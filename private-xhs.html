@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的收藏</title>
+<style>
+  :root{
+    --bg:#FAF7F5; --card:#FFFFFF; --ink:#2B2622; --muted:#9A8F86; --media-bg:#F2F2F2;
+    --accent:#D94F63; --accent-soft:#F6DDE1; --tag-bg:#F3EBE7; --line:#EEE3DD; --link:#3B6FD9;
+    --shadow: 0 1px 2px rgba(43,38,34,0.04), 0 8px 24px rgba(43,38,34,0.06);
+  }
+  *{box-sizing:border-box;}
+  html{ scrollbar-width:none; }
+  html::-webkit-scrollbar{ display:none; }
+  *{ scrollbar-width:none; }
+  *::-webkit-scrollbar{ display:none; }
+  body{ margin:0; background:var(--bg); color:var(--ink); font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB",sans-serif; -webkit-font-smoothing:antialiased; }
+  h1,h2,h3,.serif{ font-family:"Songti SC","Noto Serif SC","STSong",serif; font-weight:600; }
+
+  body.dark{
+    --bg:#0f0f0f; --card:#171717; --ink:#f5f5f5; --muted:#999999;
+    --accent:#ff2442; --accent-soft:#3a171d; --tag-bg:#242424; --line:#2c2c2c;
+    --link:#6fa0ff; --media-bg:#080808;
+  }
+
+  #connectScreen{ min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px; }
+  #connectScreen .mark{ font-size:44px; margin-bottom:14px; }
+  #connectScreen h2{ margin:0 0 8px; font-size:22px; }
+  #connectScreen p{ color:var(--muted); font-size:13.5px; line-height:1.8; max-width:440px; margin:0 0 22px; }
+  #connectScreen .warn{ color:#b5482f; font-size:12.5px; max-width:420px; }
+
+  header{ position:sticky; top:0; z-index:20; background:rgba(250,247,245,0.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--line); padding:14px 24px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  body.dark header{ background:rgba(15,15,15,0.92); }
+  header h1{ font-size:19px; margin:0; letter-spacing:1px; }
+  .search{ flex:1; min-width:180px; max-width:380px; display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--line); border-radius:999px; padding:8px 16px; }
+  .search input{ border:none; outline:none; flex:1; font-size:14px; background:transparent; color:var(--ink); }
+  .btn{ border:none; border-radius:999px; padding:8px 16px; font-size:13px; cursor:pointer; font-weight:600; transition:transform .12s ease; white-space:nowrap; display:inline-flex; align-items:center; justify-content:center; line-height:1.2; }
+  .btn:active{ transform:scale(0.96); }
+  .btn-primary{ background:var(--accent); color:#fff; box-shadow:0 4px 14px rgba(217,79,99,0.35); }
+  .btn-ghost{ background:transparent; color:var(--muted); border:1px solid var(--line); }
+  .btn-icon{ width:34px; height:34px; padding:0; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; }
+  .folder-name{ font-size:11.5px; color:var(--muted); white-space:nowrap; }
+
+  #filterBar{ display:none; align-items:center; gap:10px; padding:10px 24px; border-bottom:1px solid var(--line); font-size:13px; color:var(--muted); }
+  #filterTagLabel{ color:var(--accent); font-weight:600; }
+  #clearFilter{ margin-left:auto; color:var(--muted); text-decoration:underline; cursor:pointer; }
+
+  main{ padding:20px 24px 80px; }
+  .grid{ display:grid; grid-template-columns:repeat(5,minmax(190px,1fr)); grid-auto-rows:8px; gap:16px; align-items:start; }
+  @media (max-width:1100px){ .grid{ grid-template-columns:repeat(3,minmax(180px,1fr)); } }
+  @media (max-width:700px){ .grid{ grid-template-columns:repeat(2,minmax(150px,1fr)); } }
+  .card{ margin-bottom:0; background:var(--card); border-radius:16px; overflow:hidden; box-shadow:var(--shadow); cursor:pointer; position:relative; border:1px solid var(--line); transition:transform .15s ease, box-shadow .15s ease; }
+  .card:hover{ transform:translateY(-3px); box-shadow:0 4px 8px rgba(43,38,34,0.06), 0 14px 28px rgba(43,38,34,0.10); }
+  .card img.thumb{ width:100%; display:block; max-height:360px; min-height:200px; object-fit:cover; background:var(--tag-bg); }
+  .card-body{ padding:12px 14px 14px; }
+  .card-source-line{ font-size:11px; color:var(--muted); margin-bottom:5px; }
+  .card-title{ font-size:16px; font-weight:400; margin:0 0 6px; line-height:1.4; }
+  .card.no-media-card .card-body{ padding:16px; }
+  .card.no-media-card .card-title{ font-size:17px; line-height:1.5; margin-bottom:8px; }
+  .card.no-media-card .card-snippet{ display:block; -webkit-line-clamp:5; }
+  .card-snippet{ font-size:12.5px; color:var(--muted); line-height:1.6; margin:0 0 8px; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; }
+  .card-tags{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:6px; }
+  .card-tags span{ font-size:11px; color:var(--link); cursor:pointer; }
+  .card-tags span:hover{ text-decoration:underline; }
+  .ribbon{ position:absolute; top:10px; left:-6px; background:var(--accent); color:#fff; font-size:10px; padding:3px 10px 3px 14px; border-radius:0 4px 4px 0; box-shadow:var(--shadow); z-index:2; }
+  .ribbon:after{ content:""; position:absolute; left:0; bottom:-5px; border-top:5px solid #8a2e3b; border-left:5px solid transparent; }
+  .empty{ text-align:center; color:var(--muted); padding:80px 20px; }
+  .empty .big{ font-size:40px; margin-bottom:12px; }
+
+  .fab{ position:fixed; right:28px; bottom:28px; width:56px; height:56px; border-radius:50%; background:var(--accent); color:#fff; font-size:28px; display:flex; align-items:center; justify-content:center; box-shadow:0 8px 20px rgba(217,79,99,0.45); cursor:pointer; z-index:30; border:none; }
+
+  .overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:40; display:none; align-items:center; justify-content:center; overflow-y:auto; padding:24px 16px; }
+  .overlay.show{ display:flex; }
+  .sheet{ background:var(--card); width:100%; max-width:640px; border-radius:20px; padding:28px 28px 32px; box-shadow:var(--shadow); position:relative; margin:auto; }
+  .sheet-close{ position:absolute; top:18px; right:18px; background:var(--tag-bg); border:none; width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:14px; color:var(--muted); z-index:5; }
+
+  .reader-sheet{ width:min(1180px,94vw); height:min(860px,92vh); background:var(--card); border-radius:18px; overflow:hidden; display:grid; grid-template-columns:minmax(0,1fr) 450px; box-shadow:var(--shadow); position:relative; margin:auto; }
+  .reader-sheet.no-media{ grid-template-columns:1fr; max-width:640px; }
+  .reader-media{ min-width:0; min-height:0; background:var(--media-bg); position:relative; }
+  .reader-side{ min-width:0; min-height:0; display:flex; position:relative; flex-direction:column; background:var(--card); border-left:1px solid var(--line); }
+  .reader-menu{ position:relative; margin-left:auto; flex-shrink:0; }
+  .reader-menu-dropdown{ position:absolute; top:38px; right:0; background:var(--card); border:1px solid var(--line); border-radius:10px; box-shadow:var(--shadow); overflow:hidden; min-width:110px; z-index:7; }
+  .reader-menu-dropdown div{ padding:9px 16px; font-size:13px; cursor:pointer; }
+  .reader-menu-dropdown div:hover{ background:var(--tag-bg); }
+  .reader-sheet.no-media .reader-side{ border-left:none; }
+  .reader-side-content{ flex:1; overflow-y:auto; padding:26px 28px 20px; }
+  .reader-author{ display:flex; align-items:center; gap:10px; margin-top:10px; margin-bottom:20px; }
+  .reader-avatar{ width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--accent); color:#fff; font-weight:600; flex-shrink:0; }
+  .reader-author small{ display:block; color:var(--muted); font-size:11px; margin-top:2px; }
+  .reader-title{ font-size:18px; line-height:1.5; margin-top: 15px; margin-bottom: 8px; font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB",sans-serif; font-weight:600; }
+  .reader-body{ font-size:15.5px; line-height:1.5; }
+  .reader-body p, .reader-body div{ margin:4px 0 !important; }
+  .reader-body blockquote{ margin:10px 0; padding:10px 16px; background:var(--tag-bg); border-left:3px solid var(--accent); border-radius:6px; color:var(--muted); }
+  .reader-body hr{ border:none; border-top:1px dashed var(--line); margin:16px 0; }
+  .reader-tags{ margin-top: 5px; margin-bottom: 25px; font-size:15.5px; } 
+  .reader-tags span{ color:var(--link); margin-right:10px; cursor:pointer; }
+  .reader-tags span:hover{ text-decoration:underline; }
+  
+  .reader-bottom{
+    border-top:1px solid var(--line);
+    padding:10px 16px 12px;
+    color:var(--muted);
+  }
+
+  .quick-author-wrap{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    min-width:0;
+  }
+
+  .quick-author-label{
+    font-size:12px;
+    color:var(--muted);
+  }
+
+  .quick-author-edit{
+    width:120px;
+    border:1px solid var(--line);
+    background:var(--tag-bg);
+    color:var(--ink);
+    border-radius:8px;
+    padding:6px 8px;
+    outline:none;
+    font-size:12px;
+  }
+
+  .quick-author-edit:focus{
+    /* border-color:var(--accent); */
+    background:var(--card);
+  }
+
+  .quick-reply-hint{
+    font-size:11.5px;
+    color:var(--muted);
+    margin:0 0 7px;
+  }
+
+  .quick-reply-hint a{
+    color:var(--muted);
+    margin-left:8px;
+    cursor:pointer;
+    text-decoration:none;
+  }
+
+  .comment-input-row{
+    display:flex;
+    align-items:flex-end;
+    gap:8px;
+  }
+
+  .quick-comment-box{
+    flex:1;
+    min-width:0;
+    border:1px solid var(--line);
+    border-radius:20px;
+    background:var(--tag-bg);
+    padding:8px 14px;
+    transition:
+      border-color .15s,
+      background .15s,
+      border-radius .15s;
+  }
+
+  .quick-comment-box:focus-within{
+    /* border-color:var(--muted); */
+    background:var(--card);
+  }
+
+  .quick-comment-input{
+    display:block;
+    width:100%;
+    min-height:24px;
+    max-height:120px;
+    resize:none;
+    overflow-y:auto;
+    border:0;
+    outline:0;
+    background:transparent;
+    color:var(--ink);
+    font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB",sans-serif;
+    font-size: 13px; 
+    line-height: 1.5;
+  }
+
+  .comment-actions{
+    display:none;
+    align-items:center;
+    justify-content:space-between;
+    margin-top:7px;
+  }
+
+  .reader-bottom.expanded .comment-actions{
+    display:flex;
+  }
+
+  .comment-action-buttons{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+
+  .comment-tools{
+    display:none;
+  }
+
+  .comment-tool{
+    display:none;
+  }
+
+  .quick-send{
+    flex:0 0 auto;
+    padding:7px 13px;
+  }
+
+  .comment-count{
+    font-size:13px;
+    color:var(--muted);
+  }
+
+  .reply-link,
+  .comment-action{
+    cursor:pointer;
+    user-select:none;
+  }
+
+  .reply-link:hover,
+  .comment-action:hover{
+    color:var(--accent);
+  }
+
+
+  /* ===== 点击输入框后的展开状态 ===== */
+
+  .reader-bottom.expanded .comment-actions{
+    display:flex;
+  }
+
+  .reader-bottom.expanded .quick-comment-box{
+    border-radius:12px;
+  }
+
+  .reader-bottom.expanded .quick-comment-input{
+    min-height:30px;
+  }
+
+  .carousel{ position:absolute; inset:0; overflow:hidden; }
+  .carousel-track{ display:flex; width:100%; height:100%; transition:transform .25s ease; }
+  .carousel-track .slide{ flex:0 0 100%; display:flex; align-items:center; justify-content:center; height:100%; }
+  .carousel-track .slide img, .carousel-track .slide video{ max-width:100%; max-height:100%; object-fit:contain; }
+  .car-arrow{ position:absolute; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.35); color:#fff; border:none; width:34px; height:34px; border-radius:50%; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:3; opacity:0; transition:opacity .2s; }
+  .car-arrow.left{ left:12px; } .car-arrow.right{ right:12px; }
+  .car-counter{ position:absolute; bottom:12px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.5); color:#fff; font-size:11px; padding:3px 11px; border-radius:999px; z-index:3; opacity:0; transition:opacity .2s; }
+  .reader-media:hover .car-arrow, .reader-media:hover .car-counter{ opacity:1; }
+
+  .discuss{ margin-top:0px; border-top:1px solid var(--line); padding-top:10px; }
+  .discuss h3{ font-size:13px; margin:0 0 20px; color:var(--muted); font-weight:400; }
+  .comment{ display:flex; gap:15px; margin-bottom:16px; }
+  .avatar{ width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12.5px; color:#fff; font-weight:600; flex-shrink:0; }
+  .comment-main{ flex:1; min-width:0; }
+  .comment-main .author{ font-weight:600; font-size:13px; color:var(--muted); }
+  .comment-main .text{ font-size:13.5px; line-height:1.5; margin-top:2px; }
+  .comment-main .meta{ font-size:11px; color:var(--muted); margin-top:4px; }
+  .reply-to{ color:var(--muted); }
+  .reply{ margin-top:10px; padding-left:0; border-left:0; }
+  .reply .comment{ margin-bottom:10px; }
+  .reply .avatar{ width:24px; height:24px; font-size:10.5px; }
+  .reply .comment{ gap:8px; }
+  .comment-actions-inline{ display:inline-flex; gap:10px; margin-left:10px; font-size:11px; color:var(--muted); }
+  .comment-action{ display:inline-flex; align-items:center; gap:3px; }
+
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:12px; color:var(--muted); margin-bottom:6px; }
+  .field input[type=text]{ width:100%; border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:14px; outline:none; background:var(--card); color:var(--ink); }
+  .field input[type=text]:focus{ border-color:var(--accent); }
+  .field-row{ display:flex; gap:12px; }
+  .field-row .field{ flex:1; }
+  .toolbar{ display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap; }
+  .toolbar button{ border:1px solid var(--line); background:var(--card); border-radius:8px; padding:6px 10px; font-size:13px; cursor:pointer; color:var(--ink); }
+  .toolbar button:hover{ background:var(--tag-bg); }
+  .editor-body{ min-height:160px; border:1px solid var(--line); border-radius:10px; padding:14px; font-size:14.5px; line-height:1.8; outline:none; }
+  .editor-body:focus{ border-color:var(--accent); }
+  .editor-body blockquote{ margin:8px 0; padding:8px 14px; background:var(--tag-bg); border-left:3px solid var(--accent); border-radius:6px; }
+  .editor-body hr{ border:none; border-top:1px dashed var(--line); margin:10px 0; }
+  .hint{ font-size:11px; color:var(--muted); margin-top:4px; }
+
+  .media-gallery{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+  .media-thumb{ position:relative; width:84px; height:84px; border-radius:10px; overflow:hidden; background:var(--tag-bg); flex-shrink:0; }
+  .media-thumb img, .media-thumb video{ width:100%; height:100%; object-fit:cover; }
+  .media-thumb .rm{ position:absolute; top:3px; right:3px; background:rgba(0,0,0,0.55); color:#fff; width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; cursor:pointer; }
+  .media-buttons{ display:flex; gap:8px; }
+
+  .comment-row{ display:flex; gap:8px; margin-bottom:6px; }
+  .comment-row input{ flex:1; border:1px solid var(--line); border-radius:8px; padding:7px 10px; font-size:13px; outline:none; background:var(--card); color:var(--ink); }
+  .reply-hint{ display:none; font-size:11.5px; color:var(--muted); margin-bottom:8px; }
+  .reply-hint a{ color:var(--muted); margin-left:8px; cursor:pointer; text-decoration:underline; }
+  .comment-list-edit{ margin-bottom:10px; }
+  .comment-item-edit{ display:flex; justify-content:space-between; align-items:center; font-size:13px; padding:6px 0; border-bottom:1px dashed var(--line); gap:8px; }
+  .comment-item-edit .actions{ white-space:nowrap; }
+  .comment-item-edit .rm{ color:var(--muted); cursor:pointer; font-size:12px; margin-left:10px; display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:6px; }
+  .comment-item-edit .rm:hover{ background:var(--tag-bg); color:var(--ink); }
+
+  .footer-actions{ display:flex; justify-content:space-between; align-items:center; margin-top:20px; gap:10px; }
+
+  .toast{ position:fixed; bottom:28px; left:50%; transform:translateX(-50%); background:var(--ink); color:var(--bg); font-size:13px; padding:10px 18px; border-radius:999px; z-index:60; opacity:0; transition:opacity .2s; pointer-events:none; }
+  .toast.show{ opacity:0.92; }
+
+  #pickerGrid{ max-height:360px; overflow-y:auto; }
+  .picker-thumb-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+  .picker-thumb{ cursor:pointer; border-radius:8px; overflow:hidden; background:var(--tag-bg); }
+  .picker-thumb img, .picker-thumb video{ width:100%; height:84px; object-fit:cover; display:block; }
+  .picker-thumb:hover{ background:var(--line); }
+  .picker-thumb .picker-label{ font-size:10.5px; color:var(--muted); padding:4px 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .picker-thumb.picker-folder{ display:flex; flex-direction:column; align-items:center; justify-content:center; height:112px; font-size:26px; }
+  .picker-thumb.picker-folder .picker-label{ text-align:center; }
+  #pickerSearch{ width:100%; padding:9px 12px; border:1px solid var(--line); border-radius:8px; margin-bottom:10px; font-size:13px; outline:none; background:var(--card); color:var(--ink); }
+</style>
+</head>
+<body>
+
+<div id="connectScreen">
+  <div class="mark">✿</div>
+  <h2 class="serif">我的收藏</h2>
+  <p>选择你已经用来存放收藏图片/视频的那个文件夹（或者新建一个）。这个文件夹里已有的图片和视频会被直接索引使用，不会被复制。收藏数据会以一个叫「【RedNote】」的子文件夹保存在里面。</p>
+  <button class="btn btn-primary" id="connectBtn">选择 / 创建收藏文件夹</button>
+  <p class="folder-name" id="rememberedName" style="margin-top:14px;"></p>
+  <p class="warn" id="unsupportedWarn" style="display:none;">你当前的浏览器不支持直接读写本地文件夹，请用电脑版 Chrome 或 Edge 打开这个文件。</p>
+</div>
+
+<div id="app" style="display:none;">
+  <header>
+    <h1 class="serif">✿ 我的收藏</h1>
+    <div class="search">
+      <span>🔍</span>
+      <input id="searchInput" type="text" placeholder="搜索标题 / 正文 / 标签 / 来源">
+    </div>
+    <span class="folder-name" id="currentFolderName"></span>
+    <button class="btn btn-icon btn-ghost" id="themeToggle" title="切换深色/浅色">☾</button>
+    <button class="btn btn-ghost" id="switchFolderBtn">更换收藏文件夹</button>
+  </header>
+
+  <div id="filterBar">
+    正在查看标签 <span id="filterTagLabel"></span>
+    <a id="clearFilter">清除筛选</a>
+  </div>
+
+  <main>
+    <div class="grid" id="grid"></div>
+    <div class="empty" id="emptyState" style="display:none;">
+      <div class="big">🌱</div>
+      <div>还没有收藏，点右下角 ＋ 添加第一条</div>
+    </div>
+  </main>
+
+  <button class="fab" id="addBtn">＋</button>
+</div>
+
+<div class="overlay" id="readerOverlay"><div class="reader-sheet" id="readerSheet"></div></div>
+
+<div class="overlay" id="editorOverlay">
+  <div class="sheet">
+    <button class="sheet-close" id="editorClose">✕</button>
+    <h2 class="serif" id="editorHeading" style="margin-top:0;">新建收藏</h2>
+
+    <div class="field">
+      <label>标题</label>
+      <input type="text" id="fTitle" placeholder="给这条收藏起个标题">
+    </div>
+
+    <div class="field">
+      <label>图片 / 视频</label>
+      <div class="media-gallery" id="mediaGallery"></div>
+      <div class="media-buttons">
+        <button class="btn btn-ghost" type="button" id="addFromLibraryBtn">从收藏文件夹选择</button>
+        <button class="btn btn-ghost" type="button" id="addUploadBtn">上传新文件</button>
+      </div>
+      <input type="file" id="galleryFileInput" accept="image/*,video/*" style="display:none" multiple>
+      <div class="hint">优先从你连接的收藏文件夹里直接选择已有的图片/视频，不会复制；上传新文件才会另外保存一份</div>
+    </div>
+
+    <div class="field">
+      <label>正文</label>
+      <div class="toolbar">
+        <button type="button" data-cmd="bold"><b>B</b></button>
+        <button type="button" data-cmd="italic"><i>I</i></button>
+        <button type="button" data-cmd="quote">❝ 引用</button>
+        <button type="button" data-cmd="hr">— 分隔线</button>
+      </div>
+      <div class="editor-body" id="fBody" contenteditable="true"></div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>发帖者</label>
+        <input type="text" id="fAuthor" placeholder="我">
+      </div>
+      <div class="field">
+        <label>来源平台</label>
+        <input type="text" id="fSource" placeholder="小红书 / 知乎 / ...">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>标签（用空格或逗号分隔）</label>
+      <input type="text" id="fTags" placeholder="独处 成长 生活">
+    </div>
+
+    <div class="field">
+      <label>讨论 / 评论</label>
+      <div class="comment-list-edit" id="commentListEdit"></div>
+      <div class="reply-hint" id="replyHint"></div>
+      <div class="comment-row">
+        <input type="text" id="cAuthor" placeholder="昵称">
+        <input type="text" id="cText" placeholder="评论内容">
+        <button class="btn btn-ghost" id="cAdd" type="button">添加</button>
+      </div>
+    </div>
+
+    <div class="footer-actions">
+      <button class="btn btn-ghost" id="deleteBtn" style="display:none; color:#c0394a; border-color:#f0c9d0;">删除</button>
+      <button class="btn btn-primary" id="saveBtn">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="pickerOverlay">
+  <div class="sheet" style="max-width:560px;">
+    <button class="sheet-close" id="pickerClose">✕</button>
+    <h3 class="serif" style="margin-top:0;">从收藏文件夹选择</h3>
+    <div id="pickerBrowse">
+      <input type="text" id="pickerSearch" placeholder="搜索文件名 / 路径...">
+      <button class="btn btn-ghost" id="pickerBack" style="display:none;margin-bottom:10px;">⬅ 上一级</button>
+      <div id="pickerGrid"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= handle persistence ================= */
+let handleDB;
+function openHandleDB(){
+  return new Promise((resolve)=>{
+    const req = indexedDB.open("myXHS_handle", 1);
+    req.onupgradeneeded = e => { e.target.result.createObjectStore("handles"); };
+    req.onsuccess = e => { handleDB = e.target.result; resolve(); };
+  });
+}
+function saveHandle(h, key){
+  return new Promise((resolve, reject)=>{
+    try{
+      const tx = handleDB.transaction("handles","readwrite");
+      tx.objectStore("handles").put(h, key);
+      tx.oncomplete = ()=> resolve();
+      tx.onerror = ()=> reject(tx.error);
+    }catch(err){ reject(err); }
+  });
+}
+function loadHandle(key){
+  return new Promise((resolve)=>{
+    const tx = handleDB.transaction("handles","readonly");
+    const req = tx.objectStore("handles").get(key);
+    req.onsuccess = ()=> resolve(req.result || null);
+    req.onerror = ()=> resolve(null);
+  });
+}
+
+/* ================= state ================= */
+let rootHandle=null, appDirHandle=null, postsDirHandle=null, mediaDirHandle=null;
+let libraryFiles=[];
+let allPosts=[];
+let activeTag=null, searchTerm="";
+let editingId=null, editingComments=[], replyTarget=null, editingMedia=[];
+const dbFolderName = "【RedNote】";
+const pendingUploads = new Map();
+
+function genId(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function escapeHtml(s){ return (s||"").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function colorFor(name){
+  const palette = ["#D94F63","#4F8CD9","#4FAF6D","#C98A3B","#8F63D9","#3BAFA3"];
+  let h = 0; for(const ch of (name||"?")) h = (h*31 + ch.charCodeAt(0)) >>> 0;
+  return palette[h % palette.length];
+}
+/* base64-safe JSON round-trip for embedding arbitrary data (comments/media) inside a meta attribute
+   without any risk of the html/script escaping corruption bug from before */
+function encodeJSONSafe(obj){
+  return btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
+}
+function decodeJSONSafe(str){
+  if(!str) return [];
+  try{ return JSON.parse(decodeURIComponent(escape(atob(str)))); }catch(e){ return []; }
+}
+
+/* ================= theme ================= */
+function applyTheme(theme){
+  document.body.classList.toggle("dark", theme === "dark");
+  localStorage.setItem("myXHS_theme", theme);
+  const btn = document.getElementById("themeToggle");
+  if(btn) btn.textContent = theme === "dark" ? "☀" : "☾";
+}
+document.getElementById("themeToggle").onclick = ()=>{
+  applyTheme(document.body.classList.contains("dark") ? "light" : "dark");
+};
+applyTheme(localStorage.getItem("myXHS_theme") || "light");
+
+/* ================= connect root folder (also the media library) ================= */
+async function init(){
+  if(!window.showDirectoryPicker){
+    document.getElementById("unsupportedWarn").style.display = "block";
+    document.getElementById("connectBtn").disabled = true;
+    return;
+  }
+  await openHandleDB();
+  document.getElementById("connectBtn").onclick = async ()=>{
+    const current = await loadHandle("root");
+    await connectFolder(current);
+  };
+  const remembered = await loadHandle("root");
+  if(remembered){
+    document.getElementById("rememberedName").textContent = `上次使用的文件夹：「${remembered.name}」`;
+    try{
+      const perm = await remembered.queryPermission({mode:"readwrite"});
+      if(perm === "granted"){
+        await connectFolder(remembered);
+      }
+    }catch(e){}
+  }
+}
+
+document.getElementById("switchFolderBtn").onclick = ()=>{
+  rootHandle = null;
+  document.getElementById("app").style.display = "none";
+  document.getElementById("connectScreen").style.display = "flex";
+};
+async function connectFolder(remembered){
+  rootHandle = null;
+  if(remembered){
+    try{
+      const perm = await remembered.requestPermission({mode:"readwrite"});
+      if(perm === "granted"){
+        await remembered.entries().next();
+        rootHandle = remembered;
+      }
+    }catch(err){ rootHandle = null; }
+  }
+  if(!rootHandle){
+    try{
+      rootHandle = await window.showDirectoryPicker({mode:"readwrite"});
+      await saveHandle(rootHandle, "root");
+    }catch(err){
+      if(err.name === "AbortError") return;
+      showToast(`无法选择文件夹：${err.name}`);
+      return;
+    }
+  }
+  try{
+    appDirHandle = await rootHandle.getDirectoryHandle(dbFolderName, {create:true});
+    postsDirHandle = await appDirHandle.getDirectoryHandle("posts", {create:true});
+    mediaDirHandle = await appDirHandle.getDirectoryHandle("media", {create:true});
+
+    document.getElementById("connectScreen").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    document.getElementById("currentFolderName").textContent = `📁 ${rootHandle.name}`;
+
+    await scanAssetLibrary();
+    showToast(`已连接，索引到 ${libraryFiles.length} 个素材文件`);
+    await reload();
+  }catch(err){
+    console.error(err);
+    showToast(`初始化失败：${err.name}`);
+  }
+}
+
+/* ================= scan the whole collection folder for existing images/videos ================= */
+async function scanAssetLibrary(){
+  libraryFiles = [];
+  await scanAssetDirectory(rootHandle, "");
+}
+async function scanAssetDirectory(dirHandle, prefix){
+  for await (const [name, handle] of dirHandle.entries()){
+    try{
+      if(prefix === "" && name === dbFolderName) continue;
+      if(handle.kind === "file"){
+        if(/\.(png|jpe?g|gif|webp|bmp|avif|mp4|webm|mov|m4v)$/i.test(name)){
+          libraryFiles.push({name, path: prefix + name});
+        }
+      } else if(handle.kind === "directory"){
+        await scanAssetDirectory(handle, prefix + name + "/");
+      }
+    }catch(e){ console.warn("跳过：", prefix + name, e); }
+  }
+}
+function isVideoName(name){ return /\.(mp4|webm|mov|m4v)$/i.test(name); }
+
+/* ================= disk I/O: posts stored as one .html file each (original design, kept) ================= */
+async function getAllPostsFromDisk(){
+  const posts = [];
+  for await (const [name, handle] of postsDirHandle.entries()){
+    if(handle.kind !== "file" || !name.endsWith(".html")) continue;
+    try{
+      const html = await (await handle.getFile()).text();
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const meta = k => doc.querySelector(`meta[name="${k}"]`)?.content || "";
+      posts.push({
+        id: meta("xhs-id") || name.replace(".html",""),
+        title: meta("xhs-title"),
+        author: meta("xhs-author"),
+        source: meta("xhs-source"),
+        tags: meta("xhs-tags") ? meta("xhs-tags").split("|").filter(Boolean) : [],
+        createdAt: Number(meta("xhs-created")) || 0,
+        body: doc.querySelector("#xhs-body")?.innerHTML.trim() || "",
+        comments: decodeJSONSafe(meta("xhs-comments-b64")),
+        media: decodeJSONSafe(meta("xhs-media-b64"))
+      });
+    }catch(e){ console.warn("读取帖子失败：", name, e); }
+  }
+  posts.sort((a,b)=> b.createdAt - a.createdAt);
+  return posts;
+}
+async function writePostToDisk(post){
+  const html = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="xhs-id" content="${escapeHtml(post.id)}">
+<meta name="xhs-title" content="${escapeHtml(post.title)}">
+<meta name="xhs-author" content="${escapeHtml(post.author)}">
+<meta name="xhs-source" content="${escapeHtml(post.source)}">
+<meta name="xhs-tags" content="${escapeHtml(post.tags.join("|"))}">
+<meta name="xhs-created" content="${post.createdAt}">
+<meta name="xhs-reader-width" content="${post.readerWidth || ""}">
+<meta name="xhs-comments-b64" content="${encodeJSONSafe(post.comments)}">
+<meta name="xhs-media-b64" content="${encodeJSONSafe(post.media)}">
+<title>${escapeHtml(post.title || "我的收藏")}</title>
+</head>
+<body>
+<article id="xhs-body">
+${post.body}
+</article>
+</body>
+</html>`;
+  const fh = await postsDirHandle.getFileHandle(`${post.id}.html`, {create:true});
+  const w = await fh.createWritable();
+  await w.write(html);
+  await w.close();
+}
+async function deletePostFromDisk(post){
+  try{ await postsDirHandle.removeEntry(`${post.id}.html`); }catch(e){}
+  for(const m of (post.media||[])){
+    if(m.type === "file"){ try{ await mediaDirHandle.removeEntry(m.ref); }catch(e){} }
+  }
+}
+async function writeMediaFile(filename, blob){
+  const fh = await mediaDirHandle.getFileHandle(filename, {create:true});
+  const w = await fh.createWritable();
+  await w.write(blob);
+  await w.close();
+}
+async function readMediaBlobURL(filename){
+  const file = await (await mediaDirHandle.getFileHandle(filename)).getFile();
+  return URL.createObjectURL(file);
+}
+async function getLibraryFileHandle(path){
+  const parts = path.split("/");
+  let dir = rootHandle;
+  for(let i=0;i<parts.length-1;i++) dir = await dir.getDirectoryHandle(parts[i]);
+  return await dir.getFileHandle(parts[parts.length-1]);
+}
+async function readLibraryBlobURL(path){
+  const file = await (await getLibraryFileHandle(path)).getFile();
+  return URL.createObjectURL(file);
+}
+
+async function getMediaFile(m){
+  if(m.type === "file") return await (await mediaDirHandle.getFileHandle(m.ref)).getFile();
+  return await (await getLibraryFileHandle(m.ref)).getFile();
+}
+function fileToDataURL(file){
+  return new Promise((resolve)=>{
+    const r = new FileReader();
+    r.onload = ()=> resolve(r.result);
+    r.readAsDataURL(file);
+  });
+}
+function themeSafeBodyHtml(html){
+  const doc = new DOMParser().parseFromString(html || "", "text/html");
+  doc.querySelectorAll("[style]").forEach(el=>{
+    const style = el.getAttribute("style") || "";
+    const cleaned = style
+      .replace(/(?:^|;)\s*(?:background|background-color)\s*:[^;]+;?/gi, "")
+      .replace(/(?:^|;)\s*color\s*:[^;]+;?/gi, "")
+      .trim();
+    if(cleaned) el.setAttribute("style", cleaned);
+    else el.removeAttribute("style");
+  });
+  return doc.body.innerHTML;
+}
+
+function renderCommentsStatic(comments){
+  if(!comments || !comments.length) return "";
+  function one(c, depth=1){
+    const avatar = depth === 1 ? 30 : 24;
+    const fs = depth === 1 ? 12.5 : 10.5;
+    return `<div style="display:flex;gap:${depth===1?10:8}px;margin-bottom:14px;">
+      <div style="width:${avatar}px;height:${avatar}px;border-radius:50%;background:${colorFor(c.author)};color:#fff;display:flex;align-items:center;justify-content:center;font-size:${fs}px;font-weight:600;flex-shrink:0;">${escapeHtml((c.author||"匿").charAt(0))}</div>
+      <div>
+        <div style="font-weight:600;font-size:13px;">${escapeHtml(c.author||"匿名")}</div>
+        <div style="font-size:13.5px;line-height:1.6;">${c.replyToAuthor ? `回复 <span style="color:#9A8F86;">${escapeHtml(c.replyToAuthor)}</span>: ` : ""}${escapeHtml(c.text)}</div>
+        ${(c.replies && c.replies.length && depth===1) ? `<div style="margin-top:10px;padding-left:0;border-left:0;">${c.replies.map(r=>one(r,2)).join("")}</div>` : ""}
+      </div>
+    </div>`;
+  }
+  return `<div style="margin-top:16px;border-top:1px solid #EEE3DD;padding-top:16px;">${comments.map(c => one(c, 1)).join("")}</div>`;
+}
+
+async function exportPostSnapshot(p){
+  showToast("正在导出…");
+  const liveSheet = document.getElementById("readerSheet");
+  const clone = liveSheet.cloneNode(true);
+
+  for(const el of [...clone.querySelectorAll("img, video")]){
+    const isFile = el.hasAttribute("data-file");
+    const isAsset = el.hasAttribute("data-asset-path");
+    if(!isFile && !isAsset) continue;
+    try{
+      const m = isFile ? {type:"file", ref: el.getAttribute("data-file")} : {type:"asset", ref: el.getAttribute("data-asset-path")};
+      const file = await getMediaFile(m);
+      el.setAttribute("src", await fileToDataURL(file));
+    }catch(e){}
+  }
+
+  clone.querySelectorAll(".reader-menu, .reader-bottom, .comment-actions-inline").forEach(el => el.remove());
+  clone.removeAttribute("id");
+  clone.removeAttribute("style");
+
+  const slideCount = clone.querySelectorAll(".carousel-track > .slide").length;
+  const carouselScript = slideCount > 1 ? `
+<script>
+(function(){
+  const track = document.querySelector(".carousel-track");
+  const counter = document.querySelector(".car-counter");
+  const total = ${slideCount};
+  let idx = 0;
+  function update(){
+    track.style.transform = "translateX(-" + (idx*100) + "%)";
+    if(counter) counter.textContent = (idx+1) + " / " + total;
+  }
+  document.querySelectorAll(".car-arrow").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      idx = (idx + Number(btn.dataset.dir) + total) % total;
+      update();
+    });
+  });
+})();
+<\/script>` : "";
+
+  const pageStyle = document.querySelector("style").textContent;
+
+  const html = `<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8">
+<meta name="color-scheme" content="light only">
+<title>${escapeHtml(p.title || "我的收藏")}</title>
+<style>
+${pageStyle}
+:root{ color-scheme:light !important; }
+body{ margin:0; padding:40px 16px; background:#FAF7F5 !important; color:#2B2622 !important; display:flex; justify-content:center; }
+.reader-sheet{ position:static !important; width:min(1180px,94vw) !important; height:auto !important; max-height:none !important; box-shadow:none; }
+.reader-media{ height:min(860px,80vh); }
+.reader-side-content{ overflow-y:visible; }
+</style></head>
+<body>
+${clone.outerHTML}
+${carouselScript}
+</body></html>`;
+
+  const dir = await appDirHandle.getDirectoryHandle("exports", {create:true});
+  const filename = `${(p.title||"未命名").replace(/[\\/:*?"<>|]/g,"").trim().slice(0,40) || "未命名"}-${p.id.slice(-5)}.html`;
+  const fh = await dir.getFileHandle(filename, {create:true});
+  const w = await fh.createWritable();
+  await w.write(html);
+  await w.close();
+  showToast(`已导出到文件夹：${filename}`);
+}
+
+async function hydrateMedia(containerEl){
+  const els = containerEl.querySelectorAll("[data-file], [data-asset-path]");
+  let missing = 0;
+  for(const el of els){
+    try{
+      if(el.hasAttribute("data-file")) el.setAttribute("src", await readMediaBlobURL(el.getAttribute("data-file")));
+      else el.setAttribute("src", await readLibraryBlobURL(el.getAttribute("data-asset-path")));
+    }catch(e){ missing++; }
+  }
+  if(missing > 0) showToast(`有 ${missing} 个素材未能显示，原文件可能被移动或删除了`);
+}
+
+/* ================= grid ================= */
+function plainSnippet(html){
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  return doc.body.textContent.trim().slice(0, 120);
+}
+function commentsToText(comments){
+  let out = "";
+  (comments||[]).forEach(c=>{ out += " " + c.text; (c.replies||[]).forEach(r => out += " " + r.text); });
+  return out;
+}
+function matchesSearch(p, term){
+  if(!term) return true;
+  const hay = [p.title, plainSnippet(p.body), (p.tags||[]).join(" "), p.source||"", p.author||"", commentsToText(p.comments)].join(" ").toLowerCase();
+  return hay.includes(term.toLowerCase());
+}
+function renderFilterBar(){
+  const bar = document.getElementById("filterBar");
+  if(activeTag){
+    bar.style.display = "flex";
+    document.getElementById("filterTagLabel").textContent = `#${activeTag}`;
+  } else {
+    bar.style.display = "none";
+  }
+}
+document.getElementById("clearFilter").onclick = ()=>{ activeTag = null; renderFilterBar(); renderGrid(); };
+function setActiveTag(tag){
+  activeTag = tag;
+  renderFilterBar();
+  renderGrid();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function layoutMasonryCard(card){
+  const grid = document.getElementById("grid");
+  const styles = getComputedStyle(grid);
+  const rowHeight = parseFloat(styles.getPropertyValue("grid-auto-rows")) || 8;
+  const rowGap = parseFloat(styles.getPropertyValue("row-gap") || styles.getPropertyValue("gap")) || 0;
+  const height = card.getBoundingClientRect().height;
+  const span = Math.ceil((height + rowGap) / (rowHeight + rowGap));
+  card.style.gridRowEnd = `span ${span}`;
+}
+function layoutMasonry(){
+  document.querySelectorAll("#grid .card").forEach(layoutMasonryCard);
+}
+let masonryResizeTimer;
+window.addEventListener("resize", ()=>{
+  clearTimeout(masonryResizeTimer);
+  masonryResizeTimer = setTimeout(layoutMasonry, 150);
+});
+
+function renderGrid(){
+  const grid = document.getElementById("grid");
+  const empty = document.getElementById("emptyState");
+  let list = allPosts;
+  if(activeTag) list = list.filter(p => (p.tags||[]).includes(activeTag));
+  if(searchTerm) list = list.filter(p => matchesSearch(p, searchTerm));
+
+  if(list.length === 0){
+    grid.innerHTML = "";
+    empty.style.display = "block";
+    empty.querySelector("div:last-child").textContent = allPosts.length===0 ? "还没有收藏，点右下角 ＋ 添加第一条" : "没有符合条件的收藏";
+    return;
+  }
+  empty.style.display = "none";
+  grid.innerHTML = list.map(p => {
+    const firstImg = (p.media||[]).find(m => m.kind !== "video");
+    const snippet = plainSnippet(p.body);
+    const thumbAttr = firstImg ? (firstImg.type === "file" ? "data-file" : "data-asset-path") : null;
+    return `
+      <div class="card ${firstImg ? "" : "no-media-card"}" data-id="${p.id}">
+        ${p.source && firstImg ? `<div class="ribbon">${escapeHtml(p.source)}</div>` : ""}
+        ${firstImg ? `<img class="thumb" ${thumbAttr}="${escapeHtml(firstImg.ref)}">` : ""}
+        <div class="card-body">
+          ${p.source && !firstImg ? `<div class="card-source-line">${escapeHtml(p.source)}</div>` : ""}
+          <p class="card-title">${escapeHtml(p.title || "(无标题)")}</p>
+          ${!firstImg && snippet ? `<p class="card-snippet">${escapeHtml(snippet)}</p>` : ""}
+          ${(p.tags && p.tags.length) ? `<div class="card-tags">${p.tags.map(t=>`<span data-tag="${escapeHtml(t)}">#${escapeHtml(t)}</span>`).join("")}</div>` : ""}
+        </div>
+      </div>`;
+  }).join("");
+  grid.querySelectorAll(".card").forEach(card=>{ card.onclick = ()=> openReader(card.dataset.id); });
+  grid.querySelectorAll(".card-tags span").forEach(span=>{
+    span.onclick = (e)=>{ e.stopPropagation(); setActiveTag(span.dataset.tag); };
+  });
+  layoutMasonry();
+  grid.querySelectorAll("img.thumb").forEach(img=>{
+    img.addEventListener("load", ()=> layoutMasonryCard(img.closest(".card")), {once:true});
+  });
+  hydrateMedia(grid);
+}
+
+/* ================= reader ================= */
+function renderCommentsReadonly(comments){
+  if(!comments || !comments.length) return "";
+  function renderOne(c, depth=1){
+    const replyActions = `<span class="comment-actions-inline">
+      <span class="comment-action reply-link" data-reply-id="${c.id}" data-reply-author="${escapeHtml(c.author||"匿名")}">↩ 回复</span>
+      <span class="comment-action delete-comment" data-delete-id="${c.id}">⌫ 删除</span>
+    </span>`;
+    return `
+      <div class="comment ${depth > 1 ? "is-reply" : ""}">
+        <div class="avatar" style="background:${colorFor(c.author)}">${escapeHtml((c.author||"匿").charAt(0))}</div>
+        <div class="comment-main">
+          <div class="author">${escapeHtml(c.author||"匿名")}</div>
+          <div class="text">${c.replyToAuthor ? `回复 <span class="reply-to">${escapeHtml(c.replyToAuthor)}</span>: ` : ""}${escapeHtml(c.text)}${replyActions}</div>
+          ${(c.replies && c.replies.length && depth === 1) ? `<div class="reply">${c.replies.map(r=>renderOne(r,2)).join("")}</div>` : ""}
+        </div>
+      </div>`;
+  }
+  const count = (comments||[]).reduce((n,c)=>n+1+(c.replies||[]).length,0);
+  return `<div class="discuss"><h3>共 ${count} 条评论</h3>${comments.map(c=>renderOne(c,1)).join("")}</div>`;
+}
+function getQuickAuthor(){ return localStorage.getItem("myXHS_commentAuthor") || "我"; }
+function mediaTagHtml(m){
+  const attr = m.type === "file" ? "data-file" : "data-asset-path";
+  return m.kind === "video"
+    ? `<video controls ${attr}="${escapeHtml(m.ref)}"></video>`
+    : `<img ${attr}="${escapeHtml(m.ref)}">`;
+}
+function fitMediaWidth(sheet, mediaEls){
+  const MIN_LEFT = 360, MAX_LEFT = 560, RIGHT = 460;
+  if(!mediaEls || mediaEls.length === 0) return;
+  const ready = mediaEls.map(el => new Promise(resolve=>{
+    if(el.tagName === "IMG"){
+      if(el.complete && el.naturalWidth) resolve();
+      else el.addEventListener("load", resolve, {once:true});
+    } else {
+      if(el.readyState >= 1) resolve();
+      else el.addEventListener("loadedmetadata", resolve, {once:true});
+    }
+  }));
+  Promise.all(ready).then(()=>{
+    const h = sheet.clientHeight || 860;
+    let widest = 0;
+    mediaEls.forEach(el=>{
+      const ratio = el.tagName === "IMG" ? el.naturalWidth/el.naturalHeight : el.videoWidth/el.videoHeight;
+      if(ratio && isFinite(ratio)) widest = Math.max(widest, h*ratio);
+    });
+    if(!widest) return;
+    const left = Math.max(MIN_LEFT, Math.min(MAX_LEFT, widest));
+    const width = Math.min(window.innerWidth*0.94, left + RIGHT);
+    sheet.style.width = `${width}px`;
+    sheet.style.gridTemplateColumns = `${left}px ${RIGHT}px`;
+    const p = allPosts.find(x => x.id === document.getElementById("readerSheet")?.dataset.postId);
+    if(p && Math.abs((p.readerWidth||0) - (left+RIGHT)) > 1){
+      p.readerWidth = left + RIGHT;
+      writePostToDisk(p).catch(()=>{});
+    }
+  });
+}
+function openReader(id){
+  const p = allPosts.find(x => x.id === id);
+  if(!p) return;
+  let quickReplyTarget = null;
+  const sheet = document.getElementById("readerSheet");
+  sheet.dataset.postId = p.id;
+  const media = p.media || [];
+  const hasMedia = media.length > 0;
+  sheet.classList.toggle("no-media", !hasMedia);
+
+  // Reuse the previously measured width immediately, so reopening the same post
+  // does not resize after the media loads.
+  if(hasMedia){
+    const savedWidth = Number(p.readerWidth) || 940;
+    const right = 460;
+    const left = Math.max(360, Math.min(560, savedWidth - right));
+    sheet.style.width = `${Math.min(window.innerWidth*0.94, savedWidth)}px`;
+    sheet.style.gridTemplateColumns = `${left}px ${right}px`;
+  }else{
+    sheet.style.gridTemplateColumns = "";
+    sheet.style.width = "";
+  }
+
+  const mediaHtml = hasMedia ? `
+    <div class="reader-media">
+      <div class="carousel">
+        <div class="carousel-track">${media.map(m=>`<div class="slide">${mediaTagHtml(m)}</div>`).join("")}</div>
+      </div>
+      ${media.length > 1 ? `
+        <button class="car-arrow left" data-dir="-1">‹</button>
+        <button class="car-arrow right" data-dir="1">›</button>
+        <div class="car-counter">1 / ${media.length}</div>
+      ` : ""}
+    </div>` : "";
+
+  let commentCount = 0;
+  (p.comments||[]).forEach(c => { commentCount += 1 + (c.replies||[]).length; });
+  const date = new Date(p.createdAt).toLocaleString();
+  const authorName = p.author || "我";
+
+  sheet.innerHTML = `
+    ${mediaHtml}
+    <div class="reader-side">
+      <div class="reader-side-content">
+        <div class="reader-author">
+          <div class="reader-avatar" style="background:${colorFor(authorName)}">${escapeHtml(authorName.charAt(0))}</div>
+          <div>
+            <strong>${escapeHtml(authorName)}</strong>
+            <small>${p.source ? `来源 · ${escapeHtml(p.source)} · ` : ""}${date}</small>
+          </div>
+          <div class="reader-menu">
+            <button class="btn-icon btn-ghost" id="readerMenuBtn" title="更多">⋯</button>
+            <div class="reader-menu-dropdown" id="readerMenuDropdown" style="display:none;">
+              <div data-act="edit">✎ 编辑</div>
+              <div data-act="export">⇩ 导出</div>
+            </div>
+          </div>
+        </div>
+        <h2 class="reader-title serif">${escapeHtml(p.title || "(无标题)")}</h2>
+        <div class="reader-body">${themeSafeBodyHtml(p.body)}</div>
+        ${(p.tags && p.tags.length) ? `<div class="reader-tags">${p.tags.map(t=>`<span data-tag="${escapeHtml(t)}">#${escapeHtml(t)}</span>`).join("")}</div>` : ""}
+        ${renderCommentsReadonly(p.comments)}
+      </div>
+      <div class="reader-bottom" id="readerComposer">
+        <div class="quick-reply-hint" id="quickReplyHint" style="display:none;"></div>
+        <div class="comment-input-row">
+          <div class="quick-comment-box">
+            <textarea class="quick-comment-input" id="quickCommentInput" rows="1" placeholder="说点什么..." maxlength="2000"></textarea>
+            <div class="comment-actions">
+              <div class="quick-author-wrap">
+                <span class="quick-author-label">昵称</span>
+                <input
+                  class="quick-author-edit"
+                  id="quickAuthorInput"
+                  aria-label="评论昵称"
+                >
+              </div>
+
+              <div class="comment-action-buttons">
+                <button
+                  class="btn btn-primary quick-send"
+                  id="quickCommentSend"
+                  type="button"
+                >发送</button>
+
+                <button
+                  class="btn btn-ghost"
+                  id="quickCommentCancel"
+                  type="button"
+                >取消</button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("readerOverlay").classList.add("show");
+
+  const menuBtn = document.getElementById("readerMenuBtn");
+  const dd = document.getElementById("readerMenuDropdown");
+  menuBtn.onclick = (e)=>{
+    e.stopPropagation();
+    dd.style.display = dd.style.display === "block" ? "none" : "block";
+  };
+  document.addEventListener("click", function closeReaderMenu(e){
+    if(!dd.contains(e.target) && e.target !== menuBtn) dd.style.display = "none";
+  }, {once:false});
+
+  sheet.querySelector(".reader-side-content").addEventListener("scroll", ()=>{ dd.style.display = "none"; });
+
+  sheet.querySelector('[data-act="edit"]').onclick = ()=>{ dd.style.display="none"; closeReader(); openEditor(p.id); };
+  sheet.querySelector('[data-act="export"]').onclick = ()=>{ dd.style.display="none"; exportPostSnapshot(p); };
+  sheet.querySelectorAll(".reader-tags span").forEach(span=>{
+    span.onclick = ()=>{ closeReader(); setActiveTag(span.dataset.tag); };
+  });
+
+  const composer = document.getElementById("readerComposer");
+  const authorInput = document.getElementById("quickAuthorInput");
+  const input = document.getElementById("quickCommentInput");
+  const cancelBtn = document.getElementById("quickCommentCancel");
+  const hint = document.getElementById("quickReplyHint");
+
+  authorInput.onchange = ()=>{
+    const name = authorInput.value.trim() || "我";
+    localStorage.setItem("myXHS_commentAuthor", name);
+    authorInput.value = name;
+  };
+
+  function expandComposer(){
+    composer.classList.add("expanded");
+
+    input.rows = 1;
+
+    requestAnimationFrame(()=>{
+      input.style.height = "auto";
+      input.style.height = Math.min(input.scrollHeight, 120) + "px";
+    });
+  }
+
+  function collapseComposer(){
+    composer.classList.remove("expanded");
+
+    hint.style.display = "none";
+    quickReplyTarget = null;
+
+    input.value = "";
+    input.style.height = "22px";
+    input.rows = 1;
+  }
+
+  input.addEventListener("focus", expandComposer);
+
+  input.addEventListener("input", ()=>{
+    input.style.height = "auto";
+    input.style.height = Math.min(input.scrollHeight, 120) + "px";
+  });
+
+  cancelBtn.onclick = collapseComposer;
+
+
+  // /* 点击输入框外部，自动收起 */
+  // document.addEventListener("mousedown", (event)=>{
+  //   if (!composer.contains(event.target)) {
+  //     collapseComposer();
+  //   }
+  // });
+
+  sheet.querySelectorAll(".delete-comment").forEach(el=>{
+    el.onclick = async ()=>{
+      const id = el.dataset.deleteId;
+      if(!confirm("确定删除这条评论吗？")) return;
+      removeCommentNode(p.comments || [], id);
+      await writePostToDisk(p);
+      await reload();
+      openReader(p.id);
+    };
+  });
+  sheet.querySelectorAll(".reply-link").forEach(el=>{
+    el.onclick = ()=>{
+      quickReplyTarget = el.dataset.replyId;
+      expandComposer();
+      hint.style.display = "block";
+      hint.innerHTML = `正在回复 @${escapeHtml(el.dataset.replyAuthor)}`;
+      input.focus();
+    };
+  });
+
+  async function sendQuickComment(){
+    const text = input.value.trim();
+    if(!text) return;
+    const author = authorInput.value.trim() || "我";
+    p.comments = p.comments || [];
+    if(quickReplyTarget){
+      const loc = locateComment(p.comments, quickReplyTarget);
+      if(loc){
+        const node = {id: genId(), author, text, at: Date.now(), replies: []};
+        if(loc.depth === 1) node.replyToAuthor = loc.node.author || "匿名";
+        (loc.root.replies = loc.root.replies || []).push(node);
+      }
+    } else {
+      p.comments.push({id: genId(), author, text, at: Date.now(), replies: []});
+    }
+    await writePostToDisk(p);
+    await reload();
+    openReader(p.id);
+  }
+  document.getElementById("quickCommentSend").onclick = sendQuickComment;
+  input.addEventListener("keydown", (e)=>{
+    if((e.ctrlKey || e.metaKey) && e.key === "Enter"){
+      e.preventDefault();
+      sendQuickComment();
+    }
+  });
+
+  const track = sheet.querySelector(".carousel-track");
+  if(track && media.length > 1){
+    let idx = 0;
+    const counter = sheet.querySelector(".car-counter");
+    function update(){
+      track.style.transform = `translateX(-${idx*100}%)`;
+      if(counter) counter.textContent = `${idx+1} / ${media.length}`;
+    }
+    sheet.querySelectorAll(".car-arrow").forEach(btn=>{
+      btn.onclick = ()=>{ idx = (idx + Number(btn.dataset.dir) + media.length) % media.length; update(); };
+    });
+  }
+
+  hydrateMedia(sheet).then(()=> fitMediaWidth(sheet, [...sheet.querySelectorAll(".carousel-track .slide img, .carousel-track .slide video")]));
+}
+
+function closeReader(){ document.getElementById("readerOverlay").classList.remove("show"); }
+
+/* ================= editor: media gallery (separate from the rich-text body) ================= */
+function renderMediaGallery(){
+  const el = document.getElementById("mediaGallery");
+  el.innerHTML = editingMedia.map((m,i)=>{
+    let inner;
+    if(m.previewUrl){
+      inner = m.kind === "video" ? `<video src="${m.previewUrl}" muted></video>` : `<img src="${m.previewUrl}">`;
+    } else {
+      const attr = m.type === "file" ? "data-file" : "data-asset-path";
+      inner = m.kind === "video" ? `<video ${attr}="${escapeHtml(m.ref)}" muted></video>` : `<img ${attr}="${escapeHtml(m.ref)}">`;
+    }
+    return `<div class="media-thumb">${inner}<span class="rm" data-rm="${i}">✕</span></div>`;
+  }).join("");
+  el.querySelectorAll("[data-rm]").forEach(btn=>{
+    btn.onclick = ()=>{ editingMedia.splice(Number(btn.dataset.rm),1); renderMediaGallery(); };
+  });
+  hydrateMedia(el);
+}
+document.getElementById("fBody").addEventListener("paste", (e)=>{
+  e.preventDefault();
+  const text = (e.clipboardData || window.clipboardData).getData("text/plain");
+  document.execCommand("insertText", false, text);
+});
+document.getElementById("editorOverlay").addEventListener("paste", (e)=>{
+  const items = e.clipboardData && e.clipboardData.items;
+  if(!items) return;
+  for(const item of items){
+    if(item.type && item.type.startsWith("image/")){
+      const file = item.getAsFile();
+      if(!file) continue;
+      const token = genId();
+      pendingUploads.set(token, file);
+      editingMedia.push({type:"file", kind:"image", ref:token, previewUrl:URL.createObjectURL(file)});
+      renderMediaGallery();
+      e.preventDefault();
+    }
+  }
+});
+document.getElementById("addFromLibraryBtn").onclick = ()=> openPicker();
+document.getElementById("addUploadBtn").onclick = ()=> document.getElementById("galleryFileInput").click();
+document.getElementById("galleryFileInput").onchange = (e)=>{
+  const files = [...e.target.files];
+  files.forEach(file=>{
+    const token = genId();
+    pendingUploads.set(token, file);
+    editingMedia.push({
+      type:"file",
+      kind: file.type.startsWith("video/") ? "video" : "image",
+      ref: token,
+      previewUrl: URL.createObjectURL(file)
+    });
+  });
+  e.target.value = "";
+  renderMediaGallery();
+};
+
+/* library picker modal — appends to the media gallery, no cursor/selection involved */
+let pickerPath = "";
+function openPicker(){
+  pickerPath = "";
+  document.getElementById("pickerSearch").value = "";
+  renderPickerList("");
+  document.getElementById("pickerOverlay").classList.add("show");
+}
+function pickerLabel(path){
+  const parts = path.split("/");
+  const nameNoExt = parts[parts.length-1].replace(/\.[^.]+$/, "");
+  return parts.length > 1 ? `${parts[0]} / ${nameNoExt}` : nameNoExt;
+}
+function getPickerChildren(prefix){
+  const folders = new Set();
+  const files = [];
+  for(const f of libraryFiles){
+    if(!f.path.startsWith(prefix)) continue;
+    const rest = f.path.slice(prefix.length);
+    const parts = rest.split("/").filter(Boolean);
+    if(parts.length === 0) continue;
+    if(parts.length === 1) files.push(f);
+    else folders.add(parts[0]);
+  }
+  return {folders: [...folders].sort(), files};
+}
+function fileThumbHtml(f, attr, showPath){
+  const label = showPath ? pickerLabel(f.path) : f.name.replace(/\.[^.]+$/, "");
+  return `<div class="picker-thumb" ${attr}>${isVideoName(f.name) ? `<video data-asset-path="${escapeHtml(f.path)}" muted></video>` : `<img data-asset-path="${escapeHtml(f.path)}">`}<div class="picker-label">${escapeHtml(label)}</div></div>`;
+}
+function renderPickerList(term){
+  const grid = document.getElementById("pickerGrid");
+  const backBtn = document.getElementById("pickerBack");
+  if(term){
+    backBtn.style.display = "none";
+    const filtered = libraryFiles.filter(f => f.path.toLowerCase().includes(term.toLowerCase()));
+    if(filtered.length === 0){ grid.innerHTML = `<div class="hint">没有找到匹配的文件</div>`; return; }
+    grid.innerHTML = `<div class="picker-thumb-grid">${filtered.map((f,i)=>fileThumbHtml(f, `data-file-idx="${i}"`, true)).join("")}</div>`;
+    grid.querySelectorAll("[data-file-idx]").forEach(el=>{
+      el.onclick = ()=> pickLibraryFile(filtered[Number(el.dataset.fileIdx)]);
+    });
+    hydrateMedia(grid);
+    return;
+  }
+  backBtn.style.display = pickerPath ? "inline-flex" : "none";
+  const {folders, files} = getPickerChildren(pickerPath);
+  if(folders.length === 0 && files.length === 0){ grid.innerHTML = `<div class="hint">这个文件夹里没有图片/视频</div>`; return; }
+  const folderTiles = folders.map(name => `<div class="picker-thumb picker-folder" data-folder="${escapeHtml(name)}">📁<div class="picker-label">${escapeHtml(name)}</div></div>`).join("");
+  const fileTiles = files.map((f,i)=>fileThumbHtml(f, `data-file-idx="${i}"`, false)).join("");
+  grid.innerHTML = `<div class="picker-thumb-grid">${folderTiles}${fileTiles}</div>`;
+  grid.querySelectorAll("[data-folder]").forEach(el=>{
+    el.onclick = ()=>{ pickerPath += el.dataset.folder + "/"; document.getElementById("pickerSearch").value = ""; renderPickerList(""); };
+  });
+  grid.querySelectorAll("[data-file-idx]").forEach(el=>{
+    el.onclick = ()=> pickLibraryFile(files[Number(el.dataset.fileIdx)]);
+  });
+  hydrateMedia(grid);
+}
+document.getElementById("pickerBack").onclick = ()=>{
+  const parts = pickerPath.split("/").filter(Boolean);
+  parts.pop();
+  pickerPath = parts.length ? parts.join("/") + "/" : "";
+  document.getElementById("pickerSearch").value = "";
+  renderPickerList("");
+};
+document.getElementById("pickerSearch").oninput = (e)=> renderPickerList(e.target.value);
+document.getElementById("pickerClose").onclick = ()=> document.getElementById("pickerOverlay").classList.remove("show");
+document.getElementById("pickerOverlay").addEventListener("click",(e)=>{ if(e.target.id==="pickerOverlay") document.getElementById("pickerOverlay").classList.remove("show"); });
+function pickLibraryFile(f){
+  editingMedia.push({type:"asset", kind: isVideoName(f.name) ? "video" : "image", ref: f.path});
+  document.getElementById("pickerOverlay").classList.remove("show");
+  renderMediaGallery();
+}
+
+/* ================= editor ================= */
+function openEditor(id){
+  editingId = id || null;
+  editingComments = [];
+  editingMedia = [];
+  replyTarget = null;
+  document.getElementById("replyHint").style.display = "none";
+  const heading = document.getElementById("editorHeading");
+  const deleteBtn = document.getElementById("deleteBtn");
+  const fBody = document.getElementById("fBody");
+
+  if(id){
+    const p = allPosts.find(x=>x.id===id);
+    heading.textContent = "编辑收藏";
+    document.getElementById("fTitle").value = p.title || "";
+    fBody.innerHTML = p.body || "";
+    document.getElementById("fAuthor").value = p.author || "";
+    document.getElementById("fTags").value = (p.tags||[]).join(" ");
+    document.getElementById("fSource").value = p.source || "";
+    editingComments = JSON.parse(JSON.stringify(p.comments || []));
+    editingMedia = JSON.parse(JSON.stringify(p.media || []));
+    deleteBtn.style.display = "inline-block";
+  } else {
+    heading.textContent = "新建收藏";
+    document.getElementById("fTitle").value = "";
+    fBody.innerHTML = "";
+    document.getElementById("fAuthor").value = "";
+    document.getElementById("fTags").value = "";
+    document.getElementById("fSource").value = "";
+    deleteBtn.style.display = "none";
+  }
+  renderMediaGallery();
+  renderCommentEditList();
+  document.getElementById("editorOverlay").classList.add("show");
+}
+function closeEditor(){ document.getElementById("editorOverlay").classList.remove("show"); }
+
+/* two-level comment editing */
+function locateComment(list, id){
+  for(const root of list){
+    if(root.id === id) return {root, node: root, depth:0};
+    for(const child of (root.replies||[])){
+      if(child.id === id) return {root, node: child, depth:1};
+    }
+  }
+  return null;
+}
+function removeCommentNode(list, id){
+  const idx = list.findIndex(c => c.id === id);
+  if(idx > -1){ list.splice(idx,1); return true; }
+  for(const c of list){
+    const ridx = (c.replies||[]).findIndex(r => r.id === id);
+    if(ridx > -1){ c.replies.splice(ridx,1); return true; }
+  }
+  return false;
+}
+function renderCommentEditList(){
+  const el = document.getElementById("commentListEdit");
+  let html = "";
+  editingComments.forEach(c=>{
+    html += `<div class="comment-item-edit"><span>@${escapeHtml(c.author||"匿名")}：${escapeHtml(c.text)}</span><span class="actions"><span class="rm" data-reply="${c.id}" title="回复">↩</span><span class="rm" data-del="${c.id}" title="删除">⌫</span></span></div>`;
+    (c.replies||[]).forEach(r=>{
+      html += `<div class="comment-item-edit" style="margin-left:20px;"><span>@${escapeHtml(r.author||"匿名")}：${escapeHtml(r.text)}</span><span class="actions"><span class="rm" data-reply="${r.id}">回复</span><span class="rm" data-del="${r.id}">删除</span></span></div>`;
+    });
+  });
+  el.innerHTML = html || `<div class="hint">还没有评论</div>`;
+  el.querySelectorAll("[data-del]").forEach(b => b.onclick = ()=>{
+    removeCommentNode(editingComments, b.dataset.del);
+    if(replyTarget === b.dataset.del) cancelReply();
+    renderCommentEditList();
+  });
+  el.querySelectorAll("[data-reply]").forEach(b => b.onclick = ()=>{
+    replyTarget = b.dataset.reply;
+    const loc = locateComment(editingComments, replyTarget);
+    const hint = document.getElementById("replyHint");
+    hint.innerHTML = `正在回复 @${escapeHtml(loc.node.author||"匿名")} <a id="cancelReplyLink">取消</a>`;
+    hint.style.display = "block";
+    document.getElementById("cancelReplyLink").onclick = cancelReply;
+  });
+}
+function cancelReply(){ replyTarget = null; document.getElementById("replyHint").style.display = "none"; }
+document.getElementById("cAdd").onclick = ()=>{
+  const a = document.getElementById("cAuthor"), t = document.getElementById("cText");
+  if(!t.value.trim()) return;
+  const author = a.value.trim() || "匿名";
+  let text = t.value.trim();
+  if(replyTarget){
+    const loc = locateComment(editingComments, replyTarget);
+    if(loc){
+      const node = {id: genId(), author, text, at: Date.now(), replies: []};
+      if(loc.depth === 1) node.replyToAuthor = loc.node.author || "匿名";
+      (loc.root.replies = loc.root.replies || []).push(node);
+    }
+  } else {
+    editingComments.push({id: genId(), author, text, at: Date.now(), replies: []});
+  }
+  a.value = ""; t.value = "";
+  cancelReply();
+  renderCommentEditList();
+};
+
+/* text toolbar — bold/italic/quote/hr only, no media (media has its own section now) */
+document.querySelectorAll(".toolbar button").forEach(btn=>{
+  btn.onclick = ()=>{
+    const cmd = btn.dataset.cmd;
+    const body = document.getElementById("fBody");
+    body.focus();
+    if(cmd === "bold") document.execCommand("bold");
+    else if(cmd === "italic") document.execCommand("italic");
+    else if(cmd === "quote") document.execCommand("insertHTML", false, "<blockquote>引用文字</blockquote><div><br></div>");
+    else if(cmd === "hr") document.execCommand("insertHTML", false, "<hr>");
+  };
+});
+
+/* save */
+async function finalizeMedia(postId){
+  const finalList = [];
+  for(const m of editingMedia){
+    if(m.type === "file" && m.previewUrl){
+      const file = pendingUploads.get(m.ref);
+      if(!file) continue;
+      const ext = (file.name.split(".").pop() || "bin").toLowerCase();
+      const filename = `${postId}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,6)}.${ext}`;
+      await writeMediaFile(filename, file);
+      pendingUploads.delete(m.ref);
+      finalList.push({type:"file", kind:m.kind, ref:filename});
+    } else {
+      finalList.push({type:m.type, kind:m.kind, ref:m.ref});
+    }
+  }
+  return finalList;
+}
+document.getElementById("saveBtn").onclick = async ()=>{
+  const title = document.getElementById("fTitle").value.trim();
+  const author = document.getElementById("fAuthor").value.trim();
+  const tags = document.getElementById("fTags").value.trim().split(/[\s,，]+/).filter(Boolean);
+  const source = document.getElementById("fSource").value.trim();
+  const body = document.getElementById("fBody").innerHTML.trim();
+  const id = editingId || genId();
+  const existing = editingId ? allPosts.find(p=>p.id===editingId) : null;
+  const createdAt = existing ? existing.createdAt : Date.now();
+
+  if(!title && !plainSnippet(body) && editingMedia.length===0){ showToast("标题、正文、图片至少填一个"); return; }
+
+  const media = await finalizeMedia(id);
+  const post = {id, title, author, body, tags, source, comments: editingComments, media, createdAt};
+  await writePostToDisk(post);
+  closeEditor();
+  await reload();
+  showToast(editingId ? "已更新" : "已收藏");
+};
+document.getElementById("deleteBtn").onclick = async ()=>{
+  if(!editingId) return;
+  if(!confirm("确定删除这条收藏吗？此操作不可撤销。")) return;
+  const p = allPosts.find(x=>x.id===editingId);
+  await deletePostFromDisk(p);
+  closeEditor();
+  await reload();
+  showToast("已删除");
+};
+document.getElementById("addBtn").onclick = ()=> openEditor(null);
+document.getElementById("editorClose").onclick = closeEditor;
+
+/* search */
+document.getElementById("searchInput").oninput = (e)=>{ searchTerm = e.target.value; renderGrid(); };
+
+/* toast */
+let toastTimer;
+function showToast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> t.classList.remove("show"), 2400);
+}
+
+/* boot */
+async function reload(){
+  allPosts = await getAllPostsFromDisk();
+  renderGrid();
+}
+init();
+
+document.getElementById("readerOverlay").addEventListener("click", (e)=>{ if(e.target.id === "readerOverlay") closeReader(); });
+</script>
+</body>
+</html>
