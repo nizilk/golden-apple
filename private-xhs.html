@@ -7,10 +7,12 @@
 <style>
   :root{
     --bg:#FAF7F5; --card:#FFFFFF; --ink:#2B2622; --muted:#9A8F86; --media-bg:#F2F2F2;
-    --accent:#D94F63; --accent-soft:#F6DDE1; --tag-bg:#F3EBE7; --line:#EEE3DD; --link:#3B6FD9;
+    --accent:#D94F63; --accent-soft:#F6DDE1; --tag-bg:#F3EBE7; --line:#EEE3DD; --link:#3B6FD9; --sidebar-bg:#FFFFFF;
     --shadow: 0 1px 2px rgba(43,38,34,0.04), 0 8px 24px rgba(43,38,34,0.06);
   }
   *{box-sizing:border-box;}
+  input, textarea, select{ background:var(--card); color:var(--ink); }
+  :root{ color-scheme:light; }
   html{ scrollbar-width:none; }
   html::-webkit-scrollbar{ display:none; }
   *{ scrollbar-width:none; }
@@ -21,7 +23,7 @@
   body.dark{
     --bg:#0f0f0f; --card:#171717; --ink:#f5f5f5; --muted:#999999;
     --accent:#ff2442; --accent-soft:#3a171d; --tag-bg:#242424; --line:#2c2c2c;
-    --link:#6fa0ff; --media-bg:#080808;
+    --link:#6fa0ff; --media-bg:#080808; --sidebar-bg:#000000; color-scheme:dark;
   }
 
   #connectScreen{ min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px; }
@@ -30,11 +32,9 @@
   #connectScreen p{ color:var(--muted); font-size:13.5px; line-height:1.8; max-width:440px; margin:0 0 22px; }
   #connectScreen .warn{ color:#b5482f; font-size:12.5px; max-width:420px; }
 
-  header{ position:sticky; top:0; z-index:20; background:rgba(250,247,245,0.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--line); padding:14px 24px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
-  body.dark header{ background:rgba(15,15,15,0.92); }
-  header h1{ font-size:19px; margin:0; letter-spacing:1px; }
   .search{ flex:1; min-width:180px; max-width:380px; display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--line); border-radius:999px; padding:8px 16px; }
   .search input{ border:none; outline:none; flex:1; font-size:14px; background:transparent; color:var(--ink); }
+  #searchClear{ cursor:pointer; color:var(--muted); padding:0 2px; font-size:13px; }
   .btn{ border:none; border-radius:999px; padding:8px 16px; font-size:13px; cursor:pointer; font-weight:600; transition:transform .12s ease; white-space:nowrap; display:inline-flex; align-items:center; justify-content:center; line-height:1.2; }
   .btn:active{ transform:scale(0.96); }
   .btn-primary{ background:var(--accent); color:#fff; box-shadow:0 4px 14px rgba(217,79,99,0.35); }
@@ -46,8 +46,325 @@
   #filterTagLabel{ color:var(--accent); font-weight:600; }
   #clearFilter{ margin-left:auto; color:var(--muted); text-decoration:underline; cursor:pointer; }
 
-  main{ padding:20px 24px 80px; }
-  .grid{ display:grid; grid-template-columns:repeat(5,minmax(190px,1fr)); grid-auto-rows:8px; gap:16px; align-items:start; }
+  .app-shell{ display:flex; align-items:stretch; min-height:100vh; }
+  
+  /* ================================
+    左侧页面栏
+    ================================ */
+
+  #categorySidebar{
+    width:200px;
+    flex-shrink:0;
+    background:var(--sidebar-bg);
+    padding:28px 18px;
+    position:sticky;
+    top:0;
+    height:100vh;
+    align-self:flex-start;
+    overflow-y:auto;
+    border-right:1px solid var(--line);
+  }
+
+  .sidebar-brand{
+    font-size:18px;
+    font-weight:600;
+    margin:2px 0 24px;
+    font-family:"Songti SC","Noto Serif SC",serif;
+    color:var(--accent);
+    text-align:center;
+    letter-spacing:0.5px;
+  }
+
+
+  /* 页面项目 */
+
+  .cat-item{
+    padding:10px 16px;
+    border-radius:10px;
+    font-size:14px;
+    color:var(--ink);
+    cursor:pointer;
+    margin:0 8px 4px;
+    font-weight:500;
+    line-height:1.4;
+    height:40px;
+    display:flex;
+    align-items:center;
+  }
+
+  .cat-label{
+    flex:1;
+    min-width:0;
+
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .cat-item:hover{
+    background:var(--tag-bg);
+  }
+
+  .cat-item.active{
+    background:var(--accent);
+    color:#fff;
+  }
+
+
+  /* 新建页面 */
+
+  .cat-item.sb-add{
+    color:var(--accent);
+    font-size:13px;
+    margin-top:6px;
+  }
+
+
+  /* 管理按钮 */
+
+  .cat-item.cat-manage{
+    color:var(--muted);
+    font-size:13px;
+    margin-top:6px;
+  }
+
+  .cat-item.cat-manage:hover{
+    color:var(--ink);
+  }
+
+
+  /* ================================
+    页面右侧 ⋯
+    ================================ */
+
+  .sb-more{
+    flex:0 0 auto;
+
+    width:24px;
+    height:24px;
+
+    margin-left:5px;
+    padding:0;
+
+    border:0;
+    border-radius:6px;
+
+    background:transparent;
+    color:var(--muted);
+
+    font-size:18px;
+    line-height:20px;
+
+    cursor:pointer;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    opacity:0;
+
+    transition:
+      opacity .12s ease,
+      background .12s ease,
+      color .12s ease;
+  }
+
+
+  /* 只有鼠标经过页面时才显示 ⋯ */
+
+  .cat-item:hover .sb-more,
+  .sb-more:focus-visible{
+    opacity:1;
+  }
+
+  .sb-more:hover{
+    background:var(--line);
+    color:var(--ink);
+  }
+
+
+  /* 当前页面是红色背景时，⋯ 要适配 */
+
+  .cat-item.active .sb-more{
+    color:rgba(255,255,255,0.75);
+  }
+
+  .cat-item.active .sb-more:hover{
+    color:#fff;
+    background:rgba(255,255,255,0.15);
+  }
+
+
+  /* ================================
+    原地重命名
+    ================================ */
+.cat-item.inline-page-edit{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  padding:10px 8px;
+  background:var(--tag-bg);
+}
+
+.inline-page-name-input{
+  flex:1;
+  min-width:0;
+  width:0;
+  height:28px;
+  border:1px solid var(--line);
+  background:var(--card);
+  color:var(--ink);
+  border-radius:7px;
+  padding:0 7px;
+  outline:none;
+  font-family:inherit;
+  font-size:14px;
+  font-weight:500;
+  line-height:26px;
+}
+
+  .inline-page-name-input:focus{
+    border-color:var(--accent);
+  }
+
+  .inline-page-edit-actions{
+    display:flex;
+    gap:0px;
+    flex-shrink:0;
+  }
+
+  .inline-page-edit-actions button{
+    border:0;
+    background:transparent;
+    color:var(--muted);
+
+    cursor:pointer;
+
+    width:20px;
+    height:20px;
+    border-radius:5px;
+    padding:0;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+.inline-save-btn::before{
+  content:"";
+  width:9px;
+  height:5px;
+  border-left:1.5px solid currentColor;
+  border-bottom:1.5px solid currentColor;
+  transform:rotate(-45deg);
+  margin-top:-3px;
+}
+
+  .inline-page-edit-actions button:hover{
+    background:var(--line);
+    color:var(--ink);
+  }
+
+
+  /* ================================
+    页面操作菜单
+    ================================ */
+
+  .page-action-menu{
+    width:160px;
+
+    background:var(--card);
+    color:var(--ink);
+
+    border:1px solid var(--line);
+    border-radius:10px;
+
+    box-shadow:
+      0 4px 12px rgba(43,38,34,0.08),
+      0 12px 30px rgba(43,38,34,0.12);
+
+    padding:5px;
+
+    z-index:100;
+    overflow:hidden;
+
+    animation:pageMenuIn .12s ease-out;
+  }
+
+  @keyframes pageMenuIn{
+    from{
+      opacity:0;
+      transform:translateY(-3px) scale(.98);
+    }
+    to{
+      opacity:1;
+      transform:translateY(0) scale(1);
+    }
+  }
+
+  .page-action-menu button{
+    display:flex;
+    align-items:center;
+
+    width:100%;
+    min-height:34px;
+
+    padding:7px 10px;
+
+    border:0;
+    border-radius:7px;
+
+    background:transparent;
+    color:var(--ink);
+
+    font-family:inherit;
+    font-size:13px;
+
+    text-align:left;
+
+    cursor:pointer;
+  }
+
+  .page-action-menu button:hover{
+    background:var(--tag-bg);
+  }
+
+  .page-action-menu button.danger{
+    color:#c0394a;
+    background:transparent;
+  }
+
+  .page-action-menu button.danger:hover{
+    color:#c0394a;
+    background:var(--tag-bg);
+  }
+
+  body.dark .page-action-menu button.danger{
+    color:#ff7185;
+    background:transparent;
+  }
+
+  body.dark .page-action-menu button.danger:hover{
+    color:#ff7185;
+    background:rgba(255,36,66,0.16);
+  }
+
+  #selectionBar{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; background:var(--tag-bg); border-radius:12px; padding:12px 16px; margin-bottom:16px; font-size:13.5px; color:var(--ink); }
+
+  
+  .page-config-tags{ display:flex; flex-wrap:wrap; gap:6px; }
+  .cfg-tag-chip{ font-size:11.5px; padding:3px 10px; border-radius:999px; background:var(--card); color:var(--muted); cursor:pointer; border:1px solid var(--line); }
+  .cfg-tag-chip.on{ background:var(--accent); color:#fff; border-color:var(--accent); }
+  #selectionBar .btn{ margin-left:auto; }
+  .select-check{ position:absolute; top:10px; right:10px; z-index:3; width:24px; height:24px; border-radius:50%; background:rgba(0,0,0,0.4); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; border:2px solid rgba(255,255,255,0.85); }
+  .select-check.checked{ background:var(--accent); border-color:var(--accent); }
+
+  .app-main{ flex:1; min-width:0; display:flex; flex-direction:column; }
+  .app-topbar{ position:sticky; top:0; z-index:20; background:rgba(250,247,245,0.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--line); padding:14px 24px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  body.dark .app-topbar{ background:rgba(15,15,15,0.92); }
+  main{ flex:1; min-width:0; padding:24px 33px 80px; }
+
+  .grid{ display:grid; grid-template-columns:repeat(5,minmax(190px,1fr)); grid-auto-rows:8px; gap:22px; align-items:start; }
   @media (max-width:1100px){ .grid{ grid-template-columns:repeat(3,minmax(180px,1fr)); } }
   @media (max-width:700px){ .grid{ grid-template-columns:repeat(2,minmax(150px,1fr)); } }
   .card{ margin-bottom:0; background:var(--card); border-radius:16px; overflow:hidden; box-shadow:var(--shadow); cursor:pointer; position:relative; border:1px solid var(--line); transition:transform .15s ease, box-shadow .15s ease; }
@@ -74,6 +391,71 @@
   .overlay.show{ display:flex; }
   .sheet{ background:var(--card); width:100%; max-width:640px; border-radius:20px; padding:28px 28px 32px; box-shadow:var(--shadow); position:relative; margin:auto; }
   .sheet-close{ position:absolute; top:18px; right:18px; background:var(--tag-bg); border:none; width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:14px; color:var(--muted); z-index:5; }
+
+.page-name-sheet{
+  width:min(380px, calc(100vw - 32px));
+  background:var(--card);
+  border-radius:16px;
+  padding:54px 24px 20px;
+  box-shadow:var(--shadow);
+  position:relative;
+}
+
+.page-name-close{
+  position:absolute;
+  top:14px;
+  right:14px;
+  width:28px;
+  height:28px;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  font-size:16px;
+  line-height:28px;
+  text-align:center;
+  cursor:pointer;
+}
+
+.page-name-close:hover{
+  color:var(--ink);
+}
+
+.page-name-input{
+  display:block;
+  width:100%;
+  height:44px;
+  padding:0 13px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  outline:none;
+  background:var(--card);
+  color:var(--ink);
+  font-family:inherit;
+  font-size:14px;
+  line-height:44px;
+  transition:border-color .15s ease, box-shadow .15s ease;
+}
+
+.page-name-input::placeholder{
+  color:var(--muted);
+}
+
+.page-name-input:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-soft);
+}
+
+.page-name-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  margin-top:16px;
+}
+
+.page-name-actions .btn{
+  min-width:64px;
+}
 
   .reader-sheet{ width:min(1180px,94vw); height:min(860px,92vh); background:var(--card); border-radius:18px; overflow:hidden; display:grid; grid-template-columns:minmax(0,1fr) 450px; box-shadow:var(--shadow); position:relative; margin:auto; }
   .reader-sheet.no-media{ grid-template-columns:1fr; max-width:640px; }
@@ -291,8 +673,12 @@
   .media-thumb .rm{ position:absolute; top:3px; right:3px; background:rgba(0,0,0,0.55); color:#fff; width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; cursor:pointer; }
   .media-buttons{ display:flex; gap:8px; }
 
-  .comment-row{ display:flex; gap:8px; margin-bottom:6px; }
-  .comment-row input{ flex:1; border:1px solid var(--line); border-radius:8px; padding:7px 10px; font-size:13px; outline:none; background:var(--card); color:var(--ink); }
+  .comment-row{ display:flex; gap:8px; margin-bottom:6px; align-items:flex-end; }
+  .comment-row input, .comment-row textarea{ font-size:13px !important; font-family:inherit; border:1px solid var(--line); border-radius:8px !important; padding:7px 10px !important; outline:none; background:var(--card); color:var(--ink); }
+  .comment-row input{ flex:1; }
+  .comment-row #cAuthor{ flex:0 0 90px; }
+  
+  .comment-row textarea{ flex:1; border:1px solid var(--line); border-radius:8px; padding:7px 10px; font-size:13px; outline:none; background:var(--card); color:var(--ink); resize:none; overflow-y:auto; max-height:140px; line-height:1.5; font-family:inherit; }
   .reply-hint{ display:none; font-size:11.5px; color:var(--muted); margin-bottom:8px; }
   .reply-hint a{ color:var(--muted); margin-left:8px; cursor:pointer; text-decoration:underline; }
   .comment-list-edit{ margin-bottom:10px; }
@@ -300,6 +686,12 @@
   .comment-item-edit .actions{ white-space:nowrap; }
   .comment-item-edit .rm{ color:var(--muted); cursor:pointer; font-size:12px; margin-left:10px; display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:6px; }
   .comment-item-edit .rm:hover{ background:var(--tag-bg); color:var(--ink); }
+
+  .comment-item-editing{ flex-direction:column; align-items:stretch; gap:6px; padding:10px 0; }
+  .inline-edit-author{ font-size:13px !important; font-family:inherit; border:1px solid var(--line); border-radius:8px !important; padding:7px 10px !important; outline:none; background:var(--card); color:var(--ink); width:120px; }
+  .inline-edit-text{ font-size:13px; font-family:inherit; border:1px solid var(--line); border-radius:8px; padding:7px 10px; outline:none; background:var(--card); color:var(--ink); resize:none; overflow-y:auto; max-height:140px; line-height:1.5; }
+  .inline-edit-actions{ display:flex; gap:8px; justify-content:flex-end; }
+  .inline-edit-actions .rm{ width:26px; height:26px; }
 
   .footer-actions{ display:flex; justify-content:space-between; align-items:center; margin-top:20px; gap:10px; }
 
@@ -328,31 +720,34 @@
   <p class="warn" id="unsupportedWarn" style="display:none;">你当前的浏览器不支持直接读写本地文件夹，请用电脑版 Chrome 或 Edge 打开这个文件。</p>
 </div>
 
-<div id="app" style="display:none;">
-  <header>
-    <h1 class="serif">✿ 我的收藏</h1>
-    <div class="search">
-      <span>🔍</span>
-      <input id="searchInput" type="text" placeholder="搜索标题 / 正文 / 标签 / 来源">
+<div id="app" class="app-shell" style="display:none;">
+  <aside id="categorySidebar">
+    <div class="sidebar-brand">✿ 我的收藏</div>
+  </aside>
+  <div class="app-main">
+    <div class="app-topbar">
+      <div class="search">
+        <span>🔍</span>
+        <input id="searchInput" type="text" placeholder="搜索标题 / 正文 / 标签 / 来源">
+        <span id="searchClear" style="display:none;">✕</span>
+      </div>
+      <span class="folder-name" id="currentFolderName"></span>
+      <button class="btn btn-icon btn-ghost" id="themeToggle" title="切换深色/浅色">☾</button>
+      <button class="btn btn-ghost" id="switchFolderBtn">更换收藏文件夹</button>
     </div>
-    <span class="folder-name" id="currentFolderName"></span>
-    <button class="btn btn-icon btn-ghost" id="themeToggle" title="切换深色/浅色">☾</button>
-    <button class="btn btn-ghost" id="switchFolderBtn">更换收藏文件夹</button>
-  </header>
-
-  <div id="filterBar">
-    正在查看标签 <span id="filterTagLabel"></span>
-    <a id="clearFilter">清除筛选</a>
+    <main>
+      <div id="selectionBar" style="display:none;">
+        <div id="pageConfigTags" class="page-config-tags"></div>
+        <span id="selectionCount"></span>
+        <button class="btn btn-primary" id="selectionDoneBtn">完成</button>
+      </div>
+      <div class="grid" id="grid"></div>
+      <div class="empty" id="emptyState" style="display:none;">
+        <div class="big">🌱</div>
+        <div>还没有收藏，点右下角 ＋ 添加第一条</div>
+      </div>
+    </main>
   </div>
-
-  <main>
-    <div class="grid" id="grid"></div>
-    <div class="empty" id="emptyState" style="display:none;">
-      <div class="big">🌱</div>
-      <div>还没有收藏，点右下角 ＋ 添加第一条</div>
-    </div>
-  </main>
-
   <button class="fab" id="addBtn">＋</button>
 </div>
 
@@ -412,7 +807,7 @@
       <div class="reply-hint" id="replyHint"></div>
       <div class="comment-row">
         <input type="text" id="cAuthor" placeholder="昵称">
-        <input type="text" id="cText" placeholder="评论内容">
+        <textarea id="cText" placeholder="评论内容" rows="1"></textarea>
         <button class="btn btn-ghost" id="cAdd" type="button">添加</button>
       </div>
     </div>
@@ -420,6 +815,25 @@
     <div class="footer-actions">
       <button class="btn btn-ghost" id="deleteBtn" style="display:none; color:#c0394a; border-color:#f0c9d0;">删除</button>
       <button class="btn btn-primary" id="saveBtn">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="renameOverlay">
+  <div class="page-name-sheet">
+    <button class="page-name-close" id="renameClose" type="button">✕</button>
+
+    <input
+      type="text"
+      id="renameInput"
+      class="page-name-input"
+      placeholder="页面名称"
+      autocomplete="off"
+    >
+
+    <div class="page-name-actions">
+      <button class="btn btn-primary" id="renameSave" type="button">保存</button>
+      <button class="btn btn-ghost" id="renameCancel" type="button">取消</button>
     </div>
   </div>
 </div>
@@ -471,8 +885,10 @@ function loadHandle(key){
 let rootHandle=null, appDirHandle=null, postsDirHandle=null, mediaDirHandle=null;
 let libraryFiles=[];
 let allPosts=[];
-let activeTag=null, searchTerm="";
-let editingId=null, editingComments=[], replyTarget=null, editingMedia=[];
+let activeTag=null, activePage=null, searchTerm="";
+let pages=[];
+let homePageId=null, editingPageId=null;
+let editingId=null, editingComments=[], replyTarget=null, editingMedia=[], editingCommentId=null;
 const dbFolderName = "【RedNote】";
 const pendingUploads = new Map();
 
@@ -560,8 +976,13 @@ async function connectFolder(remembered){
     postsDirHandle = await appDirHandle.getDirectoryHandle("posts", {create:true});
     mediaDirHandle = await appDirHandle.getDirectoryHandle("media", {create:true});
 
+    const pagesData = await loadPagesData();
+    pages = pagesData.list;
+    homePageId = pagesData.home;
+    if(homePageId && pages.find(pg=>pg.id===homePageId)) activePage = homePageId;
+
     document.getElementById("connectScreen").style.display = "none";
-    document.getElementById("app").style.display = "block";
+    document.getElementById("app").style.display = "flex";
     document.getElementById("currentFolderName").textContent = `📁 ${rootHandle.name}`;
 
     await scanAssetLibrary();
@@ -593,6 +1014,35 @@ async function scanAssetDirectory(dirHandle, prefix){
   }
 }
 function isVideoName(name){ return /\.(mp4|webm|mov|m4v)$/i.test(name); }
+
+async function loadPagesData(){
+  try{
+    const fh = await appDirHandle.getFileHandle("pages.json");
+    const data = JSON.parse(await (await fh.getFile()).text());
+    if(Array.isArray(data)) return {home:null, list:data};
+    return {home: data.home||null, list: data.list||[]};
+  }catch(e){ return {home:null, list:[]}; }
+}
+async function savePagesData(){
+  const fh = await appDirHandle.getFileHandle("pages.json", {create:true});
+  const w = await fh.createWritable();
+  await w.write(JSON.stringify({home: homePageId, list: pages}));
+  await w.close();
+}
+
+function pageIncludesPost(pg, p){
+  if((pg.excludes||[]).includes(p.id)) return false;
+  if((pg.includes||[]).includes(p.id)) return true;
+  return (p.tags||[]).some(t => (pg.tags||[]).includes(t));
+}
+async function togglePageMembership(pg, p){
+  const wasIn = pageIncludesPost(pg, p);
+  pg.includes = (pg.includes||[]).filter(id => id !== p.id);
+  pg.excludes = (pg.excludes||[]).filter(id => id !== p.id);
+  if(wasIn) pg.excludes.push(p.id);
+  else pg.includes.push(p.id);
+  await savePagesData();
+}
 
 /* ================= disk I/O: posts stored as one .html file each (original design, kept) ================= */
 async function getAllPostsFromDisk(){
@@ -811,19 +1261,379 @@ function matchesSearch(p, term){
   const hay = [p.title, plainSnippet(p.body), (p.tags||[]).join(" "), p.source||"", p.author||"", commentsToText(p.comments)].join(" ").toLowerCase();
   return hay.includes(term.toLowerCase());
 }
-function renderFilterBar(){
-  const bar = document.getElementById("filterBar");
-  if(activeTag){
-    bar.style.display = "flex";
-    document.getElementById("filterTagLabel").textContent = `#${activeTag}`;
-  } else {
-    bar.style.display = "none";
+
+let sidebarEditMode = false;    // 右侧正在编辑页面内容
+let inlineRenamePageId = null;  // 左栏正在改名字
+
+function renderCategorySidebar(){
+  const el = document.getElementById("categorySidebar");
+  if(!el) return;
+
+  const homePage = pages.find(pg => pg.id === homePageId);
+  const others = pages.filter(pg => pg.id !== homePageId);
+
+  function itemHtml(pg){
+    // 正在重命名时，仍然使用原来的原地编辑
+    if(inlineRenamePageId === pg.id && sidebarEditMode){
+      return `
+        <div class="cat-item inline-page-edit ${activePage===pg.id?"active":""}" data-page="${pg.id}">
+          <input
+            class="inline-page-name-input"
+            data-inline-name="${pg.id}"
+            value="${escapeHtml(pg.name)}"
+            aria-label="页面名称"
+          >
+          <span class="inline-page-edit-actions">
+            <button type="button" class="inline-save-btn" data-inline-save="${pg.id}" title="保存" aria-label="保存"></button>
+            <button type="button" data-inline-cancel="${pg.id}" title="取消">✕</button>
+          </span>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="cat-item ${activePage===pg.id?"active":""}" data-page="${pg.id}">
+        <span class="cat-label">${escapeHtml(pg.name)}</span>
+
+        ${sidebarEditMode ? `
+          <button
+            type="button"
+            class="sb-more"
+            data-more="${pg.id}"
+            title="页面操作"
+            aria-label="页面操作"
+          >⋯</button>
+        ` : ""}
+      </div>
+    `;
   }
+
+  let html = "";
+
+  // 首页
+  if(homePage){
+    html += itemHtml(homePage);
+  }
+
+  // 全部
+  html += `
+    <div class="cat-item ${activePage===null?"active":""}" data-page="">
+      <span class="cat-label">全部</span>
+    </div>
+  `;
+
+  // 其他页面
+  others.forEach(pg => {
+    html += itemHtml(pg);
+  });
+
+  // 管理状态下显示新建
+  if(sidebarEditMode){
+    html += `
+      <div class="cat-item sb-add" id="sbAddPage">
+        <span class="cat-label">＋ 新建页面</span>
+      </div>
+    `;
+  }
+
+  // 管理 / 完成
+  html += `
+    <div class="cat-item cat-manage" id="sidebarEditToggle">
+      <span class="cat-label">
+        ${sidebarEditMode ? "完成" : "管理"}
+      </span>
+    </div>
+  `;
+
+  el.innerHTML = `
+    <div class="sidebar-brand">✿ 我的收藏</div>
+    ${html}
+  `;
+
+
+  // --------------------------------------------------
+  // 点击页面
+  // --------------------------------------------------
+
+  el.querySelectorAll(".cat-item[data-page]").forEach(item=>{
+    item.onclick = (e)=>{
+      // 点击 ⋯ 时，不切换页面
+      if(e.target.closest(".sb-more")) return;
+
+      // 如果正在重命名，也不要触发页面切换
+      if(e.target.closest(".inline-page-edit")) return;
+
+      activePage = item.dataset.page || null;
+
+      renderCategorySidebar();
+      renderGrid();
+
+      window.scrollTo({
+        top:0,
+        behavior:"smooth"
+      });
+    };
+  });
+
+
+  // --------------------------------------------------
+  // 页面 ⋯ 菜单
+  // --------------------------------------------------
+
+  el.querySelectorAll("[data-more]").forEach(btn=>{
+    btn.onclick = (e)=>{
+      e.stopPropagation();
+
+      const pageId = btn.dataset.more;
+      showPageActionMenu(btn, pageId);
+    };
+  });
+
+
+  // --------------------------------------------------
+  // 原地重命名
+  // --------------------------------------------------
+
+  el.querySelectorAll("[data-inline-save]").forEach(btn=>{
+    btn.onclick = async (e)=>{
+      e.stopPropagation();
+
+      const id = btn.dataset.inlineSave;
+      const pg = pages.find(x=>x.id===id);
+      const input = el.querySelector(`[data-inline-name="${id}"]`);
+
+      if(!pg || !input) return;
+
+      const name = input.value.trim();
+
+      if(!name){
+        input.focus();
+        return;
+      }
+
+      pg.name = name;
+      inlineRenamePageId = null;
+
+      await savePagesData();
+      renderCategorySidebar();
+    };
+  });
+
+
+  // --------------------------------------------------
+  // 取消重命名
+  // --------------------------------------------------
+
+  el.querySelectorAll("[data-inline-cancel]").forEach(btn=>{
+    btn.onclick = (e)=>{
+      e.stopPropagation();
+
+      inlineRenamePageId = null;
+      renderCategorySidebar();
+    };
+  });
+
+
+  // --------------------------------------------------
+  // 重命名输入框
+  // --------------------------------------------------
+
+  el.querySelectorAll("[data-inline-name]").forEach(input=>{
+    input.onkeydown = async (e)=>{
+      e.stopPropagation();
+
+      if(e.key === "Enter"){
+        e.preventDefault();
+
+        const pg = pages.find(
+          x => x.id === input.dataset.inlineName
+        );
+
+        const name = input.value.trim();
+
+        if(pg && name){
+          pg.name = name;
+          inlineRenamePageId = null;
+
+          await savePagesData();
+          renderCategorySidebar();
+        }
+
+      }else if(e.key === "Escape"){
+        inlineRenamePageId = null;
+        renderCategorySidebar();
+      }
+    };
+
+    input.onclick = e => e.stopPropagation();
+  });
+
+
+  // --------------------------------------------------
+  // 管理 / 完成
+  // --------------------------------------------------
+
+  const editToggleBtn = document.getElementById("sidebarEditToggle");
+
+  if(editToggleBtn){
+    editToggleBtn.onclick = ()=>{
+      sidebarEditMode = !sidebarEditMode;
+
+      // 离开管理模式时，取消正在进行的重命名
+      if(!sidebarEditMode){
+        inlineRenamePageId = null;
+      }
+
+      renderCategorySidebar();
+    };
+  }
+
+
+  // --------------------------------------------------
+  // 新建页面
+  // --------------------------------------------------
+  const addBtn = document.getElementById("sbAddPage");
+
+  if(addBtn){
+    addBtn.onclick = ()=>{
+      openRenameModal(null);
+    };
+  }
+  
 }
-document.getElementById("clearFilter").onclick = ()=>{ activeTag = null; renderFilterBar(); renderGrid(); };
-function setActiveTag(tag){
-  activeTag = tag;
-  renderFilterBar();
+
+function showPageActionMenu(anchor, pageId){
+
+  // 如果已经有菜单，先删除
+  document.querySelectorAll(".page-action-menu").forEach(el=>{
+    el.remove();
+  });
+
+  const pg = pages.find(x => x.id === pageId);
+  if(!pg) return;
+
+  const menu = document.createElement("div");
+  menu.className = "page-action-menu";
+
+  menu.innerHTML = `
+    <button type="button" data-action="home">
+      ${homePageId === pageId ? "取消首页" : "设为首页"}
+    </button>
+
+    <button type="button" data-action="rename">
+      重命名
+    </button>
+
+    <button type="button" data-action="content">
+      编辑内容
+    </button>
+
+    <button type="button" data-action="delete" class="danger">
+      删除
+    </button>
+  `;
+
+  document.body.appendChild(menu);
+
+  const rect = anchor.getBoundingClientRect();
+  const menuWidth = 160;
+  let left = rect.left;
+  if(left + menuWidth > window.innerWidth - 8) left = window.innerWidth - menuWidth - 8;
+
+  menu.style.position = "fixed";
+  menu.style.left = `${left}px`;
+  menu.style.top = `${rect.bottom + 6}px`;
+
+
+  // 设为首页
+  menu.querySelector('[data-action="home"]').onclick = async ()=>{
+    homePageId = (homePageId === pageId) ? null : pageId;
+
+    await savePagesData();
+
+    menu.remove();
+    renderCategorySidebar();
+  };
+
+
+  // 重命名
+  menu.querySelector('[data-action="rename"]').onclick = ()=>{
+    inlineRenamePageId = pageId;
+
+    menu.remove();
+    renderCategorySidebar();
+
+    const input = document.querySelector(
+      `[data-inline-name="${pageId}"]`
+    );
+
+    if(input){
+      input.focus();
+      input.select();
+    }
+  };
+
+
+  // 编辑内容
+  menu.querySelector('[data-action="content"]').onclick = ()=>{
+    menu.remove();
+
+    enterPageSelectionMode(pageId);
+  };
+
+
+  // 删除
+  menu.querySelector('[data-action="delete"]').onclick = async ()=>{
+
+    menu.remove();
+
+    if(!confirm("删除这个页面？（不会删除任何帖子）")){
+      return;
+    }
+
+    pages = pages.filter(x => x.id !== pageId);
+
+    if(homePageId === pageId){
+      homePageId = null;
+    }
+
+    if(activePage === pageId){
+      activePage = null;
+    }
+
+    if(editingPageId === pageId){
+      exitPageSelectionMode();
+    }
+
+    await savePagesData();
+
+    renderCategorySidebar();
+    renderGrid();
+  };
+
+
+  // 点击菜单外关闭
+  setTimeout(()=>{
+    const closeMenu = (e)=>{
+
+      if(
+        !menu.contains(e.target) &&
+        e.target !== anchor
+      ){
+        menu.remove();
+        document.removeEventListener("click", closeMenu);
+      }
+    };
+
+    document.addEventListener("click", closeMenu);
+  }, 0);
+}
+
+function searchByTag(tag){
+  const input = document.getElementById("searchInput");
+  input.value = tag;
+  searchTerm = tag;
+  document.getElementById("searchClear").style.display = "inline";
   renderGrid();
   window.scrollTo({top:0, behavior:"smooth"});
 }
@@ -849,9 +1659,16 @@ window.addEventListener("resize", ()=>{
 function renderGrid(){
   const grid = document.getElementById("grid");
   const empty = document.getElementById("emptyState");
+  const editPg = editingPageId ? pages.find(x=>x.id===editingPageId) : null;
   let list = allPosts;
-  if(activeTag) list = list.filter(p => (p.tags||[]).includes(activeTag));
-  if(searchTerm) list = list.filter(p => matchesSearch(p, searchTerm));
+
+  if(!editPg){
+    if(activePage){
+      const pg = pages.find(x => x.id === activePage);
+      if(pg) list = list.filter(p => pageIncludesPost(pg, p));
+    }
+    if(searchTerm) list = list.filter(p => matchesSearch(p, searchTerm));
+  }
 
   if(list.length === 0){
     grid.innerHTML = "";
@@ -864,8 +1681,10 @@ function renderGrid(){
     const firstImg = (p.media||[]).find(m => m.kind !== "video");
     const snippet = plainSnippet(p.body);
     const thumbAttr = firstImg ? (firstImg.type === "file" ? "data-file" : "data-asset-path") : null;
+    const checked = editPg ? pageIncludesPost(editPg, p) : false;
     return `
       <div class="card ${firstImg ? "" : "no-media-card"}" data-id="${p.id}">
+        ${editPg ? `<div class="select-check ${checked?"checked":""}">${checked?"✓":""}</div>` : ""}
         ${p.source && firstImg ? `<div class="ribbon">${escapeHtml(p.source)}</div>` : ""}
         ${firstImg ? `<img class="thumb" ${thumbAttr}="${escapeHtml(firstImg.ref)}">` : ""}
         <div class="card-body">
@@ -876,16 +1695,167 @@ function renderGrid(){
         </div>
       </div>`;
   }).join("");
-  grid.querySelectorAll(".card").forEach(card=>{ card.onclick = ()=> openReader(card.dataset.id); });
-  grid.querySelectorAll(".card-tags span").forEach(span=>{
-    span.onclick = (e)=>{ e.stopPropagation(); setActiveTag(span.dataset.tag); };
-  });
+
+  if(editPg){
+    grid.querySelectorAll(".card").forEach(card=>{
+      card.onclick = async (e)=>{
+        e.stopPropagation();
+        await togglePageMembership(editPg, allPosts.find(x=>x.id===card.dataset.id));
+        renderGrid();
+        updateSelectionCount();
+      };
+    });
+  } else {
+    grid.querySelectorAll(".card").forEach(card=>{ card.onclick = ()=> openReader(card.dataset.id); });
+    grid.querySelectorAll(".card-tags span").forEach(span=>{
+      span.onclick = (e)=>{ e.stopPropagation(); searchByTag(span.dataset.tag); };
+    });
+  }
   layoutMasonry();
   grid.querySelectorAll("img.thumb").forEach(img=>{
     img.addEventListener("load", ()=> layoutMasonryCard(img.closest(".card")), {once:true});
   });
   hydrateMedia(grid);
 }
+
+function enterPageSelectionMode(pageId){
+  editingPageId = pageId;
+  document.getElementById("selectionBar").style.display = "flex";
+  renderPageConfigBar();
+  renderGrid();
+}
+function renderPageConfigBar(){
+  const pg = pages.find(x=>x.id===editingPageId);
+  if(!pg) return;
+  const allTags = [...new Set(allPosts.flatMap(p=>p.tags||[]))].sort();
+  const tagsEl = document.getElementById("pageConfigTags");
+  tagsEl.innerHTML = allTags.map(t=>{
+    const on = (pg.tags||[]).includes(t);
+    return `<span class="cfg-tag-chip ${on?"on":""}" data-tag="${escapeHtml(t)}">#${escapeHtml(t)}</span>`;
+  }).join("") || `<span class="hint">还没有标签</span>`;
+  tagsEl.querySelectorAll(".cfg-tag-chip").forEach(chip=>{
+    chip.onclick = async ()=>{
+      pg.tags = pg.tags || [];
+      const t = chip.dataset.tag;
+      pg.tags = pg.tags.includes(t) ? pg.tags.filter(x=>x!==t) : [...pg.tags, t];
+      pg.includes = [];
+      pg.excludes = [];
+      await savePagesData();
+      renderPageConfigBar();
+      renderGrid();
+    };
+  });
+  updateSelectionCount();
+}
+
+function exitPageSelectionMode(){
+  editingPageId = null;
+  document.getElementById("selectionBar").style.display = "none";
+  renderGrid();
+}
+function updateSelectionCount(){
+  const pg = pages.find(x=>x.id===editingPageId);
+  if(!pg) return;
+  const count = allPosts.filter(p => pageIncludesPost(pg, p)).length;
+  document.getElementById("selectionCount").textContent = `已选 ${count} 篇`;
+}
+document.getElementById("selectionDoneBtn").onclick = exitPageSelectionMode;
+
+let renameTargetId = null;
+
+function openRenameModal(pageId){
+  renameTargetId = pageId || null;
+
+  const input = document.getElementById("renameInput");
+
+  if(pageId){
+    input.value = pages.find(p=>p.id===pageId)?.name || "";
+  }else{
+    input.value = "";
+  }
+
+  document.getElementById("renameOverlay").classList.add("show");
+
+  setTimeout(()=>{
+    input.focus();
+    input.select();
+  }, 50);
+}
+
+document.getElementById("renameClose").onclick = ()=> document.getElementById("renameOverlay").classList.remove("show");
+document.getElementById("renameCancel").onclick = ()=>{
+  document.getElementById("renameOverlay").classList.remove("show");
+};
+document.getElementById("renameInput").addEventListener("keydown", e=>{
+  if(e.key === "Enter"){
+    e.preventDefault();
+    document.getElementById("renameSave").click();
+  }
+
+  if(e.key === "Escape"){
+    e.preventDefault();
+    document.getElementById("renameOverlay").classList.remove("show");
+  }
+});
+document.getElementById("renameOverlay").addEventListener("click",(e)=>{ if(e.target.id==="renameOverlay") document.getElementById("renameOverlay").classList.remove("show"); });
+
+document.getElementById("renameSave").onclick = async ()=>{
+  const input = document.getElementById("renameInput");
+  const name = input.value.trim();
+
+  if(!name){
+    input.focus();
+    return;
+  }
+
+
+  // ==========================================
+  // 情况 1：重命名已有页面
+  // ==========================================
+
+  if(renameTargetId){
+
+    const pg = pages.find(p => p.id === renameTargetId);
+
+    if(pg){
+      pg.name = name;
+    }
+
+    await savePagesData();
+
+    document.getElementById("renameOverlay").classList.remove("show");
+
+    renderCategorySidebar();
+    return;
+  }
+
+
+  // ==========================================
+  // 情况 2：新建页面
+  // ==========================================
+
+  const pg = {
+    id: genId(),
+    name,
+    tags: [],
+    includes: [],
+    excludes: []
+  };
+
+  pages.push(pg);
+
+  activePage = pg.id;
+
+  await savePagesData();
+
+  document.getElementById("renameOverlay").classList.remove("show");
+
+  // 新建完成后，直接进入页面内容编辑
+  enterPageSelectionMode(pg.id);
+
+  // 左栏也同步刷新
+  renderCategorySidebar();
+};
 
 /* ================= reader ================= */
 function renderCommentsReadonly(comments){
@@ -1061,8 +2031,9 @@ function openReader(id){
 
   sheet.querySelector('[data-act="edit"]').onclick = ()=>{ dd.style.display="none"; closeReader(); openEditor(p.id); };
   sheet.querySelector('[data-act="export"]').onclick = ()=>{ dd.style.display="none"; exportPostSnapshot(p); };
+
   sheet.querySelectorAll(".reader-tags span").forEach(span=>{
-    span.onclick = ()=>{ closeReader(); setActiveTag(span.dataset.tag); };
+    span.onclick = ()=>{ closeReader(); searchByTag(span.dataset.tag); };
   });
 
   const composer = document.getElementById("readerComposer");
@@ -1131,7 +2102,11 @@ function openReader(id){
       quickReplyTarget = el.dataset.replyId;
       expandComposer();
       hint.style.display = "block";
-      hint.innerHTML = `正在回复 @${escapeHtml(el.dataset.replyAuthor)}`;
+      hint.innerHTML = `正在回复 ${escapeHtml(el.dataset.replyAuthor)} <a id="cancelQuickReply">取消</a>`;
+      document.getElementById("cancelQuickReply").onclick = ()=>{
+        quickReplyTarget = null;
+        hint.style.display = "none";
+      };
       input.focus();
     };
   });
@@ -1317,7 +2292,10 @@ function openEditor(id){
   editingComments = [];
   editingMedia = [];
   replyTarget = null;
+  editingCommentId = null;
+  document.getElementById("cAdd").textContent = "添加";
   document.getElementById("replyHint").style.display = "none";
+
   const heading = document.getElementById("editorHeading");
   const deleteBtn = document.getElementById("deleteBtn");
   const fBody = document.getElementById("fBody");
@@ -1348,6 +2326,8 @@ function openEditor(id){
 }
 function closeEditor(){ document.getElementById("editorOverlay").classList.remove("show"); }
 
+
+
 /* two-level comment editing */
 function locateComment(list, id){
   for(const root of list){
@@ -1367,36 +2347,108 @@ function removeCommentNode(list, id){
   }
   return false;
 }
+
 function renderCommentEditList(){
   const el = document.getElementById("commentListEdit");
+  function rowHtml(c, isReply){
+    if(editingCommentId === c.id){
+      return `<div class="comment-item-edit comment-item-editing" style="${isReply?'margin-left:20px;':''}">
+        <input type="text" class="inline-edit-author" data-inline-author="${c.id}" value="${escapeHtml(c.author||'')}" placeholder="昵称">
+        <textarea class="inline-edit-text" data-inline-text="${c.id}" rows="1" placeholder="评论内容">${escapeHtml(c.text||'')}</textarea>
+        <div class="inline-edit-actions">
+          <span class="rm" data-inline-save="${c.id}" title="保存">✓</span>
+          <span class="rm" data-inline-cancel="${c.id}" title="取消">✕</span>
+        </div>
+      </div>`;
+    }
+    return `<div class="comment-item-edit" style="${isReply?'margin-left:20px;':''}"><span>@${escapeHtml(c.author||"匿名")}：${escapeHtml(c.text)}</span><span class="actions"><span class="rm" data-edit="${c.id}" title="编辑">✎</span><span class="rm" data-reply="${c.id}" title="回复">↩</span><span class="rm" data-del="${c.id}" title="删除">⌫</span></span></div>`;
+  }
   let html = "";
   editingComments.forEach(c=>{
-    html += `<div class="comment-item-edit"><span>@${escapeHtml(c.author||"匿名")}：${escapeHtml(c.text)}</span><span class="actions"><span class="rm" data-reply="${c.id}" title="回复">↩</span><span class="rm" data-del="${c.id}" title="删除">⌫</span></span></div>`;
-    (c.replies||[]).forEach(r=>{
-      html += `<div class="comment-item-edit" style="margin-left:20px;"><span>@${escapeHtml(r.author||"匿名")}：${escapeHtml(r.text)}</span><span class="actions"><span class="rm" data-reply="${r.id}">回复</span><span class="rm" data-del="${r.id}">删除</span></span></div>`;
-    });
+    html += rowHtml(c, false);
+    (c.replies||[]).forEach(r=> html += rowHtml(r, true));
   });
   el.innerHTML = html || `<div class="hint">还没有评论</div>`;
+
   el.querySelectorAll("[data-del]").forEach(b => b.onclick = ()=>{
     removeCommentNode(editingComments, b.dataset.del);
     if(replyTarget === b.dataset.del) cancelReply();
+    if(editingCommentId === b.dataset.del) editingCommentId = null;
     renderCommentEditList();
   });
   el.querySelectorAll("[data-reply]").forEach(b => b.onclick = ()=>{
+    editingCommentId = null;
     replyTarget = b.dataset.reply;
     const loc = locateComment(editingComments, replyTarget);
     const hint = document.getElementById("replyHint");
-    hint.innerHTML = `正在回复 @${escapeHtml(loc.node.author||"匿名")} <a id="cancelReplyLink">取消</a>`;
+    hint.innerHTML = `正在回复 ${escapeHtml(loc.node.author||"匿名")} <a id="cancelReplyLink">取消</a>`;
     hint.style.display = "block";
     document.getElementById("cancelReplyLink").onclick = cancelReply;
+    renderCommentEditList();
+  });
+  el.querySelectorAll("[data-edit]").forEach(b => b.onclick = ()=>{
+    cancelReply();
+    editingCommentId = b.dataset.edit;
+    renderCommentEditList();
+  });
+  el.querySelectorAll("[data-inline-cancel]").forEach(b => b.onclick = ()=>{
+    editingCommentId = null;
+    renderCommentEditList();
+  });
+  el.querySelectorAll("[data-inline-save]").forEach(b => b.onclick = ()=>{
+    const id = b.dataset.inlineSave;
+    const loc = locateComment(editingComments, id);
+    if(loc){
+      const authorInput = el.querySelector(`[data-inline-author="${id}"]`);
+      const textInput = el.querySelector(`[data-inline-text="${id}"]`);
+      loc.node.author = authorInput.value.trim() || "匿名";
+      loc.node.text = textInput.value.trim();
+    }
+    editingCommentId = null;
+    renderCommentEditList();
+  });
+  el.querySelectorAll(".inline-edit-text").forEach(t=>{
+    t.style.height = "auto";
+    t.style.height = Math.min(t.scrollHeight, 140) + "px";
+    t.addEventListener("input", function(){
+      this.style.height = "auto";
+      this.style.height = Math.min(this.scrollHeight, 140) + "px";
+    });
   });
 }
+  
 function cancelReply(){ replyTarget = null; document.getElementById("replyHint").style.display = "none"; }
+function cancelCommentEdit(){
+  editingCommentId = null;
+  document.getElementById("cAuthor").value = "";
+  document.getElementById("cText").value = "";
+  document.getElementById("cAdd").textContent = "添加";
+  document.getElementById("replyHint").style.display = "none";
+}
+function autosizeCommentText(){
+  const t = document.getElementById("cText");
+  t.style.height = "auto";
+  t.style.height = Math.min(t.scrollHeight, 140) + "px";
+}
+document.getElementById("cText").addEventListener("input", autosizeCommentText);
+
+document.getElementById("cText").addEventListener("input", function(){
+  this.style.height = "auto";
+  this.style.height = Math.min(this.scrollHeight, 140) + "px";
+});
+
 document.getElementById("cAdd").onclick = ()=>{
   const a = document.getElementById("cAuthor"), t = document.getElementById("cText");
   if(!t.value.trim()) return;
   const author = a.value.trim() || "匿名";
   let text = t.value.trim();
+  if(editingCommentId){
+    const loc = locateComment(editingComments, editingCommentId);
+    if(loc){ loc.node.author = author; loc.node.text = text; }
+    cancelCommentEdit();
+    renderCommentEditList();
+    return;
+  }
   if(replyTarget){
     const loc = locateComment(editingComments, replyTarget);
     if(loc){
@@ -1407,7 +2459,7 @@ document.getElementById("cAdd").onclick = ()=>{
   } else {
     editingComments.push({id: genId(), author, text, at: Date.now(), replies: []});
   }
-  a.value = ""; t.value = "";
+  a.value = ""; t.value = ""; t.style.height = "auto";
   cancelReply();
   renderCommentEditList();
 };
@@ -1475,7 +2527,17 @@ document.getElementById("addBtn").onclick = ()=> openEditor(null);
 document.getElementById("editorClose").onclick = closeEditor;
 
 /* search */
-document.getElementById("searchInput").oninput = (e)=>{ searchTerm = e.target.value; renderGrid(); };
+document.getElementById("searchInput").oninput = (e)=>{
+  searchTerm = e.target.value;
+  document.getElementById("searchClear").style.display = searchTerm ? "inline" : "none";
+  renderGrid();
+};
+document.getElementById("searchClear").onclick = ()=>{
+  document.getElementById("searchInput").value = "";
+  searchTerm = "";
+  document.getElementById("searchClear").style.display = "none";
+  renderGrid();
+};
 
 /* toast */
 let toastTimer;
@@ -1490,6 +2552,7 @@ function showToast(msg){
 /* boot */
 async function reload(){
   allPosts = await getAllPostsFromDisk();
+  renderCategorySidebar();
   renderGrid();
 }
 init();
