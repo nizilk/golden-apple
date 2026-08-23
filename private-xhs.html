@@ -883,7 +883,6 @@ function loadHandle(key){
 
 /* ================= state ================= */
 let rootHandle=null, appDirHandle=null, postsDirHandle=null, mediaDirHandle=null;
-let libraryFiles=[];
 let allPosts=[];
 let activeTag=null, activePage=null, searchTerm="";
 let pages=[];
@@ -985,8 +984,6 @@ async function connectFolder(remembered){
     document.getElementById("app").style.display = "flex";
     document.getElementById("currentFolderName").textContent = `📁 ${rootHandle.name}`;
 
-    await scanAssetLibrary();
-    showToast(`已连接，索引到 ${libraryFiles.length} 个素材文件`);
     await reload();
   }catch(err){
     console.error(err);
@@ -994,26 +991,52 @@ async function connectFolder(remembered){
   }
 }
 
-/* ================= scan the whole collection folder for existing images/videos ================= */
-async function scanAssetLibrary(){
-  libraryFiles = [];
-  await scanAssetDirectory(rootHandle, "");
+/* ================= lazy media library ================= */
+
+function isMediaName(name){
+  return /\.(png|jpe?g|gif|webp|bmp|avif|mp4|webm|mov|m4v)$/i.test(name);
 }
-async function scanAssetDirectory(dirHandle, prefix){
+
+function isVideoName(name){
+  return /\.(mp4|webm|mov|m4v)$/i.test(name);
+}
+
+/*
+ * 只读取当前文件夹这一层。
+ * 不递归，不提前扫描子文件夹。
+ */
+async function getPickerChildrenFromDisk(dirHandle, prefix){
+  const folders = [];
+  const files = [];
+
   for await (const [name, handle] of dirHandle.entries()){
     try{
-      if(prefix === "" && name === dbFolderName) continue;
-      if(handle.kind === "file"){
-        if(/\.(png|jpe?g|gif|webp|bmp|avif|mp4|webm|mov|m4v)$/i.test(name)){
-          libraryFiles.push({name, path: prefix + name});
-        }
-      } else if(handle.kind === "directory"){
-        await scanAssetDirectory(handle, prefix + name + "/");
+      if(handle.kind === "directory"){
+        // 根目录下的 RedNote 数据目录不显示
+        if(prefix === "" && name === dbFolderName) continue;
+
+        folders.push({
+          name,
+          path: prefix + name + "/",
+          handle
+        });
+      }else if(handle.kind === "file" && isMediaName(name)){
+        files.push({
+          name,
+          path: prefix + name,
+          handle
+        });
       }
-    }catch(e){ console.warn("跳过：", prefix + name, e); }
+    }catch(e){
+      console.warn("跳过：", prefix + name, e);
+    }
   }
+
+  folders.sort((a,b)=>a.name.localeCompare(b.name, "zh-CN"));
+  files.sort((a,b)=>a.name.localeCompare(b.name, "zh-CN"));
+
+  return {folders, files};
 }
-function isVideoName(name){ return /\.(mp4|webm|mov|m4v)$/i.test(name); }
 
 async function loadPagesData(){
   try{
@@ -2218,77 +2241,273 @@ document.getElementById("galleryFileInput").onchange = (e)=>{
   renderMediaGallery();
 };
 
-/* library picker modal — appends to the media gallery, no cursor/selection involved */
+/* ================= lazy library picker ================= */
+
 let pickerPath = "";
+let pickerDirHandle = null;
+
+/*
+ * 打开选择器时，只把根目录作为当前目录。
+ * 此时不会读取根目录内容，真正读取发生在 renderPickerList()。
+ */
 function openPicker(){
   pickerPath = "";
+  pickerDirHandle = rootHandle;
+
   document.getElementById("pickerSearch").value = "";
-  renderPickerList("");
   document.getElementById("pickerOverlay").classList.add("show");
+
+  renderPickerList("");
 }
+
 function pickerLabel(path){
   const parts = path.split("/");
-  const nameNoExt = parts[parts.length-1].replace(/\.[^.]+$/, "");
-  return parts.length > 1 ? `${parts[0]} / ${nameNoExt}` : nameNoExt;
+  const nameNoExt = parts[parts.length - 1].replace(/\.[^.]+$/, "");
+  return parts.length > 1
+    ? `${parts[0]} / ${nameNoExt}`
+    : nameNoExt;
 }
-function getPickerChildren(prefix){
-  const folders = new Set();
-  const files = [];
-  for(const f of libraryFiles){
-    if(!f.path.startsWith(prefix)) continue;
-    const rest = f.path.slice(prefix.length);
-    const parts = rest.split("/").filter(Boolean);
-    if(parts.length === 0) continue;
-    if(parts.length === 1) files.push(f);
-    else folders.add(parts[0]);
-  }
-  return {folders: [...folders].sort(), files};
-}
+
 function fileThumbHtml(f, attr, showPath){
-  const label = showPath ? pickerLabel(f.path) : f.name.replace(/\.[^.]+$/, "");
-  return `<div class="picker-thumb" ${attr}>${isVideoName(f.name) ? `<video data-asset-path="${escapeHtml(f.path)}" muted></video>` : `<img data-asset-path="${escapeHtml(f.path)}">`}<div class="picker-label">${escapeHtml(label)}</div></div>`;
+  const label = showPath
+    ? pickerLabel(f.path)
+    : f.name.replace(/\.[^.]+$/, "");
+
+  return `
+    <div class="picker-thumb" ${attr}>
+      ${
+        isVideoName(f.name)
+          ? `<video data-asset-path="${escapeHtml(f.path)}" muted></video>`
+          : `<img data-asset-path="${escapeHtml(f.path)}">`
+      }
+      <div class="picker-label">${escapeHtml(label)}</div>
+    </div>
+  `;
 }
-function renderPickerList(term){
+
+/*
+ * 只读取当前目录的一层。
+ *
+ * 注意：
+ * 这里没有递归。
+ * 用户点进哪个文件夹，才读取哪个文件夹。
+ */
+async function renderPickerList(term){
   const grid = document.getElementById("pickerGrid");
   const backBtn = document.getElementById("pickerBack");
-  if(term){
-    backBtn.style.display = "none";
-    const filtered = libraryFiles.filter(f => f.path.toLowerCase().includes(term.toLowerCase()));
-    if(filtered.length === 0){ grid.innerHTML = `<div class="hint">没有找到匹配的文件</div>`; return; }
-    grid.innerHTML = `<div class="picker-thumb-grid">${filtered.map((f,i)=>fileThumbHtml(f, `data-file-idx="${i}"`, true)).join("")}</div>`;
-    grid.querySelectorAll("[data-file-idx]").forEach(el=>{
-      el.onclick = ()=> pickLibraryFile(filtered[Number(el.dataset.fileIdx)]);
-    });
-    hydrateMedia(grid);
+
+  if(!pickerDirHandle){
+    grid.innerHTML = `<div class="hint">没有可用的文件夹</div>`;
     return;
   }
-  backBtn.style.display = pickerPath ? "inline-flex" : "none";
-  const {folders, files} = getPickerChildren(pickerPath);
-  if(folders.length === 0 && files.length === 0){ grid.innerHTML = `<div class="hint">这个文件夹里没有图片/视频</div>`; return; }
-  const folderTiles = folders.map(name => `<div class="picker-thumb picker-folder" data-folder="${escapeHtml(name)}">📁<div class="picker-label">${escapeHtml(name)}</div></div>`).join("");
-  const fileTiles = files.map((f,i)=>fileThumbHtml(f, `data-file-idx="${i}"`, false)).join("");
-  grid.innerHTML = `<div class="picker-thumb-grid">${folderTiles}${fileTiles}</div>`;
-  grid.querySelectorAll("[data-folder]").forEach(el=>{
-    el.onclick = ()=>{ pickerPath += el.dataset.folder + "/"; document.getElementById("pickerSearch").value = ""; renderPickerList(""); };
-  });
-  grid.querySelectorAll("[data-file-idx]").forEach(el=>{
-    el.onclick = ()=> pickLibraryFile(files[Number(el.dataset.fileIdx)]);
-  });
-  hydrateMedia(grid);
+
+  grid.innerHTML = `<div class="hint">正在读取当前文件夹…</div>`;
+
+  try{
+    const {folders, files} =
+      await getPickerChildrenFromDisk(pickerDirHandle, pickerPath);
+
+    /*
+     * 搜索现在只搜索当前已经打开的这一层。
+     * 不再为了搜索而扫描整个硬盘文件夹。
+     */
+    if(term){
+      backBtn.style.display = pickerPath ? "inline-flex" : "none";
+
+      const lower = term.toLowerCase();
+
+      const filteredFiles = files.filter(f =>
+        f.name.toLowerCase().includes(lower)
+      );
+
+      const filteredFolders = folders.filter(f =>
+        f.name.toLowerCase().includes(lower)
+      );
+
+      if(filteredFiles.length === 0 && filteredFolders.length === 0){
+        grid.innerHTML = `<div class="hint">当前文件夹里没有找到匹配项</div>`;
+        return;
+      }
+
+      const folderTiles = filteredFolders.map(f => `
+        <div
+          class="picker-thumb picker-folder"
+          data-folder="${escapeHtml(f.name)}"
+        >
+          📁
+          <div class="picker-label">${escapeHtml(f.name)}</div>
+        </div>
+      `).join("");
+
+      const fileTiles = filteredFiles.map((f,i) =>
+        fileThumbHtml(f, `data-file-idx="${i}"`, true)
+      ).join("");
+
+      grid.innerHTML = `
+        <div class="picker-thumb-grid">
+          ${folderTiles}
+          ${fileTiles}
+        </div>
+      `;
+
+      grid.querySelectorAll("[data-folder]").forEach(el=>{
+        el.onclick = async ()=>{
+          const folder = filteredFolders.find(
+            f => f.name === el.dataset.folder
+          );
+
+          if(!folder) return;
+
+          pickerPath = folder.path;
+          pickerDirHandle = folder.handle;
+
+          document.getElementById("pickerSearch").value = "";
+
+          await renderPickerList("");
+        };
+      });
+
+      grid.querySelectorAll("[data-file-idx]").forEach(el=>{
+        el.onclick = ()=>{
+          pickLibraryFile(
+            filteredFiles[Number(el.dataset.fileIdx)]
+          );
+        };
+      });
+
+      hydrateMedia(grid);
+      return;
+    }
+
+    backBtn.style.display =
+      pickerPath ? "inline-flex" : "none";
+
+    if(folders.length === 0 && files.length === 0){
+      grid.innerHTML =
+        `<div class="hint">这个文件夹里没有图片/视频</div>`;
+      return;
+    }
+
+    const folderTiles = folders.map(f => `
+      <div
+        class="picker-thumb picker-folder"
+        data-folder="${escapeHtml(f.name)}"
+      >
+        📁
+        <div class="picker-label">${escapeHtml(f.name)}</div>
+      </div>
+    `).join("");
+
+    const fileTiles = files.map((f,i) =>
+      fileThumbHtml(f, `data-file-idx="${i}"`, false)
+    ).join("");
+
+    grid.innerHTML = `
+      <div class="picker-thumb-grid">
+        ${folderTiles}
+        ${fileTiles}
+      </div>
+    `;
+
+    /*
+     * 点文件夹：
+     * 不再从 libraryFiles 找，
+     * 直接使用这个文件夹自己的 FileSystemDirectoryHandle。
+     */
+    grid.querySelectorAll("[data-folder]").forEach(el=>{
+      el.onclick = async ()=>{
+        const folder = folders.find(
+          f => f.name === el.dataset.folder
+        );
+
+        if(!folder) return;
+
+        pickerPath = folder.path;
+        pickerDirHandle = folder.handle;
+
+        document.getElementById("pickerSearch").value = "";
+
+        await renderPickerList("");
+      };
+    });
+
+    grid.querySelectorAll("[data-file-idx]").forEach(el=>{
+      el.onclick = ()=>{
+        pickLibraryFile(
+          files[Number(el.dataset.fileIdx)]
+        );
+      };
+    });
+
+    hydrateMedia(grid);
+
+  }catch(err){
+    console.error(err);
+    grid.innerHTML =
+      `<div class="hint">读取文件夹失败：${escapeHtml(err.name || "未知错误")}</div>`;
+  }
 }
-document.getElementById("pickerBack").onclick = ()=>{
+
+document.getElementById("pickerBack").onclick = async ()=>{
+  if(!pickerPath) return;
+
   const parts = pickerPath.split("/").filter(Boolean);
+
   parts.pop();
-  pickerPath = parts.length ? parts.join("/") + "/" : "";
-  document.getElementById("pickerSearch").value = "";
-  renderPickerList("");
+
+  const parentPath =
+    parts.length
+      ? parts.join("/") + "/"
+      : "";
+
+  /*
+   * FileSystemDirectoryHandle 没有 parent 属性，
+   * 所以返回上一级时重新从 rootHandle 逐层取得。
+   *
+   * 这里只读取目录句柄，不读取目录里的文件。
+   */
+  let dir = rootHandle;
+
+  try{
+    for(const part of parts){
+      dir = await dir.getDirectoryHandle(part);
+    }
+
+    pickerPath = parentPath;
+    pickerDirHandle = dir;
+
+    document.getElementById("pickerSearch").value = "";
+
+    await renderPickerList("");
+  }catch(err){
+    console.error(err);
+    showToast("无法返回上一级文件夹");
+  }
 };
-document.getElementById("pickerSearch").oninput = (e)=> renderPickerList(e.target.value);
-document.getElementById("pickerClose").onclick = ()=> document.getElementById("pickerOverlay").classList.remove("show");
-document.getElementById("pickerOverlay").addEventListener("click",(e)=>{ if(e.target.id==="pickerOverlay") document.getElementById("pickerOverlay").classList.remove("show"); });
-function pickLibraryFile(f){
-  editingMedia.push({type:"asset", kind: isVideoName(f.name) ? "video" : "image", ref: f.path});
+
+document.getElementById("pickerSearch").oninput = (e)=>{
+  renderPickerList(e.target.value);
+};
+
+document.getElementById("pickerClose").onclick = ()=>{
   document.getElementById("pickerOverlay").classList.remove("show");
+};
+
+document.getElementById("pickerOverlay").addEventListener("click",(e)=>{
+  if(e.target.id === "pickerOverlay"){
+    document.getElementById("pickerOverlay").classList.remove("show");
+  }
+});
+
+function pickLibraryFile(f){
+  editingMedia.push({
+    type:"asset",
+    kind:isVideoName(f.name) ? "video" : "image",
+    ref:f.path
+  });
+
+  document.getElementById("pickerOverlay").classList.remove("show");
+
   renderMediaGallery();
 }
 
