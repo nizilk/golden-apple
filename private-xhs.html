@@ -930,8 +930,7 @@ async function init(){
   }
   await openHandleDB();
   document.getElementById("connectBtn").onclick = async ()=>{
-    const current = await loadHandle("root");
-    await connectFolder(current);
+    await connectFolder(null);
   };
   const remembered = await loadHandle("root");
   if(remembered){
@@ -978,8 +977,9 @@ async function connectFolder(remembered){
 
     const pagesData = await loadPagesData();
     pages = pagesData.list;
-    homePageId = pagesData.home;
-    if(homePageId && pages.find(pg=>pg.id===homePageId)) activePage = homePageId;
+
+    // “全部”就是唯一默认页面
+    activePage = null;
 
     document.getElementById("connectScreen").style.display = "none";
     document.getElementById("app").style.display = "flex";
@@ -1019,15 +1019,27 @@ async function loadPagesData(){
   try{
     const fh = await appDirHandle.getFileHandle("pages.json");
     const data = JSON.parse(await (await fh.getFile()).text());
-    if(Array.isArray(data)) return {home:null, list:data};
-    return {home: data.home||null, list: data.list||[]};
-  }catch(e){ return {home:null, list:[]}; }
+
+    const list = Array.isArray(data) ? data : (data.list || []);
+
+    // 自动清理旧格式，覆盖成当前统一格式
+    await savePagesDataWithList(list);
+
+    return {list};
+  }catch(e){ 
+    return {home:null, list:[]}; 
+  }
 }
-async function savePagesData(){
+
+async function savePagesDataWithList(list){
   const fh = await appDirHandle.getFileHandle("pages.json", {create:true});
   const w = await fh.createWritable();
-  await w.write(JSON.stringify({home: homePageId, list: pages}));
+  await w.write(JSON.stringify({list}, null, 2));
   await w.close();
+}
+
+async function savePagesData(){
+  await savePagesDataWithList(pages);
 }
 
 function pageIncludesPost(pg, p){
@@ -1269,8 +1281,7 @@ function renderCategorySidebar(){
   const el = document.getElementById("categorySidebar");
   if(!el) return;
 
-  const homePage = pages.find(pg => pg.id === homePageId);
-  const others = pages.filter(pg => pg.id !== homePageId);
+  const others = pages;
 
   function itemHtml(pg){
     // 正在重命名时，仍然使用原来的原地编辑
@@ -1309,11 +1320,6 @@ function renderCategorySidebar(){
   }
 
   let html = "";
-
-  // 首页
-  if(homePage){
-    html += itemHtml(homePage);
-  }
 
   // 全部
   html += `
