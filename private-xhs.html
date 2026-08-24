@@ -375,7 +375,7 @@
   body.dark .app-topbar{ background:rgba(15,15,15,0.92); }
   main{ flex:1; min-width:0; padding:24px 33px 80px; }
 
-  .grid{ display:grid; grid-template-columns:repeat(5,minmax(190px,1fr)); grid-auto-rows:8px; gap:22px; align-items:start; }
+  .grid{ display:grid; grid-template-columns:repeat(5,minmax(190px,1fr)); grid-auto-rows:8px; gap:20px; align-items:start; row-gap:24px; }
   @media (max-width:1100px){ .grid{ grid-template-columns:repeat(3,minmax(180px,1fr)); } }
   @media (max-width:700px){ .grid{ grid-template-columns:repeat(2,minmax(150px,1fr)); } }
 
@@ -410,7 +410,7 @@
 
 
 .card-body{
-  padding:8px 2px 1px;
+  padding:8px 2px 0;
   background:transparent;
 }
 
@@ -2028,13 +2028,17 @@ function fitMediaWidth(sheet, mediaEls){
   }));
   Promise.all(ready).then(()=>{
     const h = sheet.clientHeight || 860;
-    let widest = 0;
-    mediaEls.forEach(el=>{
-      const ratio = el.tagName === "IMG" ? el.naturalWidth/el.naturalHeight : el.videoWidth/el.videoHeight;
-      if(ratio && isFinite(ratio)) widest = Math.max(widest, h*ratio);
-    });
-    if(!widest) return;
-    const left = Math.max(MIN_LEFT, Math.min(MAX_LEFT, widest));
+    const first = mediaEls[0];
+
+    const ratio = first.tagName === "IMG"
+      ? first.naturalWidth / first.naturalHeight
+      : first.videoWidth / first.videoHeight;
+
+    if(!ratio || !isFinite(ratio)) return;
+
+    const firstWidth = h * ratio;
+    const left = Math.max(MIN_LEFT, Math.min(MAX_LEFT, firstWidth));
+    
     const width = Math.min(window.innerWidth*0.94, left + RIGHT);
     sheet.style.width = `${width}px`;
     sheet.style.gridTemplateColumns = `${left}px ${RIGHT}px`;
