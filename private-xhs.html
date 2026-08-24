@@ -1062,10 +1062,13 @@ async function connectFolder(remembered){
     mediaDirHandle = await appDirHandle.getDirectoryHandle("media", {create:true});
 
     const pagesData = await loadPagesData();
-    pages = pagesData.list;
 
-    // “全部”就是唯一默认页面
-    activePage = null;
+    pages = pagesData.list;
+    homePageId = pagesData.home;
+
+    // 有效的自定义首页 → 启动时进入首页
+    // 没有首页 → 仍然进入“全部”
+    activePage = homePageId || null;
 
     document.getElementById("connectScreen").style.display = "none";
     document.getElementById("app").style.display = "flex";
@@ -1130,26 +1133,48 @@ async function loadPagesData(){
     const fh = await appDirHandle.getFileHandle("pages.json");
     const data = JSON.parse(await (await fh.getFile()).text());
 
-    const list = Array.isArray(data) ? data : (data.list || []);
+    const list = Array.isArray(data)
+      ? data
+      : (data.list || []);
 
-    // 自动清理旧格式，覆盖成当前统一格式
-    await savePagesDataWithList(list);
+    const home = Array.isArray(data)
+      ? null
+      : (data.home || null);
 
-    return {list};
-  }catch(e){ 
-    return {home:null, list:[]}; 
+    // 只保留仍然存在的首页
+    const validHome = list.some(pg => pg.id === home)
+      ? home
+      : null;
+
+    // 自动统一保存为当前格式
+    await savePagesDataWithList(list, validHome);
+
+    return {
+      home: validHome,
+      list
+    };
+  }catch(e){
+    return {
+      home:null,
+      list:[]
+    };
   }
 }
 
-async function savePagesDataWithList(list){
+async function savePagesDataWithList(list, home = homePageId){
   const fh = await appDirHandle.getFileHandle("pages.json", {create:true});
   const w = await fh.createWritable();
-  await w.write(JSON.stringify({list}, null, 2));
+
+  await w.write(JSON.stringify({
+    home: home || null,
+    list
+  }, null, 2));
+
   await w.close();
 }
 
 async function savePagesData(){
-  await savePagesDataWithList(pages);
+  await savePagesDataWithList(pages, homePageId);
 }
 
 function pageIncludesPost(pg, p){
@@ -1391,7 +1416,8 @@ function renderCategorySidebar(){
   const el = document.getElementById("categorySidebar");
   if(!el) return;
 
-  const others = pages;
+  const homePage = pages.find(pg => pg.id === homePageId);
+  const others = pages.filter(pg => pg.id !== homePageId);
 
   function itemHtml(pg){
     // 正在重命名时，仍然使用原来的原地编辑
@@ -1431,14 +1457,19 @@ function renderCategorySidebar(){
 
   let html = "";
 
-  // 全部
+  // 自定义首页
+  if(homePage){
+    html += itemHtml(homePage);
+  }
+
+  // “全部”是缺省项，不属于 pages
   html += `
     <div class="cat-item ${activePage===null?"active":""}" data-page="">
       <span class="cat-label">全部</span>
     </div>
   `;
 
-  // 其他页面
+  // 其他自定义页面
   others.forEach(pg => {
     html += itemHtml(pg);
   });
