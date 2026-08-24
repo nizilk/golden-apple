@@ -1718,7 +1718,7 @@ function renderGrid(){
         ${firstImg ? `<img class="thumb" ${thumbAttr}="${escapeHtml(firstImg.ref)}">` : ""}
         <div class="card-body">
           ${p.source && !firstImg ? `<div class="card-source-line">${escapeHtml(p.source)}</div>` : ""}
-          <p class="card-title">${escapeHtml(p.title || "(无标题)")}</p>
+          ${p.title && p.title.trim() ? `<p class="card-title">${escapeHtml(p.title.trim())}</p>` : ""}
           ${!firstImg && snippet ? `<p class="card-snippet">${escapeHtml(snippet)}</p>` : ""}
           ${(p.tags && p.tags.length) ? `<div class="card-tags">${p.tags.map(t=>`<span data-tag="${escapeHtml(t)}">#${escapeHtml(t)}</span>`).join("")}</div>` : ""}
         </div>
@@ -2003,7 +2003,7 @@ function openReader(id){
             </div>
           </div>
         </div>
-        <h2 class="reader-title serif">${escapeHtml(p.title || "(无标题)")}</h2>
+        ${p.title && p.title.trim() ? `<h2 class="reader-title serif">${escapeHtml(p.title.trim())}</h2>` : ""}
         <div class="reader-body">${themeSafeBodyHtml(p.body)}</div>
         ${(p.tags && p.tags.length) ? `<div class="reader-tags">${p.tags.map(t=>`<span data-tag="${escapeHtml(t)}">#${escapeHtml(t)}</span>`).join("")}</div>` : ""}
         ${renderCommentsReadonly(p.comments)}
