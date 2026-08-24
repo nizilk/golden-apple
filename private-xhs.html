@@ -367,21 +367,129 @@
   .grid{ display:grid; grid-template-columns:repeat(5,minmax(190px,1fr)); grid-auto-rows:8px; gap:22px; align-items:start; }
   @media (max-width:1100px){ .grid{ grid-template-columns:repeat(3,minmax(180px,1fr)); } }
   @media (max-width:700px){ .grid{ grid-template-columns:repeat(2,minmax(150px,1fr)); } }
-  .card{ margin-bottom:0; background:var(--card); border-radius:16px; overflow:hidden; box-shadow:var(--shadow); cursor:pointer; position:relative; border:1px solid var(--line); transition:transform .15s ease, box-shadow .15s ease; }
-  .card:hover{ transform:translateY(-3px); box-shadow:0 4px 8px rgba(43,38,34,0.06), 0 14px 28px rgba(43,38,34,0.10); }
-  .card img.thumb{ width:100%; display:block; max-height:360px; min-height:200px; object-fit:cover; background:var(--tag-bg); }
-  .card-body{ padding:12px 14px 14px; }
-  .card-source-line{ font-size:11px; color:var(--muted); margin-bottom:5px; }
-  .card-title{ font-size:16px; font-weight:400; margin:0 0 6px; line-height:1.4; }
-  .card.no-media-card .card-body{ padding:16px; }
-  .card.no-media-card .card-title{ font-size:17px; line-height:1.5; margin-bottom:8px; }
-  .card.no-media-card .card-snippet{ display:block; -webkit-line-clamp:5; }
-  .card-snippet{ font-size:12.5px; color:var(--muted); line-height:1.6; margin:0 0 8px; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; }
-  .card-tags{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:6px; }
-  .card-tags span{ font-size:11px; color:var(--link); cursor:pointer; }
-  .card-tags span:hover{ text-decoration:underline; }
-  .ribbon{ position:absolute; top:10px; left:-6px; background:var(--accent); color:#fff; font-size:10px; padding:3px 10px 3px 14px; border-radius:0 4px 4px 0; box-shadow:var(--shadow); z-index:2; }
-  .ribbon:after{ content:""; position:absolute; left:0; bottom:-5px; border-top:5px solid #8a2e3b; border-left:5px solid transparent; }
+
+.card{
+  margin-bottom:0;
+  background:transparent;
+  border:0;
+  border-radius:0;
+  overflow:visible;
+  box-shadow:none;
+  cursor:pointer;
+  position:relative;
+  transition:transform .15s ease;
+}
+
+.card:hover{
+  transform:translateY(-2px);
+}
+
+.card img.thumb{
+  width:100%;
+  display:block;
+  max-height:360px;
+  min-height:200px;
+  object-fit:cover;
+  background:var(--tag-bg);
+  border-radius:16px;
+}
+
+.card-body{
+  padding:9px 2px 2px;
+  background:transparent;
+}
+
+.card-meta{
+  display:flex;
+  align-items:center;
+  width:100%;
+  font-size:11px;
+  line-height:1.4;
+  color:var(--muted);
+}
+
+.card-source{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.card-date{
+  margin-left:auto;
+  flex-shrink:0;
+  margin-left:12px;
+  font-size:10px;
+  opacity:.7;
+  white-space:nowrap;
+}
+
+.card:hover{
+  transform:translateY(-3px);
+  box-shadow:
+    0 4px 8px rgba(43,38,34,0.06),
+    0 14px 28px rgba(43,38,34,0.10);
+}
+
+.card img.thumb{
+  width:100%;
+  display:block;
+  max-height:360px;
+  min-height:200px;
+  object-fit:cover;
+  background:var(--tag-bg);
+}
+
+.card-body{
+  padding:10px 12px 12px;
+}
+
+.card-source-line{
+  font-size:11px;
+  color:var(--muted);
+  line-height:1.4;
+  margin:0;
+}
+
+.card-title{
+  font-size:15px;
+  font-weight:500;
+  margin:0 0 7px;
+  line-height:1.45;
+  color:var(--text);
+}
+
+.card.no-media-card .card-body{
+  padding:14px;
+}
+
+.card.no-media-card .card-title{
+  font-size:16px;
+  line-height:1.5;
+  margin-bottom:6px;
+}
+
+.card.no-media-card .card-snippet{
+  display:block;
+  -webkit-line-clamp:5;
+}
+
+.card-snippet{
+  font-size:12.5px;
+  color:var(--muted);
+  line-height:1.6;
+  margin:0 0 6px;
+  display:-webkit-box;
+  -webkit-line-clamp:4;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+
+/* Card 不显示标签，但标签数据仍然保留 */
+.card-tags{
+  display:none;
+}
+
   .empty{ text-align:center; color:var(--muted); padding:80px 20px; }
   .empty .big{ font-size:40px; margin-bottom:12px; }
 
@@ -1714,13 +1822,36 @@ function renderGrid(){
     return `
       <div class="card ${firstImg ? "" : "no-media-card"}" data-id="${p.id}">
         ${editPg ? `<div class="select-check ${checked?"checked":""}">${checked?"✓":""}</div>` : ""}
-        ${p.source && firstImg ? `<div class="ribbon">${escapeHtml(p.source)}</div>` : ""}
+
         ${firstImg ? `<img class="thumb" ${thumbAttr}="${escapeHtml(firstImg.ref)}">` : ""}
+
         <div class="card-body">
-          ${p.source && !firstImg ? `<div class="card-source-line">${escapeHtml(p.source)}</div>` : ""}
-          ${p.title && p.title.trim() ? `<p class="card-title">${escapeHtml(p.title.trim())}</p>` : ""}
-          ${!firstImg && snippet ? `<p class="card-snippet">${escapeHtml(snippet)}</p>` : ""}
-          ${(p.tags && p.tags.length) ? `<div class="card-tags">${p.tags.map(t=>`<span data-tag="${escapeHtml(t)}">#${escapeHtml(t)}</span>`).join("")}</div>` : ""}
+
+          ${p.title && p.title.trim()
+            ? `<p class="card-title">${escapeHtml(p.title.trim())}</p>`
+            : ""}
+
+          ${(p.source || p.createdAt)
+            ? `
+              <div class="card-meta">
+                ${p.source
+                  ? `<span class="card-source">${escapeHtml(p.source)}</span>`
+                  : ""
+                }
+
+                ${p.createdAt
+                  ? `<span class="card-date">${new Date(p.createdAt).toLocaleDateString()}</span>`
+                  : ""
+                }
+              </div>
+            `
+            : ""
+          }
+
+          ${!firstImg && snippet
+            ? `<p class="card-snippet">${escapeHtml(snippet)}</p>`
+            : ""}
+
         </div>
       </div>`;
   }).join("");
@@ -1736,9 +1867,6 @@ function renderGrid(){
     });
   } else {
     grid.querySelectorAll(".card").forEach(card=>{ card.onclick = ()=> openReader(card.dataset.id); });
-    grid.querySelectorAll(".card-tags span").forEach(span=>{
-      span.onclick = (e)=>{ e.stopPropagation(); searchByTag(span.dataset.tag); };
-    });
   }
   layoutMasonry();
   grid.querySelectorAll("img.thumb").forEach(img=>{
