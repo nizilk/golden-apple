@@ -123,6 +123,54 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
 .manage-page button:hover{color:var(--accent)}
 .folder-box{border:1px dashed #cdbdb2;padding:15px;text-align:center;color:var(--muted);font-size:11px}
 .cover-preview{width:100%;height:100px;border:1px solid var(--line);background:var(--accent-soft) center/cover no-repeat;margin-bottom:9px}
+
+.library-hero{
+  max-width:1040px;
+  height:230px;
+  margin:22px auto 0;
+  border:1px solid var(--line);
+  border-radius:14px;
+  overflow:hidden;
+  background:
+    linear-gradient(135deg,#d9c8bd,#eee5dc);
+  background-position:center;
+  background-size:cover;
+  position:relative;
+  box-shadow:0 12px 40px rgba(55,42,34,.08);
+}
+
+.library-hero-overlay{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:30px;
+  background:linear-gradient(
+    to bottom,
+    rgba(30,20,16,.08),
+    rgba(30,20,16,.28)
+  );
+  color:white;
+}
+
+.library-hero-title{
+  font-family:"Songti SC","Noto Serif SC","STSong",serif;
+  font-size:30px;
+  letter-spacing:.12em;
+  text-shadow:0 2px 12px rgba(0,0,0,.18);
+}
+
+.library-hero-subtitle{
+  margin-top:9px;
+  font-family:"Songti SC","Noto Serif SC","STSong",serif;
+  font-size:12px;
+  opacity:.9;
+  text-shadow:0 1px 8px rgba(0,0,0,.18);
+}
+
 /* responsive */
 @media(max-width:760px){
  .app{display:block}.sidebar{position:static;width:auto;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:18px 16px}
@@ -158,6 +206,15 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
   </div>
 </header>
 
+<div class="library-hero" id="libraryHero">
+  <div class="library-hero-overlay">
+    <div class="library-hero-title" id="heroTitle">私人图书馆</div>
+    <div class="library-hero-subtitle" id="heroSubtitle">
+      只留下此刻想读的文字。
+    </div>
+  </div>
+</div>
+
 <div class="content-wrap">
   <div class="page-intro">
     <h2 id="sectionTitle">故事</h2><small id="count"></small>
@@ -183,8 +240,8 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
 
 <div id="fileMode">
   <div class="field"><label>Word 文件</label>
-    <div class="filebox"><input type="file" id="storyFile" accept=".docx,.doc">
-      <div class="hint">推荐 .docx。导入后会自动把“与标题相同的第一段”识别为重复标题并从正文中去掉；导入后仍可编辑。</div>
+    <div class="filebox"><input type="file" id="storyFile" accept=".docx">
+      <div class="hint">支持 .docx 文件。导入后会自动读取正文；如果第一段与标题相同，会自动删除。导入后仍可手动修改标题、作者、标签和正文。</div>
     </div>
   </div>
 </div>
@@ -397,11 +454,23 @@ function openStoryEditor(id=null){
 }
 function closeStoryEditor(){storyOverlay.classList.remove("show");editingId=null}
 function htmlToPlain(html){
-  const d=document.createElement("div");d.innerHTML=html||"";
-  return [...d.children].map(x=>x.innerText||x.textContent||"").join("\\n\\n") || d.innerText || "";
+  const d=document.createElement("div");
+  d.innerHTML=html||"";
+
+  return [...d.children]
+    .map(x=>x.innerText||x.textContent||"")
+    .join("\n\n")
+    .trim();
 }
+
 function plainToHtml(text){
-  return String(text||"").split(/\\n{2,}/).map(p=>`<p>${esc(p).replace(/\\n/g,"<br>")}</p>`).join("")||"<p></p>";
+  return String(text||"")
+    .trim()
+    .split(/\n{2,}/)
+    .map(p=>{
+      return `<p>${esc(p).replace(/\n/g,"<br>")}</p>`;
+    })
+    .join("") || "<p></p>";
 }
 addBtn.onclick=()=>openStoryEditor();
 storyClose.onclick=closeStoryEditor;storyCancel.onclick=closeStoryEditor;
@@ -410,15 +479,27 @@ modeFile.onclick=()=>{modeFile.classList.add("active");modeManual.classList.remo
 modeManual.onclick=()=>{modeManual.classList.add("active");modeFile.classList.remove("active");fileMode.style.display="none"};
 
 storyFile.onchange=async()=>{
-  const f=storyFile.files[0];if(!f)return;
-  storyTitle.value=f.name.replace(/\\.docx?$/i,"");
+  const f=storyFile.files[0];
+  if(!f)return;
+
+  // 从文件名自动生成标题
+  storyTitle.value=f.name.replace(/\.docx?$/i,"");
   storyAuthor.value="";
+
   try{
     const parsed=await readDocx(f);
+
+    // 如果 Word 第一段和标题相同，就自动删除
     const cleaned=removeDuplicateTitle(parsed,storyTitle.value);
+
+    // 转成真正的普通文字
     storyBody.value=htmlToPlain(cleaned);
+
     storyTags.value="暂存";
-  }catch(e){alert("读取 Word 失败："+e.message)}
+  }catch(e){
+    alert("读取 Word 失败："+e.message);
+    console.error(e);
+  }
 };
 function removeDuplicateTitle(html,title){
   const d=document.createElement("div");d.innerHTML=html;
@@ -444,7 +525,7 @@ storySave.onclick=async()=>{
     if(modeFile.classList.contains("active")){
       const f=storyFile.files[0];
       if(!f){alert("请选择 Word 文件。");return}
-      if(!/\\.docx$/i.test(f.name)){alert("当前版本暂时只可靠支持 .docx；.doc 请先转换，下一版再处理。");return}
+      if(!/\.docx$/i.test(f.name)){alert("当前版本暂时只可靠支持 .docx；.doc 请先转换，下一版再处理。");return}
       try{
         const raw=await readDocx(f);
         const content=removeDuplicateTitle(raw,title);
@@ -555,7 +636,7 @@ async function scanFolder(){
   const files=[];
   async function walk(dir,path=""){
     for await(const [name,h] of dir.entries()){
-      if(h.kind==="file"&&/\\.docx$/i.test(name))files.push({name,h,path:(path?path+"/":"")+name});
+      if(h.kind==="file"&&/\.docx$/i.test(name))files.push({name,h,path:(path?path+"/":"")+name});
       else if(h.kind==="directory")await walk(h,path?path+"/"+name:name);
     }
   }
@@ -567,7 +648,7 @@ async function scanFolder(){
     if(s){await putFileHandle(s.id,x.h);update++;continue}
     try{
       const raw=await readDocx(f);
-      const title=x.name.replace(/\\.docx$/i,"");
+      const title=x.name.replace(/\.docx$/i,"");
       const content=removeDuplicateTitle(raw,title);
       const id="file_"+Date.now()+"_"+Math.random().toString(36).slice(2,8);
       s={id,title,author:"",tags:["暂存"],date:new Date().toISOString().slice(0,10),content,path:x.path,favorite:false,sourceType:"word"};
@@ -583,32 +664,85 @@ chooseFolder.onclick=chooseFolder;
 multiStoryFile.onchange=async()=>{
   const fs=[...multiStoryFile.files];let add=0,fail=0;
   for(const f of fs){
-    if(!/\\.docx$/i.test(f.name)){fail++;continue}
+    if(!/\.docx$/i.test(f.name)){fail++;continue}
     try{
-      const raw=await readDocx(f),title=f.name.replace(/\\.docx$/i,""),content=removeDuplicateTitle(raw,title);
+      const raw=await readDocx(f),title=f.name.replace(/\.docx$/i,""),content=removeDuplicateTitle(raw,title);
       data.stories.unshift({id:"batch_"+Date.now()+"_"+Math.random().toString(36).slice(2,7),title,author:"",tags:["暂存"],date:new Date().toISOString().slice(0,10),content,path:f.name,favorite:false,sourceType:"word"});add++
     }catch{fail++}
   }
   saveData();renderAll();multiStoryFile.value="";alert(`导入完成：${add} 篇${fail?`，跳过 ${fail} 篇`:''}。`);
 };
 
+function updateLibraryHero(){
+  heroTitle.textContent=
+    data.settings.title || "私人图书馆";
+
+  heroSubtitle.textContent=
+    data.settings.subtitle || "";
+
+  if(data.settings.cover){
+    libraryHero.style.backgroundImage=
+      `url("${data.settings.cover}")`;
+  }else{
+    libraryHero.style.backgroundImage="";
+  }
+}
+
 function openSettings(){
-  setTitle.value=data.settings.title;setSubtitle.value=data.settings.subtitle;
-  coverPreview.style.backgroundImage=data.settings.cover?`url("${data.settings.cover}")`:"";
-  settingsOverlay.classList.add("show")
+  setTitle.value=data.settings.title;
+  setSubtitle.value=data.settings.subtitle;
+
+  coverPreview.style.backgroundImage =
+    data.settings.cover
+      ? `url("${data.settings.cover}")`
+      : "";
+
+  settingsOverlay.classList.add("show");
 }
 settingsBtn.onclick=openSettings;settingsClose.onclick=()=>settingsOverlay.classList.remove("show");
 settingsOverlay.onclick=e=>{if(e.target===settingsOverlay)settingsOverlay.classList.remove("show")};
+
 coverFile.onchange=()=>{
-  const f=coverFile.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{data.settings.cover=r.result;coverPreview.style.backgroundImage=`url("${r.result}")`};r.readAsDataURL(f)
+  const f=coverFile.files[0];
+  if(!f)return;
+
+  const r=new FileReader();
+
+  r.onload=()=>{
+    data.settings.cover=r.result;
+
+    coverPreview.style.backgroundImage=
+      `url("${r.result}")`;
+
+    libraryHero.style.backgroundImage=
+      `url("${r.result}")`;
+  };
+
+  r.readAsDataURL(f);
 };
-settingsSave.onclick=()=>{data.settings.title=setTitle.value.trim()||"私人图书馆";data.settings.subtitle=setSubtitle.value.trim();saveData();settingsOverlay.classList.remove("show");render()};
+
+settingsSave.onclick=()=>{
+  data.settings.title=
+    setTitle.value.trim() || "私人图书馆";
+
+  data.settings.subtitle=
+    setSubtitle.value.trim();
+
+  saveData();
+
+  settingsOverlay.classList.remove("show");
+
+  render();
+
+  updateLibraryHero();
+};
 
 document.addEventListener("keydown",e=>{
   if(e.key==="Escape"){[reader,storyOverlay,pagesOverlay,pageConfigOverlay,libraryOverlay,settingsOverlay].forEach(x=>x.classList.remove("show"))}
 });
 
 renderAll();
+updateLibraryHero();
 </script>
 </body>
 </html>
