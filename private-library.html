@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>私人图书馆</title>
+<style>
+:root{
+  --bg:#f8f5ef;--paper:#fffdf8;--ink:#352f2a;--muted:#948980;--line:#e4dbd1;
+  --accent:#8b6256;--accent-soft:#eee2d9;--link:#6e625b;--shadow:0 12px 40px rgba(55,42,34,.08);
+}
+*{box-sizing:border-box}
+html{scrollbar-width:none}html::-webkit-scrollbar,*{scrollbar-width:none}*::-webkit-scrollbar{display:none}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB",sans-serif}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+.app{min-height:100vh;display:flex}
+.sidebar{
+  width:188px;flex:0 0 188px;position:sticky;top:0;height:100vh;padding:34px 20px 26px;
+  border-right:1px solid var(--line);background:rgba(255,253,248,.78);backdrop-filter:blur(12px)
+}
+.brand{text-align:center;font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:22px;font-weight:600;letter-spacing:.12em;margin:3px 0 28px}
+.brand small{display:block;font-family:inherit;font-size:9px;font-weight:400;letter-spacing:.25em;color:var(--muted);margin-top:6px}
+.nav{display:flex;flex-direction:column;gap:3px}
+.nav button{
+  border:0;background:transparent;width:100%;padding:9px 8px;border-radius:8px;
+  color:var(--muted);font-size:13px;text-align:center
+}
+.nav button:hover{background:var(--accent-soft);color:var(--accent)}
+.nav button.active{color:var(--accent);font-weight:600;background:var(--accent-soft)}
+.sidebar-tools{position:absolute;left:20px;right:20px;bottom:24px;display:flex;flex-direction:column;gap:7px}
+.sidebar-tools button{border:0;background:transparent;color:var(--muted);font-size:11px;padding:7px}
+.sidebar-tools button:hover{color:var(--accent)}
+.main{flex:1;min-width:0}
+.top{
+  max-width:1040px;margin:auto;padding:34px 42px 18px;display:flex;align-items:flex-end;
+  justify-content:space-between;gap:24px;border-bottom:1px solid var(--line)
+}
+.eyebrow{font-size:9px;letter-spacing:.28em;color:var(--accent);margin-bottom:8px}
+h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-weight:500;margin:0}
+.subtitle{font-family:"Songti SC","Noto Serif SC","STSong",serif;color:var(--muted);font-size:12px;margin-top:8px}
+.top-right{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.search{width:190px;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:8px 12px;outline:none;font-size:11px}
+.search:focus{border-color:var(--accent)}
+.small-btn{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:7px 11px;font-size:11px}
+.small-btn:hover{background:var(--paper);color:var(--accent)}
+.content-wrap{max-width:1040px;margin:auto;padding:20px 42px 90px}
+.page-intro{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:13px}
+.page-intro h2{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-weight:500;font-size:19px;margin:0}
+.page-intro small{font-size:10px;color:var(--muted)}
+.tags-bar{display:flex;flex-wrap:wrap;gap:6px;padding:0 0 15px;border-bottom:1px solid var(--line);margin-bottom:2px}
+.tag-chip{
+  border:0;background:transparent;color:var(--muted);font-size:10.5px;padding:5px 9px;border-radius:999px
+}
+.tag-chip:hover{color:var(--accent);background:var(--accent-soft)}
+.tag-chip.on{background:var(--accent);color:#fff}
+.story-list{display:flex;flex-direction:column}
+.story-row{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:start;
+  padding:19px 3px 18px;border-bottom:1px solid var(--line);cursor:pointer
+}
+.story-row:hover .story-title{color:var(--accent)}
+.story-title{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:18px;font-weight:500;line-height:1.55;margin:0 0 7px}
+.story-excerpt{font-family:"Songti SC","Noto Serif SC","STSong",serif;color:#766b63;font-size:12.5px;line-height:1.85;max-width:760px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.story-meta{display:flex;flex-wrap:wrap;gap:9px;margin-top:9px;color:var(--muted);font-size:9.5px}
+.story-meta .tag{color:var(--accent)}
+.story-side{display:flex;align-items:center;gap:9px;padding-top:3px}
+.story-date{font-size:9.5px;color:var(--muted);white-space:nowrap}
+.fav{border:0;background:transparent;color:#b8aaa1;font-size:17px;padding:0}.fav.on{color:#ad655e}
+.empty{text-align:center;color:var(--muted);font-family:"Songti SC","Noto Serif SC",serif;font-size:13px;line-height:2;padding:80px 20px;display:none}
+.fab{
+  position:fixed;right:30px;bottom:28px;width:55px;height:55px;border:0;border-radius:50%;
+  background:var(--accent);color:#fff;font-size:27px;line-height:1;box-shadow:0 9px 25px rgba(120,80,65,.28);z-index:20
+}
+.fab:hover{transform:translateY(-1px)}
+/* 阅读 */
+.reader{position:fixed;inset:0;background:rgba(48,38,32,.42);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;padding:18px;z-index:40}
+.reader.show{display:flex}
+.read-sheet{
+  position:relative;width:min(820px,95vw);height:min(900px,94vh);overflow:auto;
+  background:var(--paper);box-shadow:0 24px 90px rgba(35,25,20,.22);padding:52px 72px 70px
+}
+.read-close{position:absolute;right:18px;top:17px;width:30px;height:30px;border:0;border-radius:50%;background:var(--accent-soft);color:var(--muted)}
+.read-kicker{font-size:9px;letter-spacing:.24em;color:var(--accent)}
+.read-sheet h2{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:31px;line-height:1.55;font-weight:500;margin:10px 0 7px}
+.read-meta{font-size:10.5px;color:var(--muted);padding-bottom:17px;border-bottom:1px solid var(--line)}
+.read-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:11px}
+.read-tags span{font-size:9.5px;color:var(--accent);background:var(--accent-soft);padding:4px 8px;border-radius:999px}
+.article-body{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:16px;line-height:2.2;padding-top:28px}
+.article-body p{margin:0 0 1.05em}
+.article-body h1,.article-body h2,.article-body h3{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-weight:500;line-height:1.6;margin:1.2em 0 .6em}
+.read-actions{display:flex;gap:7px;border-top:1px solid var(--line);padding-top:15px;margin-top:38px}
+.read-actions button{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:7px 12px;font-size:10.5px}
+.read-actions button:hover{background:var(--accent-soft);color:var(--accent)}
+/* 弹窗 */
+.overlay{position:fixed;inset:0;background:rgba(38,29,25,.45);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
+.overlay.show{display:flex}
+.dialog{width:min(650px,95vw);max-height:92vh;overflow:auto;background:var(--paper);padding:30px 32px 28px;box-shadow:var(--shadow);position:relative}
+.dialog h2{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:22px;font-weight:500;margin:0 0 22px}
+.dialog-close{position:absolute;right:17px;top:17px;width:29px;height:29px;border:0;border-radius:50%;background:var(--accent-soft);color:var(--muted)}
+.field{margin-bottom:15px}.field label{display:block;color:var(--muted);font-size:10.5px;margin-bottom:6px}
+.field input,.field textarea,.field select{
+  width:100%;border:1px solid var(--line);background:transparent;border-radius:7px;padding:9px 10px;outline:none;font-size:12.5px
+}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent)}
+.field textarea{min-height:130px;resize:vertical;line-height:1.8}
+.form-row{display:flex;gap:10px}.form-row>.field{flex:1}
+.dialog-actions{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:22px}
+.dialog-actions .right{display:flex;gap:7px}
+.btn{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:8px 13px;font-size:10.5px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.danger{color:#a05c5c}
+.mode-row{display:flex;gap:6px;margin-bottom:15px}
+.mode-btn{flex:1;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:7px;padding:8px;font-size:10.5px}
+.mode-btn.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.filebox{border:1px dashed #cdbdb2;padding:15px;text-align:center;color:var(--muted);font-size:11px}
+.hint{font-size:9.5px;color:var(--muted);line-height:1.7;margin-top:6px}
+/* 页面管理 */
+.manage-pages{display:flex;flex-direction:column;gap:5px}
+.manage-page{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line);padding:9px 2px}
+.manage-page span{flex:1;font-size:12px}
+.manage-page button{border:0;background:transparent;color:var(--muted);font-size:10px}
+.manage-page button:hover{color:var(--accent)}
+.folder-box{border:1px dashed #cdbdb2;padding:15px;text-align:center;color:var(--muted);font-size:11px}
+.cover-preview{width:100%;height:100px;border:1px solid var(--line);background:var(--accent-soft) center/cover no-repeat;margin-bottom:9px}
+/* responsive */
+@media(max-width:760px){
+ .app{display:block}.sidebar{position:static;width:auto;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:18px 16px}
+ .brand{margin-bottom:12px}.nav{flex-direction:row;overflow:auto}.nav button{white-space:nowrap}
+ .sidebar-tools{position:static;flex-direction:row;justify-content:center;margin-top:8px}.sidebar-tools button{padding:5px 8px}
+ .top{padding:24px 20px 15px;align-items:flex-start}.top-right{display:none}.content-wrap{padding:18px 20px 80px}
+ .story-row{grid-template-columns:minmax(0,1fr)}.story-side{display:none}.read-sheet{padding:42px 25px 55px}.read-sheet h2{font-size:26px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand">私人图书馆<small>PRIVATE LIBRARY</small></div>
+  <nav class="nav" id="nav"></nav>
+  <div class="sidebar-tools">
+    <button id="managePagesBtn">页面管理</button>
+    <button id="manageLibraryBtn">本地文件</button>
+    <button id="settingsBtn">书房设置</button>
+  </div>
+</aside>
+
+<main class="main">
+<header class="top">
+  <div>
+    <div class="eyebrow">A QUIET LIBRARY</div>
+    <h1 id="pageTitle">全部故事</h1>
+    <div class="subtitle" id="pageSubtitle">只留下此刻想读的文字。</div>
+  </div>
+  <div class="top-right">
+    <input class="search" id="search" placeholder="搜索标题 / 作者 / 正文 / 标签">
+    <button class="small-btn" id="sortBtn">最近加入</button>
+  </div>
+</header>
+
+<div class="content-wrap">
+  <div class="page-intro">
+    <h2 id="sectionTitle">故事</h2><small id="count"></small>
+  </div>
+  <div class="tags-bar" id="tagsBar"></div>
+  <section class="story-list" id="storyList"></section>
+  <div class="empty" id="empty">这里还没有故事。<br>点击右下角的 ＋，导入一篇 Word 或手动创建文章。</div>
+</div>
+</main>
+</div>
+
+<button class="fab" id="addBtn" title="添加文章">＋</button>
+
+<!-- 添加 / 编辑 -->
+<div class="overlay" id="storyOverlay">
+<div class="dialog">
+<button class="dialog-close" id="storyClose">×</button>
+<h2 id="storyDialogTitle">添加文章</h2>
+<div class="mode-row" id="modeRow">
+  <button class="mode-btn active" id="modeFile">从 Word 导入</button>
+  <button class="mode-btn" id="modeManual">手动创建</button>
+</div>
+
+<div id="fileMode">
+  <div class="field"><label>Word 文件</label>
+    <div class="filebox"><input type="file" id="storyFile" accept=".docx,.doc">
+      <div class="hint">推荐 .docx。导入后会自动把“与标题相同的第一段”识别为重复标题并从正文中去掉；导入后仍可编辑。</div>
+    </div>
+  </div>
+</div>
+
+<div id="editFields">
+  <div class="form-row">
+    <div class="field"><label>标题</label><input id="storyTitle" placeholder="文章标题"></div>
+    <div class="field"><label>作者</label><input id="storyAuthor" placeholder="作者"></div>
+  </div>
+  <div class="field"><label>标签（可输入多个，用空格或逗号分隔）</label><input id="storyTags" placeholder="例如：太中 同人 暂存"></div>
+  <div class="field"><label>正文</label><textarea id="storyBody" style="min-height:300px" placeholder="文章正文……"></textarea></div>
+</div>
+
+<div class="dialog-actions">
+  <button class="btn danger" id="deleteStoryBtn" style="display:none">删除文章</button>
+  <div class="right"><button class="btn" id="storyCancel">取消</button><button class="btn primary" id="storySave">保存</button></div>
+</div>
+</div>
+</div>
+
+<!-- 阅读 -->
+<div class="reader" id="reader">
+<article class="read-sheet">
+<button class="read-close" id="readerClose">×</button>
+<div class="read-kicker">PRIVATE LIBRARY</div>
+<h2 id="rTitle"></h2>
+<div class="read-meta" id="rMeta"></div>
+<div class="read-tags" id="rTags"></div>
+<div class="article-body" id="rContent"></div>
+<div class="read-actions">
+  <button id="rEdit">编辑</button>
+  <button id="rFav">♡ 收藏</button>
+  <button id="rOpen">打开原文件</button>
+</div>
+</article>
+</div>
+
+<!-- 页面管理 -->
+<div class="overlay" id="pagesOverlay">
+<div class="dialog">
+<button class="dialog-close" id="pagesClose">×</button>
+<h2>页面</h2>
+<div class="field"><label>新建页面</label><div class="form-row"><input id="newPageName" placeholder="例如：太中 / 夏日 / 暂存"><button class="btn primary" id="addPage">新建</button></div></div>
+<div class="hint" style="margin-bottom:13px">页面不是标签。标签描述文章；页面则决定“这一页展示哪些文章”。一篇文章可以属于多个页面。</div>
+<div class="manage-pages" id="pageList"></div>
+</div>
+</div>
+
+<!-- 页面配置 -->
+<div class="overlay" id="pageConfigOverlay">
+<div class="dialog">
+<button class="dialog-close" id="pageConfigClose">×</button>
+<h2 id="pageConfigTitle">页面内容</h2>
+<div class="field"><label>包含哪些文章</label><div class="hint" style="margin-bottom:10px">勾选后，这些文章会出现在这个页面。取消勾选不会删除文章。</div>
+<div id="pagePostList" class="manage-pages"></div></div>
+</div>
+</div>
+
+<!-- 本地文件 -->
+<div class="overlay" id="libraryOverlay">
+<div class="dialog">
+<button class="dialog-close" id="libraryClose">×</button>
+<h2>本地文件</h2>
+<div class="field"><label>连接文件夹</label>
+<div class="folder-box" id="folderBox">尚未连接本地文件夹<br><br><button class="btn" id="chooseFolder">选择文件夹</button></div>
+</div>
+<div class="field"><label>也可以批量导入</label><div class="filebox"><input type="file" id="multiStoryFile" accept=".docx,.doc" multiple></div></div>
+<div class="hint">文件夹扫描会递归读取子文件夹中的 .docx。浏览器无法可靠解析旧式二进制 .doc；如果你的收藏主要是 .doc，我们下一步可以专门解决这一层。</div>
+</div>
+</div>
+
+<!-- 书房设置 -->
+<div class="overlay" id="settingsOverlay">
+<div class="dialog">
+<button class="dialog-close" id="settingsClose">×</button>
+<h2>书房设置</h2>
+<div class="field"><label>书房标题</label><input id="setTitle" placeholder="私人图书馆"></div>
+<div class="field"><label>一句话简介</label><textarea id="setSubtitle" style="min-height:70px"></textarea></div>
+<div class="field"><label>自定义图片（可选）</label><div class="cover-preview" id="coverPreview"></div><input type="file" id="coverFile" accept="image/*"><div class="hint">图片现在作为书房的轻量装饰，不再做成巨大的背景卡片；以后也可以改成侧栏头像、书签或文章插图。</div></div>
+<div class="dialog-actions"><span></span><button class="btn primary" id="settingsSave">保存</button></div>
+</div>
+</div>
+
+<script>
+const STORAGE="privateLibraryV3";
+const DB_NAME="privateLibraryFilesV3", DB_STORE="handles";
+
+const defaultData={
+  settings:{title:"私人图书馆",subtitle:"只留下此刻想读的文字。",cover:""},
+  pages:[
+    {id:"all",name:"全部",postIds:[]},
+    {id:"theme",name:"当前主题",postIds:["demo1","demo2"]},
+    {id:"temp",name:"暂存",postIds:["demo3"]}
+  ],
+  currentPage:"all",
+  activeTag:"全部",
+  tags:["全部","当前主题","暂存"],
+  stories:[
+    {id:"demo1",title:"在雨停之前",author:"某某",tags:["当前主题","雨夜"],date:"2026-08-21",content:"<p>雨落下来的时候，城市像被轻轻按低了声音。</p><p>他站在窗边，没有问她还要不要走。她也没有解释为什么留下。</p><p>后来他们都明白，有些选择并不需要一个郑重其事的答案。</p>",path:"",favorite:false,sourceType:"demo"},
+    {id:"demo2",title:"夏夜、便利店与未寄出的信",author:"某某",tags:["当前主题","夏夜"],date:"2026-08-17",content:"<p>便利店的灯光太亮了，亮得让人忘记现在已经是凌晨。</p><p>她把热饮推过去，说：先拿着吧。至于信，明天再决定。</p>",path:"",favorite:false,sourceType:"demo"},
+    {id:"demo3",title:"如果我们从来没有错过",author:"某某",tags:["暂存","if"],date:"2026-08-09",content:"<p>如果那一天没有下雨，他们也许会走另一条路。</p><p>但人生最奇妙的地方，也许正是没有人知道另一条路通向哪里。</p>",path:"",favorite:false,sourceType:"demo"}
+  ]
+};
+
+let data=JSON.parse(localStorage.getItem(STORAGE)||"null");
+if(!data){data=defaultData;saveData()}
+let newest=true,readerStory=null,editingId=null,folderHandle=null;
+
+function saveData(){localStorage.setItem(STORAGE,JSON.stringify(data))}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function strip(html){const d=document.createElement("div");d.innerHTML=html||"";return d.textContent||""}
+function normalizeTags(raw){
+  return [...new Set(String(raw||"").split(/[\s,，、]+/).map(x=>x.trim()).filter(Boolean))];
+}
+function allTags(){
+  const set=new Set(["全部"]);
+  data.stories.forEach(s=>(s.tags||[]).forEach(t=>set.add(t)));
+  return [...set];
+}
+function getPage(){return data.pages.find(p=>p.id===data.currentPage)||data.pages[0]}
+function pageStories(){
+  const page=getPage();
+  let list=data.stories;
+  if(page && page.id!=="all") list=list.filter(s=page.postIds.includes(s.id));
+  const q=search.value.trim().toLowerCase();
+  if(data.activeTag && data.activeTag!=="全部") list=list.filter(s=>(s.tags||[]).includes(data.activeTag));
+  if(q) list=list.filter(s=>(s.title+" "+s.author+" "+(s.tags||[]).join(" ")+" "+strip(s.content)).toLowerCase().includes(q));
+  return newest?list:[...list].reverse();
+}
+
+function renderNav(){
+  nav.innerHTML=data.pages.map(p=>`<button class="${p.id===data.currentPage?'active':''}" data-page="${esc(p.id)}">${esc(p.name)}</button>`).join("");
+  nav.querySelectorAll("[data-page]").forEach(b=>b.onclick=()=>{
+    data.currentPage=b.dataset.page;data.activeTag="全部";saveData();renderAll()
+  });
+}
+function renderTags(){
+  tagsBar.innerHTML=allTags().map(t=>`<button class="tag-chip ${data.activeTag===t?'on':''}" data-tag="${esc(t)}">#${esc(t)}</button>`).join("");
+  tagsBar.querySelectorAll("[data-tag]").forEach(b=>b.onclick=()=>{data.activeTag=b.dataset.tag;render()});
+}
+function render(){
+  const page=getPage();
+  pageTitle.textContent=page.name;
+  pageSubtitle.textContent=data.settings.subtitle||"";
+  sectionTitle.textContent=page.id==="all"?"故事":page.name;
+  renderTags();
+  const list=pageStories();
+  count.textContent=`${list.length} 篇`;
+  storyList.innerHTML=list.map(s=>{
+    const tags=(s.tags||[]).slice(0,4).map(t=>`<span class="tag">#${esc(t)}</span>`).join("");
+    return `<article class="story-row" data-id="${esc(s.id)}">
+      <div>
+        <h3 class="story-title">${esc(s.title||"无标题")}</h3>
+        <div class="story-excerpt">${esc(strip(s.content).slice(0,230))}</div>
+        <div class="story-meta"><span>${esc(s.author||"未知作者")}</span>${tags}</div>
+      </div>
+      <div class="story-side"><span class="story-date">${esc(s.date||"")}</span><button class="fav ${s.favorite?'on':''}" data-fav="${esc(s.id)}">${s.favorite?'♥':'♡'}</button></div>
+    </article>`
+  }).join("");
+  empty.style.display=list.length?"none":"block";
+  storyList.querySelectorAll(".story-row").forEach(r=>r.onclick=()=>openStory(r.dataset.id));
+  storyList.querySelectorAll("[data-fav]").forEach(b=>b.onclick=e=>{e.stopPropagation();toggleFav(b.dataset.fav)});
+}
+function renderAll(){renderNav();render();}
+
+function toggleFav(id){const s=data.stories.find(x=>x.id===id);if(!s)return;s.favorite=!s.favorite;saveData();render()}
+function openStory(id){
+  const s=data.stories.find(x=>x.id===id);if(!s)return;
+  readerStory=s;rTitle.textContent=s.title||"无标题";rMeta.textContent=`${s.author||"未知作者"} · ${s.date||""}${s.path?" · 本地 Word":""}`;
+  rTags.innerHTML=(s.tags||[]).map(t=>`<span>#${esc(t)}</span>`).join("");
+  rContent.innerHTML=s.content||"<p>暂无正文。</p>";
+  rFav.textContent=s.favorite?"♥ 已收藏":"♡ 收藏";
+  reader.classList.add("show");
+}
+readerClose.onclick=()=>reader.classList.remove("show");
+reader.onclick=e=>{if(e.target===reader)reader.classList.remove("show")};
+rFav.onclick=()=>{if(readerStory){toggleFav(readerStory.id);openStory(readerStory.id)}};
+rEdit.onclick=()=>{if(readerStory){reader.classList.remove("show");openStoryEditor(readerStory.id)}};
+rOpen.onclick=async()=>{
+  if(!readerStory?.path){alert("这篇文章没有关联的本地 Word 文件。");return}
+  const h=await getFileHandle(readerStory.id);
+  if(!h){alert("浏览器没有保存这篇文章的文件句柄。请重新连接原文件夹。");return}
+  try{
+    const perm=await h.requestPermission({mode:"read"});
+    if(perm!=="granted"){alert("没有获得文件读取权限。");return}
+    const f=await h.getFile();
+    alert(`原文件仍在本地：\\n${f.name}\\n\\n正文已经保存在私人图书馆中；编辑网页文章不会修改原 Word 文件。`);
+  }catch(e){alert("无法读取原文件："+e.message)}
+};
+
+search.oninput=render;
+sortBtn.onclick=()=>{newest=!newest;sortBtn.textContent=newest?"最近加入":"最早加入";render()};
+function openStoryEditor(id=null){
+  editingId=id;
+  storyDialogTitle.textContent=id?"编辑文章":"添加文章";
+  deleteStoryBtn.style.display=id?"inline-flex":"none";
+  modeRow.style.display=id?"none":"flex";
+  if(id){
+    const s=data.stories.find(x=>x.id===id);
+    if(!s)return;
+    modeFile.style.display="none";modeManual.style.display="none";
+    storyTitle.value=s.title||"";storyAuthor.value=s.author||"";storyTags.value=(s.tags||[]).join(" ");
+    storyBody.value=htmlToPlain(s.content);
+  }else{
+    modeFile.style.display="block";modeManual.style.display="none";
+    storyFile.value="";storyTitle.value="";storyAuthor.value="";storyTags.value="暂存";storyBody.value="";
+    modeFile.classList.add("active");modeManual.classList.remove("active");
+  }
+  storyOverlay.classList.add("show");
+}
+function closeStoryEditor(){storyOverlay.classList.remove("show");editingId=null}
+function htmlToPlain(html){
+  const d=document.createElement("div");d.innerHTML=html||"";
+  return [...d.children].map(x=>x.innerText||x.textContent||"").join("\\n\\n") || d.innerText || "";
+}
+function plainToHtml(text){
+  return String(text||"").split(/\\n{2,}/).map(p=>`<p>${esc(p).replace(/\\n/g,"<br>")}</p>`).join("")||"<p></p>";
+}
+addBtn.onclick=()=>openStoryEditor();
+storyClose.onclick=closeStoryEditor;storyCancel.onclick=closeStoryEditor;
+storyOverlay.onclick=e=>{if(e.target===storyOverlay)closeStoryEditor()};
+modeFile.onclick=()=>{modeFile.classList.add("active");modeManual.classList.remove("active");fileMode.style.display="block"};
+modeManual.onclick=()=>{modeManual.classList.add("active");modeFile.classList.remove("active");fileMode.style.display="none"};
+
+storyFile.onchange=async()=>{
+  const f=storyFile.files[0];if(!f)return;
+  storyTitle.value=f.name.replace(/\\.docx?$/i,"");
+  storyAuthor.value="";
+  try{
+    const parsed=await readDocx(f);
+    const cleaned=removeDuplicateTitle(parsed,storyTitle.value);
+    storyBody.value=htmlToPlain(cleaned);
+    storyTags.value="暂存";
+  }catch(e){alert("读取 Word 失败："+e.message)}
+};
+function removeDuplicateTitle(html,title){
+  const d=document.createElement("div");d.innerHTML=html;
+  const first=d.querySelector("p,h1,h2,h3");
+  if(first){
+    const a=(first.textContent||"").trim().replace(/\s+/g," ");
+    const b=String(title||"").trim().replace(/\s+/g," ");
+    if(a && b && (a===b || a.toLowerCase()===b.toLowerCase())) first.remove();
+  }
+  return d.innerHTML;
+}
+
+storySave.onclick=async()=>{
+  const title=storyTitle.value.trim();
+  if(!title){alert("请填写标题。");return}
+  const tags=normalizeTags(storyTags.value);
+  if(!tags.length)tags.push("暂存");
+  tags.forEach(t=>{if(!data.tags.includes(t))data.tags.push(t)});
+  if(editingId){
+    const s=data.stories.find(x=>x.id===editingId);if(!s)return;
+    s.title=title;s.author=storyAuthor.value.trim();s.tags=tags;s.content=plainToHtml(storyBody.value);
+  }else{
+    if(modeFile.classList.contains("active")){
+      const f=storyFile.files[0];
+      if(!f){alert("请选择 Word 文件。");return}
+      if(!/\\.docx$/i.test(f.name)){alert("当前版本暂时只可靠支持 .docx；.doc 请先转换，下一版再处理。");return}
+      try{
+        const raw=await readDocx(f);
+        const content=removeDuplicateTitle(raw,title);
+        const id="story_"+Date.now()+"_"+Math.random().toString(36).slice(2,8);
+        const s={id,title,author:storyAuthor.value.trim(),tags,date:new Date().toISOString().slice(0,10),content,path:f.name,favorite:false,sourceType:"word"};
+        data.stories.unshift(s);
+        // 直接选择文件无法得到可长期保存的 handle；仍保存文件名。
+      }catch(e){alert("导入失败："+e.message);return}
+    }else{
+      data.stories.unshift({id:"manual_"+Date.now(),title,author:storyAuthor.value.trim(),tags,date:new Date().toISOString().slice(0,10),content:plainToHtml(storyBody.value),path:"",favorite:false,sourceType:"manual"});
+    }
+  }
+  saveData();closeStoryEditor();renderAll();
+};
+deleteStoryBtn.onclick=async()=>{
+  if(!editingId)return;
+  const s=data.stories.find(x=>x.id===editingId);
+  if(!s||!confirm(`删除《${s.title}》？`))return;
+  data.stories=data.stories.filter(x=>x.id!==editingId);
+  data.pages.forEach(p=>p.postIds=p.postIds.filter(id=>id!==editingId));
+  await removeFileHandle(editingId);saveData();closeStoryEditor();renderAll();
+};
+
+function openPages(){renderPageList();pagesOverlay.classList.add("show")}
+function renderPageList(){
+  pageList.innerHTML=data.pages.map(p=>`<div class="manage-page">
+    <span>${esc(p.name)}${p.id==="all"?"（固定）":""}</span>
+    <button data-config="${esc(p.id)}">${p.id==="all"?"—":"选择文章"}</button>
+    ${p.id!=="all"?`<button data-rename="${esc(p.id)}">改名</button><button data-delete="${esc(p.id)}">删除</button>`:""}
+  </div>`).join("");
+  pageList.querySelectorAll("[data-config]").forEach(b=>b.onclick=()=>openPageConfig(b.dataset.config));
+  pageList.querySelectorAll("[data-rename]").forEach(b=>b.onclick=()=>{
+    const p=data.pages.find(x=>x.id===b.dataset.rename);if(!p)return;
+    const n=prompt("页面名称",p.name);if(n&&n.trim()){p.name=n.trim();saveData();renderPageList();renderNav()}
+  });
+  pageList.querySelectorAll("[data-delete]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.delete;if(!confirm("删除页面？文章不会被删除。"))return;
+    data.pages=data.pages.filter(x=>x.id!==id);if(data.currentPage===id)data.currentPage="all";saveData();renderPageList();renderNav();render()
+  });
+}
+managePagesBtn.onclick=openPages;
+pagesClose.onclick=()=>pagesOverlay.classList.remove("show");
+pagesOverlay.onclick=e=>{if(e.target===pagesOverlay)pagesOverlay.classList.remove("show")};
+addPage.onclick=()=>{
+  const n=newPageName.value.trim();if(!n)return;
+  const id="page_"+Date.now();data.pages.push({id,name:n,postIds:[]});data.currentPage=id;data.activeTag="全部";newPageName.value="";saveData();renderAll();renderPageList();
+};
+function openPageConfig(id){
+  const p=data.pages.find(x=>x.id===id);if(!p||id==="all")return;
+  pageConfigTitle.textContent=`${p.name} · 选择文章`;
+  pagePostList.innerHTML=data.stories.map(s=>`<label class="manage-page" style="cursor:pointer">
+    <input type="checkbox" data-post="${esc(s.id)}" ${p.postIds.includes(s.id)?"checked":""}>
+    <span>${esc(s.title)}<small style="display:block;color:var(--muted);font-size:9px">${esc((s.tags||[]).join(" · "))}</small></span>
+  </label>`).join("");
+  pagePostList.querySelectorAll("[data-post]").forEach(cb=>cb.onchange=()=>{
+    const id=cb.dataset.post;
+    if(cb.checked&&!p.postIds.includes(id))p.postIds.push(id);
+    if(!cb.checked)p.postIds=p.postIds.filter(x=>x!==id);
+    saveData();render();
+  });
+  pageConfigOverlay.classList.add("show");
+}
+pageConfigClose.onclick=()=>pageConfigOverlay.classList.remove("show");
+pageConfigOverlay.onclick=e=>{if(e.target===pageConfigOverlay)pageConfigOverlay.classList.remove("show")};
+
+const DB={};
+function openFileDB(){
+  return new Promise((resolve,reject)=>{
+    const req=indexedDB.open(DB_NAME,1);
+    req.onupgradeneeded=()=>req.result.createObjectStore(DB_STORE);
+    req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+  });
+}
+async function putFileHandle(id,h){
+  if(!h)return;try{const db=await openFileDB();await new Promise((res,rej)=>{const tx=db.transaction(DB_STORE,"readwrite");tx.objectStore(DB_STORE).put(h,id);tx.oncomplete=res;tx.onerror=()=>rej(tx.error)});db.close()}catch(e){}
+}
+async function getFileHandle(id){
+  try{const db=await openFileDB();const h=await new Promise((res,rej)=>{const tx=db.transaction(DB_STORE);const r=tx.objectStore(DB_STORE).get(id);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});db.close();return h||null}catch{return null}
+}
+async function removeFileHandle(id){
+  try{const db=await openFileDB();await new Promise((res,rej)=>{const tx=db.transaction(DB_STORE,"readwrite");tx.objectStore(DB_STORE).delete(id);tx.oncomplete=res;tx.onerror=()=>rej(tx.error)});db.close()}catch{}
+}
+async function readDocx(file){
+  if(!window.JSZip){
+    await new Promise((resolve,reject)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";s.onload=resolve;s.onerror=()=>reject(new Error("无法加载 DOCX 解析模块；请检查网络。"));document.head.appendChild(s)})
+  }
+  const zip=await JSZip.loadAsync(await file.arrayBuffer());
+  const xml=await zip.file("word/document.xml").async("string");
+  const doc=new DOMParser().parseFromString(xml,"application/xml");
+  const paras=[...doc.getElementsByTagName("w:p")];
+  const out=[];
+  for(const p of paras){
+    const texts=[...p.getElementsByTagName("w:t")].map(t=>t.textContent).join("");
+    if(texts.trim())out.push(`<p>${esc(texts)}</p>`);
+  }
+  return out.join("")||"<p>空白文档。</p>";
+}
+
+async function chooseFolder(){
+  if(!window.showDirectoryPicker){alert("当前浏览器不支持选择本地文件夹。请使用最新版 Chrome / Edge。");return}
+  try{
+    folderHandle=await showDirectoryPicker({mode:"read"});
+    folderBox.innerHTML=`已连接：<strong>${esc(folderHandle.name)}</strong><br><br><button class="btn" id="scanFolder">扫描 / 更新 .docx</button>`;
+    scanFolder.onclick=scanFolder;
+  }catch{}
+}
+async function scanFolder(){
+  const files=[];
+  async function walk(dir,path=""){
+    for await(const [name,h] of dir.entries()){
+      if(h.kind==="file"&&/\\.docx$/i.test(name))files.push({name,h,path:(path?path+"/":"")+name});
+      else if(h.kind==="directory")await walk(h,path?path+"/"+name:name);
+    }
+  }
+  await walk(folderHandle);
+  let add=0,update=0;
+  for(const x of files){
+    const f=await x.h.getFile();
+    let s=data.stories.find(s=>s.path===x.path);
+    if(s){await putFileHandle(s.id,x.h);update++;continue}
+    try{
+      const raw=await readDocx(f);
+      const title=x.name.replace(/\\.docx$/i,"");
+      const content=removeDuplicateTitle(raw,title);
+      const id="file_"+Date.now()+"_"+Math.random().toString(36).slice(2,8);
+      s={id,title,author:"",tags:["暂存"],date:new Date().toISOString().slice(0,10),content,path:x.path,favorite:false,sourceType:"word"};
+      data.stories.unshift(s);await putFileHandle(id,x.h);add++;
+    }catch(e){console.error(e)}
+  }
+  if(add||update)saveData();renderAll();alert(`扫描完成：新增 ${add} 篇，已存在 ${update} 篇。`);
+}
+manageLibraryBtn.onclick=()=>libraryOverlay.classList.add("show");
+libraryClose.onclick=()=>libraryOverlay.classList.remove("show");
+libraryOverlay.onclick=e=>{if(e.target===libraryOverlay)libraryOverlay.classList.remove("show")};
+chooseFolder.onclick=chooseFolder;
+multiStoryFile.onchange=async()=>{
+  const fs=[...multiStoryFile.files];let add=0,fail=0;
+  for(const f of fs){
+    if(!/\\.docx$/i.test(f.name)){fail++;continue}
+    try{
+      const raw=await readDocx(f),title=f.name.replace(/\\.docx$/i,""),content=removeDuplicateTitle(raw,title);
+      data.stories.unshift({id:"batch_"+Date.now()+"_"+Math.random().toString(36).slice(2,7),title,author:"",tags:["暂存"],date:new Date().toISOString().slice(0,10),content,path:f.name,favorite:false,sourceType:"word"});add++
+    }catch{fail++}
+  }
+  saveData();renderAll();multiStoryFile.value="";alert(`导入完成：${add} 篇${fail?`，跳过 ${fail} 篇`:''}。`);
+};
+
+function openSettings(){
+  setTitle.value=data.settings.title;setSubtitle.value=data.settings.subtitle;
+  coverPreview.style.backgroundImage=data.settings.cover?`url("${data.settings.cover}")`:"";
+  settingsOverlay.classList.add("show")
+}
+settingsBtn.onclick=openSettings;settingsClose.onclick=()=>settingsOverlay.classList.remove("show");
+settingsOverlay.onclick=e=>{if(e.target===settingsOverlay)settingsOverlay.classList.remove("show")};
+coverFile.onchange=()=>{
+  const f=coverFile.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{data.settings.cover=r.result;coverPreview.style.backgroundImage=`url("${r.result}")`};r.readAsDataURL(f)
+};
+settingsSave.onclick=()=>{data.settings.title=setTitle.value.trim()||"私人图书馆";data.settings.subtitle=setSubtitle.value.trim();saveData();settingsOverlay.classList.remove("show");render()};
+
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){[reader,storyOverlay,pagesOverlay,pageConfigOverlay,libraryOverlay,settingsOverlay].forEach(x=>x.classList.remove("show"))}
+});
+
+renderAll();
+</script>
+</body>
+</html>
