@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>私人图书馆</title>
+<style>
+:root{
+  --bg:#f4efe8;--paper:#fffdf9;--paper2:#f8f2ea;--ink:#332d29;--muted:#968980;
+  --line:#e5d9cf;--accent:#8b6256;--accent-soft:#eee0d7;--shadow:0 14px 42px rgba(60,42,32,.07);
+  --hero:url("");
+}
+*{box-sizing:border-box}
+html{scrollbar-width:none}html::-webkit-scrollbar{display:none}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"PingFang SC","Microsoft YaHei",sans-serif}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.app{min-height:100vh;display:flex}
+.sidebar{
+  width:205px;flex:0 0 205px;position:sticky;top:0;height:100vh;padding:30px 18px;
+  background:rgba(255,253,249,.76);backdrop-filter:blur(14px);border-right:1px solid var(--line)
+}
+.brand{text-align:center;font-family:"Songti SC","Noto Serif SC",serif;font-size:22px;font-weight:600;letter-spacing:.1em;margin:3px 0 30px}
+.brand small{display:block;font-size:9px;color:var(--muted);font-family:inherit;font-weight:400;letter-spacing:.25em;margin-top:7px}
+.nav{display:flex;flex-direction:column;gap:5px}
+.nav button{
+  border:0;background:transparent;color:var(--muted);border-radius:11px;padding:9px 8px;
+  width:100%;text-align:center;font-size:13px
+}
+.nav button:hover,.nav button.active{background:var(--paper2);color:var(--accent)}
+.nav button.active{font-weight:600}
+.sidebar-bottom{position:absolute;left:18px;right:18px;bottom:22px}
+.sidebar-bottom button{width:100%;padding:8px;border:1px solid var(--line);background:transparent;border-radius:999px;color:var(--muted);font-size:11px}
+.main{flex:1;min-width:0}
+.top{max-width:1080px;margin:auto;padding:32px 40px 20px;display:flex;justify-content:space-between;align-items:flex-end;gap:20px}
+.eyebrow{font-size:10px;color:var(--accent);letter-spacing:.24em;margin-bottom:8px}
+h1{font-family:"Songti SC","Noto Serif SC",serif;font-weight:500;font-size:31px;margin:0}
+.subtitle{font-size:11.5px;color:var(--muted);margin-top:8px}
+.top-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.top-actions button,.search{
+  border:1px solid var(--line);background:var(--paper);color:var(--muted);border-radius:999px;padding:8px 12px;font-size:11px
+}
+.search{outline:none;width:190px}
+.wrap{max-width:1080px;margin:auto;padding:10px 40px 80px}
+.hero{
+  min-height:205px;border-radius:22px;border:1px solid var(--line);overflow:hidden;
+  position:relative;background:var(--hero),linear-gradient(125deg,#e8ddd4,#f8f2eb);
+  background-size:cover;background-position:center;box-shadow:var(--shadow);margin-bottom:25px
+}
+.hero:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(48,37,31,.63),rgba(48,37,31,.18),rgba(48,37,31,0))}
+.hero-inner{position:relative;z-index:1;padding:34px 38px;color:white;max-width:650px}
+.hero-label{font-size:10px;letter-spacing:.24em;opacity:.78}
+.hero h2{font-family:"Songti SC","Noto Serif SC",serif;font-weight:500;font-size:28px;margin:11px 0 8px}
+.hero p{font-family:"Songti SC","Noto Serif SC",serif;line-height:1.9;font-size:13px;margin:0;opacity:.9}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin:0 2px 13px}
+.section-head span{font-family:"Songti SC","Noto Serif SC",serif;font-size:17px}
+.section-head small{color:var(--muted);font-size:10px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px}
+.card{
+  background:var(--paper);border:1px solid var(--line);border-radius:17px;padding:21px 23px;
+  box-shadow:0 5px 22px rgba(60,42,32,.04);transition:.16s ease;cursor:pointer
+}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.card-top{display:flex;justify-content:space-between;gap:10px}
+.tag{font-size:9.5px;color:var(--accent);letter-spacing:.15em}
+.favorite{border:0;background:none;color:#b9a9a0;padding:0;font-size:15px}.favorite.on{color:#bd6d65}
+.card h3{font-family:"Songti SC","Noto Serif SC",serif;font-size:19px;line-height:1.5;font-weight:500;margin:10px 0 8px}
+.excerpt{font-family:"Songti SC","Noto Serif SC",serif;font-size:13px;line-height:1.9;color:#776b63;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.card-footer{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:10px;margin-top:16px}
+.empty{text-align:center;color:var(--muted);padding:75px 20px;display:none;line-height:2}
+.reader{position:fixed;inset:0;background:rgba(45,35,30,.44);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;padding:20px;z-index:30}
+.reader.show{display:flex}
+.sheet{position:relative;width:min(790px,95vw);max-height:93vh;overflow:auto;background:var(--paper);border-radius:21px;padding:42px 54px 60px;box-shadow:0 25px 80px rgba(30,20,16,.2)}
+.close{position:absolute;right:17px;top:17px;border:0;background:var(--paper2);color:var(--muted);width:31px;height:31px;border-radius:50%}
+.read-tag{font-size:9.5px;color:var(--accent);letter-spacing:.2em}
+.sheet h2{font-family:"Songti SC","Noto Serif SC",serif;font-weight:500;font-size:29px;line-height:1.5;margin:10px 0 7px}
+.read-meta{color:var(--muted);font-size:10.5px;padding-bottom:18px;border-bottom:1px solid var(--line)}
+.content{font-family:"Songti SC","Noto Serif SC",serif;font-size:16px;line-height:2.15;padding-top:26px}
+.content p{margin:0 0 1.1em}
+.reader-actions{display:flex;gap:7px;margin-top:35px;padding-top:14px;border-top:1px solid var(--line)}
+.reader-actions button{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:7px 12px;font-size:11px}
+.overlay{position:fixed;inset:0;background:rgba(30,22,19,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:40}
+.overlay.show{display:flex}
+.dialog{width:min(560px,94vw);background:var(--paper);border-radius:19px;padding:28px;box-shadow:var(--shadow);position:relative}
+.dialog h2{font-family:"Songti SC","Noto Serif SC",serif;font-size:22px;font-weight:500;margin:0 0 20px}
+.close-dialog{position:absolute;right:16px;top:16px;border:0;background:var(--paper2);border-radius:50%;width:30px;height:30px;color:var(--muted)}
+.field{margin-bottom:15px}.field label{display:block;font-size:11px;color:var(--muted);margin-bottom:6px}
+.field input,.field textarea,.field select{
+  width:100%;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:10px;padding:9px 11px;outline:none;font-size:13px
+}
+.field textarea{min-height:90px;resize:vertical}.field input:focus,.field textarea:focus{border-color:var(--accent)}
+.row{display:flex;gap:9px}.row>*{flex:1}
+.dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
+.dialog-actions button{border-radius:999px;padding:8px 14px;border:1px solid var(--line);background:transparent;color:var(--muted);font-size:11px}
+.dialog-actions .primary{background:var(--accent);border-color:var(--accent);color:white}
+.mode-btn{
+  flex:1;border:1px solid var(--line);background:var(--paper);color:var(--muted);
+  border-radius:10px;padding:9px 10px;font-size:11px
+}
+.mode-btn.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+.story-dialog{width:min(620px,94vw)}
+.story-dialog textarea{font-family:"Songti SC","Noto Serif SC",serif;line-height:1.8}
+.story-dialog .row{align-items:flex-start}
+
+.hint{font-size:10px;color:var(--muted);line-height:1.7}
+.file-box{border:1px dashed #d4c5ba;border-radius:12px;padding:14px;text-align:center;color:var(--muted);font-size:11px}
+.manage-list{max-height:330px;overflow:auto;border:1px solid var(--line);border-radius:11px}
+.manage-row{display:flex;align-items:center;gap:9px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.manage-row:last-child{border-bottom:0}.manage-row span{flex:1;min-width:0;font-size:12px}
+.manage-row button{border:0;background:none;color:var(--muted);font-size:11px}
+.settings-preview{height:115px;border-radius:13px;background:linear-gradient(125deg,#e8ddd4,#f8f2eb) center/cover;margin-bottom:10px;border:1px solid var(--line)}
+@media(max-width:820px){.sidebar{width:155px;flex-basis:155px}.top,.wrap{padding-left:24px;padding-right:24px}}
+@media(max-width:620px){
+ .app{display:block}.sidebar{position:static;width:auto;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:16px}
+ .brand{margin-bottom:10px}.nav{flex-direction:row;overflow:auto}.nav button{white-space:nowrap}
+ .sidebar-bottom{display:none}.top{padding:23px 20px 15px;align-items:flex-start}.top-actions{display:none}.wrap{padding:5px 20px 60px}
+ .grid{grid-template-columns:1fr}.hero-inner{padding:29px 25px}.hero h2{font-size:24px}.sheet{padding:35px 25px 45px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand">私人图书馆<small>PRIVATE LIBRARY</small></div>
+  <nav class="nav" id="nav"></nav>
+  <div class="sidebar-bottom"><button id="manageBtn">管理图书馆</button></div>
+</aside>
+
+<main class="main">
+<header class="top">
+  <div><div class="eyebrow">A QUIET LIBRARY</div><h1 id="pageTitle">全部故事</h1><div class="subtitle">只留下此刻想读的文字。</div></div>
+  <div class="top-actions">
+    <input class="search" id="search" placeholder="搜索标题 / 作者 / 正文">
+    <button id="sortBtn">最近加入</button>
+    <button id="addStoryBtn">＋ 添加文章</button><button id="randomBtn">随便读一篇</button>
+  </div>
+</header>
+
+<div class="wrap">
+<section class="hero" id="hero">
+  <div class="hero-inner">
+    <div class="hero-label">PERSONAL SHELF</div>
+    <h2 id="heroTitle">我的私人书架</h2>
+    <p id="heroText">这里收藏那些值得再次打开的故事。主题可以变化，书架也可以变化；留下来的，只是你真正喜欢的文字。</p>
+  </div>
+</section>
+
+<div class="section-head"><span id="sectionTitle">故事</span><small id="count"></small></div>
+<section class="grid" id="grid"></section>
+<div class="empty" id="empty">这里还没有故事。<br>可以点击“＋ 添加文章”导入 Word，或在“管理图书馆”中连接本地文件夹。</div>
+</div>
+</main>
+</div>
+
+
+<div class="overlay" id="storyOverlay">
+<div class="dialog story-dialog">
+<button class="close-dialog" id="storyClose">×</button>
+<h2 id="storyDialogTitle">添加文章</h2>
+
+<div class="field">
+  <label>添加方式</label>
+  <div class="row">
+    <button class="mode-btn active" id="modeFile">从本地 Word 导入</button>
+    <button class="mode-btn" id="modeManual">手动创建</button>
+  </div>
+</div>
+
+<div id="fileMode">
+  <div class="field">
+    <label>Word 文件</label>
+    <div class="file-box">
+      <input type="file" id="storyFile" accept=".docx,.doc">
+      <div class="hint">推荐使用 .docx。导入后会复制文章正文到本地浏览器数据中，并保留原文件关联信息。</div>
+    </div>
+  </div>
+</div>
+
+<div id="manualMode" style="display:none">
+  <div class="field"><label>标题</label><input id="storyTitle" placeholder="文章标题"></div>
+  <div class="row">
+    <div class="field"><label>作者</label><input id="storyAuthor" placeholder="作者"></div>
+    <div class="field"><label>主题</label><select id="storyTag"></select></div>
+  </div>
+  <div class="field"><label>正文</label><textarea id="storyBody" style="min-height:260px" placeholder="在这里粘贴文章正文……"></textarea></div>
+</div>
+
+<div id="fileMeta" style="display:none">
+  <div class="row">
+    <div class="field"><label>标题</label><input id="fileStoryTitle" placeholder="默认使用文件名"></div>
+    <div class="field"><label>作者</label><input id="fileStoryAuthor" placeholder="可选"></div>
+  </div>
+  <div class="field"><label>主题</label><select id="fileStoryTag"></select></div>
+</div>
+
+<div class="dialog-actions">
+  <button id="storyCancel">取消</button>
+  <button class="primary" id="storyImport">添加到图书馆</button>
+</div>
+</div>
+</div>
+
+<div class="reader" id="reader">
+<article class="sheet">
+<button class="close" id="readerClose">×</button>
+<div class="read-tag" id="rTag"></div><h2 id="rTitle"></h2><div class="read-meta" id="rMeta"></div>
+<div class="content" id="rContent"></div>
+<div class="reader-actions"><button id="rFav">♡ 收藏</button><button id="rOpen">打开原文件</button></div>
+</article>
+</div>
+
+<div class="overlay" id="settingsOverlay">
+<div class="dialog">
+<button class="close-dialog" id="settingsClose">×</button>
+<h2>书房设置</h2>
+<div class="field"><label>书房标题</label><input id="setTitle" value="我的私人书架"></div>
+<div class="field"><label>副标题 / 简介</label><textarea id="setText">这里收藏那些值得再次打开的故事。主题可以变化，书架也可以变化；留下来的，只是你真正喜欢的文字。</textarea></div>
+<div class="field"><label>自定义头图</label><div class="settings-preview" id="preview"></div><input type="file" id="heroFile" accept="image/*"><div class="hint">图片只在当前浏览器本地使用。后续可改成读取你指定的本地图片文件。</div></div>
+<div class="dialog-actions"><button id="settingsCancel">取消</button><button class="primary" id="settingsSave">保存</button></div>
+</div>
+</div>
+
+<div class="overlay" id="manageOverlay">
+<div class="dialog">
+<button class="close-dialog" id="manageClose">×</button>
+<h2>管理图书馆</h2>
+<div class="field"><label>本地图书馆文件夹</label>
+<div class="file-box" id="folderBox">尚未连接文件夹<br><br><button id="chooseFolder">选择文件夹</button></div>
+</div>
+<div class="field">
+  <label>也可以直接导入 Word</label>
+  <div class="file-box"><input type="file" id="multiStoryFile" accept=".docx,.doc" multiple></div>
+</div>
+<div class="hint">连接后会扫描文件夹中的 .docx / .doc。推荐使用 .docx：浏览器可以直接提取正文；旧式 .doc 属于二进制格式，纯前端无法可靠解析，本版会跳过它。你也可以用上面的“直接导入 Word”一次导入多篇 .docx。</div>
+<div class="field" style="margin-top:18px"><label>主题</label><div class="row"><input id="newTag" placeholder="例如：某角色 / 某 CP / 暂存"><button id="addTag" style="flex:0 0 auto;border:1px solid var(--line);background:var(--paper2);border-radius:10px;padding:0 14px;color:var(--muted)">添加</button></div></div>
+<div class="manage-list" id="tagList"></div>
+<div class="dialog-actions"><button class="primary" id="manageDone">完成</button></div>
+</div>
+</div>
+
+<script>
+/* ===== 数据层 =====
+   这是第一版的“本地可运行”结构：
+   1. 文章元数据保存在 localStorage
+   2. Word 文档通过 File System Access API 读取
+   3. .docx 用浏览器内置解压读取 XML
+   4. .doc 预留为后续本地转换方案
+*/
+const STORAGE="privateLibraryV1";
+const defaultData={
+  settings:{title:"我的私人书架",text:"这里收藏那些值得再次打开的故事。主题可以变化，书架也可以变化；留下来的，只是你真正喜欢的文字。",hero:""},
+  tags:["全部","当前主题","暂存"],
+  currentTag:"全部",
+  stories:[
+    {id:"demo1",title:"在雨停之前",author:"某某",tag:"当前主题",date:"2026.08.21",excerpt:"有些故事并没有真正结束，只是两个人终于学会在沉默里并肩站着。",content:"<p>雨落下来的时候，城市像被轻轻按低了声音。</p><p>他站在窗边，没有问她还要不要走。她也没有解释为什么留下。</p><p>后来他们都明白，有些选择并不需要一个郑重其事的答案。</p>",path:"",favorite:false},
+    {id:"demo2",title:"夏夜、便利店与未寄出的信",author:"某某",tag:"当前主题",date:"2026.08.17",excerpt:"凌晨两点的便利店亮得像一座小小的岛，而他终于把那封信重新折好。",content:"<p>便利店的灯光太亮了，亮得让人忘记现在已经是凌晨。</p><p>她把热饮推过去，说：先拿着吧。至于信，明天再决定。</p>",path:"",favorite:false},
+    {id:"demo3",title:"如果我们从来没有错过",author:"某某",tag:"暂存",date:"2026.08.09",excerpt:"这是一个关于另一种可能性的故事。没有轰轰烈烈，只是一点迟来的温柔。",content:"<p>如果那一天没有下雨，他们也许会走另一条路。</p><p>但人生最奇妙的地方，也许正是没有人知道另一条路通向哪里。</p>",path:"",favorite:false}
+  ]
+};
+let data=JSON.parse(localStorage.getItem(STORAGE)||"null")||defaultData;
+
+let newest=true, readerStory=null, folderHandle=null;
+const DB_NAME="privateLibraryFilesV2", DB_STORE="handles";
+
+function openFileDB(){
+  return new Promise((resolve,reject)=>{
+    const req=indexedDB.open(DB_NAME,1);
+    req.onupgradeneeded=()=>req.result.createObjectStore(DB_STORE);
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error);
+  });
+}
+async function putFileHandle(id,handle){
+  try{
+    const db=await openFileDB();
+    await new Promise((resolve,reject)=>{
+      const tx=db.transaction(DB_STORE,"readwrite");
+      tx.objectStore(DB_STORE).put(handle,id);
+      tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);
+    });
+    db.close();
+  }catch(e){ console.warn("无法保存文件句柄",e); }
+}
+async function getFileHandle(id){
+  try{
+    const db=await openFileDB();
+    const h=await new Promise((resolve,reject)=>{
+      const tx=db.transaction(DB_STORE,"readonly");
+      const req=tx.objectStore(DB_STORE).get(id);
+      req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+    });
+    db.close();return h||null;
+  }catch(e){return null}
+}
+async function removeFileHandle(id){
+  try{
+    const db=await openFileDB();
+    await new Promise((resolve,reject)=>{
+      const tx=db.transaction(DB_STORE,"readwrite");
+      tx.objectStore(DB_STORE).delete(id);
+      tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);
+    });
+    db.close();
+  }catch{}
+}
+
+
+function save(){localStorage.setItem(STORAGE,JSON.stringify(data))}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function renderNav(){
+  nav.innerHTML=data.tags.map(t=>`<button class="${t===data.currentTag?'active':''}" data-tag="${esc(t)}">${esc(t)}</button>`).join("");
+  nav.querySelectorAll("button").forEach(b=>b.onclick=()=>{data.currentTag=b.dataset.tag;save();renderNav();render()})
+}
+function render(){
+  pageTitle.textContent=data.currentTag==="全部"?"全部故事":data.currentTag;
+  sectionTitle.textContent=data.currentTag==="全部"?"故事":data.currentTag;
+  let q=search.value.trim().toLowerCase();
+  let list=data.stories.filter(s=>data.currentTag==="全部"||s.tag===data.currentTag);
+  if(q) list=list.filter(s=>(s.title+" "+s.author+" "+s.excerpt+" "+strip(s.content)).toLowerCase().includes(q));
+  if(!newest)list=[...list].reverse();
+  count.textContent=`${list.length} 篇`;
+  grid.innerHTML=list.map(s=>`
+  <article class="card" data-id="${esc(s.id)}">
+    <div class="card-top"><div class="tag">${esc(s.tag)}</div>
+      <button class="favorite ${s.favorite?'on':''}" data-fav="${esc(s.id)}">${s.favorite?'♥':'♡'}</button>
+    </div>
+    <h3>${esc(s.title)}</h3><div class="excerpt">${esc(s.excerpt||strip(s.content).slice(0,180))}</div>
+    <div class="card-footer"><span>${esc(s.author||"未知作者")}</span><span>${s.sourceType==="word"?"DOCX":(s.sourceType==="manual"?"手动":"演示")} · ${esc(s.date||"")}</span></div>
+  </article>`).join("");
+  empty.style.display=list.length?"none":"block";
+  grid.querySelectorAll(".card").forEach(c=>c.onclick=()=>openStory(c.dataset.id));
+  grid.querySelectorAll("[data-fav]").forEach(b=>b.onclick=e=>{e.stopPropagation();toggleFav(b.dataset.fav)})
+}
+function strip(html){const d=document.createElement("div");d.innerHTML=html||"";return d.textContent||""}
+function openStory(id){
+  const s=data.stories.find(x=>x.id===id);if(!s)return;readerStory=s;
+  rTag.textContent=s.tag;rTitle.textContent=s.title;rMeta.textContent=`${s.author||"未知作者"} · ${s.date||""}`;
+  rContent.innerHTML=s.content||"<p>暂无正文。</p>";rFav.textContent=s.favorite?"♥ 已收藏":"♡ 收藏";
+  reader.classList.add("show");
+}
+function toggleFav(id){const s=data.stories.find(x=>x.id===id);if(!s)return;s.favorite=!s.favorite;save();render()}
+readerClose.onclick=()=>reader.classList.remove("show");
+reader.onclick=e=>{if(e.target===reader)reader.classList.remove("show")};
+rFav.onclick=()=>{if(readerStory){toggleFav(readerStory.id);openStory(readerStory.id)}};
+
+rOpen.onclick=async()=>{
+  if(!readerStory?.path){alert("这篇文章没有关联的本地 Word 文件。");return}
+  const h=await getFileHandle(readerStory.id);
+  if(h){
+    try{
+      const perm=await h.requestPermission({mode:"read"});
+      if(perm!=="granted"){alert("浏览器没有授予读取该文件的权限。");return}
+      const f=await h.getFile();
+      alert(`已重新读取原文件：${f.name}\n\n当前版本主要用于阅读与管理；原文件仍保留在你的本地文件夹中。`);
+      return;
+    }catch(e){console.warn(e)}
+  }
+  alert(`原文件路径：${readerStory.path}\n\n浏览器没有保存可直接打开的文件句柄。请重新连接图书馆文件夹后再试。`);
+};
+
+search.oninput=render;
+sortBtn.onclick=()=>{newest=!newest;sortBtn.textContent=newest?"最近加入":"最早加入";render()};
+randomBtn.onclick=()=>{const list=data.stories.filter(s=>data.currentTag==="全部"||s.tag===data.currentTag);if(list.length)openStory(list[Math.floor(Math.random()*list.length)].id)};
+
+function openSettings(){
+  setTitle.value=data.settings.title;setText.value=data.settings.text;
+  preview.style.backgroundImage=data.settings.hero?`url("${data.settings.hero}")`:"linear-gradient(125deg,#e8ddd4,#f8f2eb)";
+  settingsOverlay.classList.add("show")
+}
+settingsSave.onclick=()=>{data.settings.title=setTitle.value.trim()||"我的私人书架";data.settings.text=setText.value.trim();heroTitle.textContent=data.settings.title;heroText.textContent=data.settings.text;if(data.settings.hero)hero.style.backgroundImage=`url("${data.settings.hero}")`;save();settingsOverlay.classList.remove("show")};
+settingsCancel.onclick=()=>settingsOverlay.classList.remove("show");settingsClose.onclick=()=>settingsOverlay.classList.remove("show");
+heroFile.onchange=()=>{const f=heroFile.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{data.settings.hero=r.result;preview.style.backgroundImage=`url("${r.result}")`};r.readAsDataURL(f)};
+
+manageBtn.onclick=()=>{renderTags();manageOverlay.classList.add("show")};
+manageClose.onclick=()=>manageOverlay.classList.remove("show");manageDone.onclick=()=>{save();manageOverlay.classList.remove("show");renderNav();render()};
+function renderTags(){
+  tagList.innerHTML=data.tags.filter(t=>t!=="全部").map(t=>`<div class="manage-row"><span>${esc(t)}</span><button data-rm-tag="${esc(t)}">删除</button></div>`).join("")||"<div class='manage-row'><span>暂无自定义主题</span></div>";
+  tagList.querySelectorAll("[data-rm-tag]").forEach(b=>b.onclick=()=>{const t=b.dataset.rmTag;if(!confirm(`删除主题“${t}”？文章不会被删除。`))return;data.tags=data.tags.filter(x=>x!==t);data.stories.forEach(s=>{if(s.tag===t)s.tag="暂存"});if(data.currentTag===t)data.currentTag="全部";renderTags()})
+}
+addTag.onclick=()=>{const t=newTag.value.trim();if(!t||data.tags.includes(t))return;data.tags.push(t);newTag.value="";renderTags()};
+
+let zipLoaded=false;
+async function readDocx(file){
+  if(!window.DecompressionStream) throw new Error("浏览器不支持解压 DOCX");
+  const buf=await file.arrayBuffer();
+  const ds=new DecompressionStream("deflate-raw");
+  /* 浏览器不能直接读取 zip；这里采用轻量 JSZip CDN 仅用于 .docx */
+  throw new Error("DOCX 解析模块尚未加载");
+}
+
+function fillStoryTags(){
+  const tags=data.tags.filter(t=>t!=="全部");
+  const opts=tags.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join("");
+  storyTag.innerHTML=opts;fileStoryTag.innerHTML=opts;
+  if(data.tags.includes("暂存")){storyTag.value="暂存";fileStoryTag.value="暂存";}
+}
+function openStoryDialog(){
+  fillStoryTags();
+  modeFile.classList.add("active");modeManual.classList.remove("active");
+  fileMode.style.display="block";manualMode.style.display="none";fileMeta.style.display="none";
+  storyFile.value="";storyTitle.value="";storyAuthor.value="";storyBody.value="";
+  storyOverlay.classList.add("show");
+}
+function closeStoryDialog(){storyOverlay.classList.remove("show")}
+modeFile.onclick=()=>{
+  modeFile.classList.add("active");modeManual.classList.remove("active");
+  fileMode.style.display="block";manualMode.style.display="none";
+  fileMeta.style.display=storyFile.files.length?"block":"none";
+};
+modeManual.onclick=()=>{
+  modeManual.classList.add("active");modeFile.classList.remove("active");
+  fileMode.style.display="none";manualMode.style.display="block";fileMeta.style.display="none";
+};
+storyFile.onchange=()=>{
+  const f=storyFile.files[0];
+  fileMeta.style.display=f?"block":"none";
+  if(f) fileStoryTitle.value=f.name.replace(/\.(docx?|DOCX?)$/,"");
+};
+storyCancel.onclick=closeStoryDialog;
+storyClose.onclick=closeStoryDialog;
+storyOverlay.onclick=e=>{if(e.target===storyOverlay)closeStoryDialog()};
+
+async function importOneFile(file, forcedTag, authorOverride="", titleOverride=""){
+  const isDocx=/\.docx$/i.test(file.name);
+  const id="story_"+Date.now()+"_"+Math.random().toString(36).slice(2,8);
+  const title=titleOverride.trim()||file.name.replace(/\.(docx?|DOCX?)$/,"");
+  let content="";
+  if(isDocx){
+    content=await simpleDocxText(file);
+  }else{
+    throw new Error("旧式 .doc 文件无法在纯浏览器环境中稳定解析。请先转为 .docx。");
+  }
+  const tag=forcedTag || (data.tags.includes("暂存")?"暂存":data.tags.find(t=>t!=="全部")||"暂存");
+  const story={id,title,author:authorOverride.trim(),tag,date:new Date().toISOString().slice(0,10),
+    excerpt:strip(content).slice(0,180),content,path:file.webkitRelativePath||file.name,favorite:false,sourceType:"word"};
+  data.stories.unshift(story);
+  return {story,file};
+}
+
+storyImport.onclick=async()=>{
+  try{
+    if(modeManual.classList.contains("active")){
+      const title=storyTitle.value.trim();
+      const body=storyBody.value.trim();
+      if(!title||!body){alert("请至少填写标题和正文。");return}
+      const content=body.split(/\n{2,}/).map(x=>`<p>${esc(x).replace(/\n/g,"<br>")}</p>`).join("");
+      data.stories.unshift({id:"manual_"+Date.now(),title,author:storyAuthor.value.trim(),tag:storyTag.value,
+        date:new Date().toISOString().slice(0,10),excerpt:body.slice(0,180),content,path:"",favorite:false,sourceType:"manual"});
+    }else{
+      const f=storyFile.files[0];
+      if(!f){alert("请选择一个 .docx 文件。");return}
+      const result=await importOneFile(f,fileStoryTag.value,fileStoryAuthor.value,fileStoryTitle.value);
+      await putFileHandle(result.story.id, await fileHandleFromFileInput(f));
+    }
+    save();closeStoryDialog();render();
+  }catch(e){
+    console.error(e);alert("导入失败："+(e.message||e));
+  }
+};
+
+async function fileHandleFromFileInput(file){
+  // 普通 <input type=file> 无法可靠地反推出 FileSystemFileHandle。
+  // 文章正文已经保存，因此这里仅返回 null；文件夹扫描时会保存真实句柄。
+  return null;
+}
+
+multiStoryFile.onchange=async()=>{
+  const fs=[...multiStoryFile.files];
+  if(!fs.length)return;
+  let ok=0,fail=0;
+  for(const f of fs){
+    try{
+      const result=await importOneFile(f, data.tags.includes("暂存")?"暂存":undefined);
+      ok++;
+    }catch{fail++}
+  }
+  save();render();
+  multiStoryFile.value="";
+  alert(`导入完成：${ok} 篇${fail?`，${fail} 篇无法解析`:''}。`);
+};
+
+addStoryBtn.onclick=openStoryDialog;
+
+async function chooseFolder(){
+  if(!window.showDirectoryPicker){alert("当前浏览器不支持“选择本地文件夹”。建议使用最新版 Chrome / Edge。");return}
+  try{
+    folderHandle=await showDirectoryPicker({mode:"read"});
+    folderBox.innerHTML=`已连接：<strong>${esc(folderHandle.name)}</strong><br><br><button id="scanFolder">扫描 / 更新文章</button>`;
+    document.getElementById("scanFolder").onclick=scanFolder;
+  }catch{}
+}
+
+async function scanFolder(){
+  if(!folderHandle)return;
+  const files=[];
+  async function walk(handle,path=""){
+    for await(const [name,h] of handle.entries()){
+      if(h.kind==="file" && /\.(docx?|DOCX?)$/.test(name))files.push({h,name,path:path+"/"+name});
+      else if(h.kind==="directory")await walk(h,path+"/"+name);
+    }
+  }
+  await walk(folderHandle);
+  if(!files.length){alert("没有找到 .doc 或 .docx 文件。");return}
+
+  let imported=0,updated=0,failed=0;
+  for(const x of files){
+    const f=await x.h.getFile();
+    const existing=data.stories.find(s=>s.path===x.path && s.sourceType==="word");
+    if(existing){
+      // 文件仍然存在：更新句柄，不重复创建文章。
+      await putFileHandle(existing.id,x.h);
+      updated++;
+      continue;
+    }
+    if(!/\.docx$/i.test(x.name)){failed++;continue}
+    try{
+      const content=await simpleDocxText(f);
+      const id="file_"+Date.now()+"_"+Math.random().toString(36).slice(2,8);
+      const story={
+        id,title:x.name.replace(/\.docx$/i,""),author:"",tag:data.tags.includes("暂存")?"暂存":(data.tags.find(t=>t!=="全部")||"暂存"),
+        date:new Date().toISOString().slice(0,10),excerpt:strip(content).slice(0,180),content,path:x.path,
+        favorite:false,sourceType:"word"
+      };
+      data.stories.unshift(story);
+      await putFileHandle(id,x.h);
+      imported++;
+    }catch(e){console.error(e);failed++}
+  }
+  save();render();renderTags();
+  alert(`扫描完成：新增 ${imported} 篇，已存在 ${updated} 篇${failed?`，无法解析 ${failed} 篇`:''}。`);
+}
+
+async function simpleDocxText(file){
+  /* DOCX 是 zip 容器。这里动态加载 JSZip，保持 HTML 单文件。 */
+  if(!window.JSZip){
+    await new Promise((resolve,reject)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";s.onload=resolve;s.onerror=reject;document.head.appendChild(s)});
+  }
+  const zip=await JSZip.loadAsync(await file.arrayBuffer());
+  const xml=await zip.file("word/document.xml").async("string");
+  const doc=new DOMParser().parseFromString(xml,"application/xml");
+  const paras=[...doc.getElementsByTagName("w:p")].map(p=>[...p.getElementsByTagName("w:t")].map(t=>t.textContent).join(""));
+  return paras.filter(Boolean).map(x=>`<p>${esc(x)}</p>`).join("")||"<p>空白文档。</p>";
+}
+document.getElementById("chooseFolder").onclick=chooseFolder;
+
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){reader.classList.remove("show");settingsOverlay.classList.remove("show");manageOverlay.classList.remove("show")}});
+
+heroTitle.textContent=data.settings.title;heroText.textContent=data.settings.text;
+if(data.settings.hero)hero.style.backgroundImage=`url("${data.settings.hero}")`;
+document.querySelector(".sidebar-bottom button").onclick=openSettings;
+renderNav();render();
+</script>
+</body>
+</html>
