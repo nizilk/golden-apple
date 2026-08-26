@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>我的收藏</title>
+<link id="appFavicon" rel="icon" type="image/png">
 <style>
   :root{
     --bg:#FFFFFF;
@@ -970,6 +971,7 @@ function loadHandle(key){
 
 /* ================= state ================= */
 let rootHandle=null, appDirHandle=null, postsDirHandle=null, mediaDirHandle=null;
+let faviconObjectUrl = null;
 let allPosts=[];
 let activeTag=null, activePage=null, searchTerm="";
 let pages=[];
@@ -1006,6 +1008,27 @@ document.getElementById("themeToggle").onclick = ()=>{
   applyTheme(document.body.classList.contains("dark") ? "light" : "dark");
 };
 applyTheme(localStorage.getItem("myXHS_theme") || "light");
+
+/* ================= Icon ================= */
+async function loadFavicon(){
+  const link = document.getElementById("appFavicon");
+  if(!link || !appDirHandle) return;
+
+  try{
+    const fh = await appDirHandle.getFileHandle("favicon.png");
+    const file = await fh.getFile();
+
+    if(faviconObjectUrl){
+      URL.revokeObjectURL(faviconObjectUrl);
+    }
+
+    faviconObjectUrl = URL.createObjectURL(file);
+    link.href = faviconObjectUrl;
+  }catch(e){
+    // RedNote/favicon.png 不存在时，不做任何处理
+    console.warn("未找到 【RedNote】/favicon.png");
+  }
+}
 
 /* ================= connect root folder (also the media library) ================= */
 async function init(){
@@ -1061,6 +1084,8 @@ async function connectFolder(remembered){
     postsDirHandle = await appDirHandle.getDirectoryHandle("posts", {create:true});
     mediaDirHandle = await appDirHandle.getDirectoryHandle("media", {create:true});
 
+    await loadFavicon();
+
     const pagesData = await loadPagesData();
 
     pages = pagesData.list;
@@ -1080,6 +1105,7 @@ async function connectFolder(remembered){
     showToast(`初始化失败：${err.name}`);
   }
 }
+
 
 /* ================= lazy media library ================= */
 
