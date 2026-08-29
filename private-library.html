@@ -92,6 +92,12 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
 .read-actions{display:flex;gap:7px;border-top:1px solid var(--line);padding-top:15px;margin-top:38px}
 .read-actions button{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:7px 12px;font-size:10.5px}
 .read-actions button:hover{background:var(--accent-soft);color:var(--accent)}
+.reader-loading,
+.reader-note{
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.8;
+}
 /* 弹窗 */
 .overlay{position:fixed;inset:0;background:rgba(38,29,25,.45);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
 .overlay.show{display:flex}
@@ -125,50 +131,33 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
 .cover-preview{width:100%;height:100px;border:1px solid var(--line);background:var(--accent-soft) center/cover no-repeat;margin-bottom:9px}
 
 .library-hero{
-  max-width:1040px;
-  height:230px;
-  margin:22px auto 0;
+  width:100%;
+  aspect-ratio:2.35 / 1;
+  min-height:280px;
+  max-height:430px;
+  margin:0 0 28px;
   border:1px solid var(--line);
   border-radius:14px;
   overflow:hidden;
+  background:var(--accent-soft);
+  box-shadow:var(--shadow);
+}
+
+.library-hero-image{
+  width:100%;
+  height:100%;
   background:
-    linear-gradient(135deg,#d9c8bd,#eee5dc);
+    linear-gradient(135deg,#d8c8bd,#eee5dc);
   background-position:center;
   background-size:cover;
-  position:relative;
-  box-shadow:0 12px 40px rgba(55,42,34,.08);
+  background-repeat:no-repeat;
 }
 
-.library-hero-overlay{
-  position:absolute;
-  inset:0;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  padding:30px;
-  background:linear-gradient(
-    to bottom,
-    rgba(30,20,16,.08),
-    rgba(30,20,16,.28)
-  );
-  color:white;
-}
-
-.library-hero-title{
-  font-family:"Songti SC","Noto Serif SC","STSong",serif;
-  font-size:30px;
-  letter-spacing:.12em;
-  text-shadow:0 2px 12px rgba(0,0,0,.18);
-}
-
-.library-hero-subtitle{
+.story-file{
   margin-top:9px;
-  font-family:"Songti SC","Noto Serif SC","STSong",serif;
-  font-size:12px;
-  opacity:.9;
-  text-shadow:0 1px 8px rgba(0,0,0,.18);
+  color:var(--muted);
+  font-size:9.5px;
+  letter-spacing:.02em;
 }
 
 /* responsive */
@@ -176,7 +165,33 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
  .app{display:block}.sidebar{position:static;width:auto;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:18px 16px}
  .brand{margin-bottom:12px}.nav{flex-direction:row;overflow:auto}.nav button{white-space:nowrap}
  .sidebar-tools{position:static;flex-direction:row;justify-content:center;margin-top:8px}.sidebar-tools button{padding:5px 8px}
- .top{padding:24px 20px 15px;align-items:flex-start}.top-right{display:none}.content-wrap{padding:18px 20px 80px}
+
+  .top{
+    padding:18px 20px 10px;
+    align-items:flex-start;
+  }
+
+  .top-right{
+    width:100%;
+    display:flex;
+  }
+
+  .search{
+    flex:1;
+    width:auto;
+  }
+
+  .content-wrap{
+    padding:18px 20px 80px;
+  }
+
+  .library-hero{
+    aspect-ratio:1.6 / 1;
+    min-height:220px;
+    max-height:300px;
+    margin-bottom:22px;
+  }
+
  .story-row{grid-template-columns:minmax(0,1fr)}.story-side{display:none}.read-sheet{padding:42px 25px 55px}.read-sheet h2{font-size:26px}
 }
 </style>
@@ -195,27 +210,17 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
 
 <main class="main">
 <header class="top">
-  <div>
-    <div class="eyebrow">A QUIET LIBRARY</div>
-    <h1 id="pageTitle">全部故事</h1>
-    <div class="subtitle" id="pageSubtitle">只留下此刻想读的文字。</div>
-  </div>
   <div class="top-right">
-    <input class="search" id="search" placeholder="搜索标题 / 作者 / 正文 / 标签">
+    <input class="search" id="search" placeholder="搜索标题 / 作者 / 标签">
     <button class="small-btn" id="sortBtn">最近加入</button>
   </div>
 </header>
 
-<div class="library-hero" id="libraryHero">
-  <div class="library-hero-overlay">
-    <div class="library-hero-title" id="heroTitle">私人图书馆</div>
-    <div class="library-hero-subtitle" id="heroSubtitle">
-      只留下此刻想读的文字。
-    </div>
-  </div>
-</div>
 
 <div class="content-wrap">
+  <div class="library-hero" id="libraryHero">
+    <div class="library-hero-image" id="libraryHeroImage"></div>
+  </div>
   <div class="page-intro">
     <h2 id="sectionTitle">故事</h2><small id="count"></small>
   </div>
@@ -233,15 +238,25 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
 <div class="dialog">
 <button class="dialog-close" id="storyClose">×</button>
 <h2 id="storyDialogTitle">添加文章</h2>
+
 <div class="mode-row" id="modeRow">
-  <button class="mode-btn active" id="modeFile">从 Word 导入</button>
-  <button class="mode-btn" id="modeManual">手动创建</button>
+  <button class="mode-btn active" id="modeFile">
+    添加本地 .docx
+  </button>
 </div>
 
 <div id="fileMode">
-  <div class="field"><label>Word 文件</label>
-    <div class="filebox"><input type="file" id="storyFile" accept=".docx">
-      <div class="hint">支持 .docx 文件。导入后会自动读取正文；如果第一段与标题相同，会自动删除。导入后仍可手动修改标题、作者、标签和正文。</div>
+  <div class="field">
+    <label>本地 Word 文件</label>
+
+    <div class="filebox">
+      <button class="btn" id="chooseStoryFile" type="button">
+        选择 .docx 文件
+      </button>
+
+      <div class="hint" id="storyFileName">
+        选择后，网页只保存这个文件的本地引用，不会复制文章正文。
+      </div>
     </div>
   </div>
 </div>
@@ -252,7 +267,14 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
     <div class="field"><label>作者</label><input id="storyAuthor" placeholder="作者"></div>
   </div>
   <div class="field"><label>标签（可输入多个，用空格或逗号分隔）</label><input id="storyTags" placeholder="例如：太中 同人 暂存"></div>
-  <div class="field"><label>正文</label><textarea id="storyBody" style="min-height:300px" placeholder="文章正文……"></textarea></div>
+  <div class="field">
+    <label>简介</label>
+    <textarea
+      id="storySummary"
+      style="min-height:110px"
+      placeholder="给这篇文章写一小段私人简介……"
+    ></textarea>
+  </div>
 </div>
 
 <div class="dialog-actions">
@@ -308,8 +330,12 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
 <div class="field"><label>连接文件夹</label>
 <div class="folder-box" id="folderBox">尚未连接本地文件夹<br><br><button class="btn" id="chooseFolder">选择文件夹</button></div>
 </div>
-<div class="field"><label>也可以批量导入</label><div class="filebox"><input type="file" id="multiStoryFile" accept=".docx,.doc" multiple></div></div>
-<div class="hint">文件夹扫描会递归读取子文件夹中的 .docx。浏览器无法可靠解析旧式二进制 .doc；如果你的收藏主要是 .doc，我们下一步可以专门解决这一层。</div>
+
+<div class="hint">
+  连接后，网页会读取这个文件夹中的 .docx，并建立本地索引。
+  文章正文仍然只存在于你的原始 Word 文件中。
+</div>
+
 </div>
 </div>
 
@@ -318,9 +344,18 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
 <div class="dialog">
 <button class="dialog-close" id="settingsClose">×</button>
 <h2>书房设置</h2>
-<div class="field"><label>书房标题</label><input id="setTitle" placeholder="私人图书馆"></div>
-<div class="field"><label>一句话简介</label><textarea id="setSubtitle" style="min-height:70px"></textarea></div>
-<div class="field"><label>自定义图片（可选）</label><div class="cover-preview" id="coverPreview"></div><input type="file" id="coverFile" accept="image/*"><div class="hint">图片现在作为书房的轻量装饰，不再做成巨大的背景卡片；以后也可以改成侧栏头像、书签或文章插图。</div></div>
+<div class="field">
+  <label>书房头图</label>
+
+  <div class="cover-preview" id="coverPreview"></div>
+
+  <input type="file" id="coverFile" accept="image/*">
+
+  <div class="hint">
+    这张图片只用于网页界面，不属于任何文章。
+    推荐使用横向图片。
+  </div>
+</div>
 <div class="dialog-actions"><span></span><button class="btn primary" id="settingsSave">保存</button></div>
 </div>
 </div>
@@ -330,25 +365,38 @@ const STORAGE="privateLibraryV3";
 const DB_NAME="privateLibraryFilesV3", DB_STORE="handles";
 
 const defaultData={
-  settings:{title:"私人图书馆",subtitle:"只留下此刻想读的文字。",cover:""},
+  settings:{
+    title:"私人图书馆",
+    subtitle:"",
+    cover:""
+  },
+
   pages:[
-    {id:"all",name:"全部",postIds:[]},
-    {id:"theme",name:"当前主题",postIds:["demo1","demo2"]},
-    {id:"temp",name:"暂存",postIds:["demo3"]}
+    {
+      id:"all",
+      name:"全部",
+      postIds:[]
+    }
   ],
+
   currentPage:"all",
   activeTag:"全部",
-  tags:["全部","当前主题","暂存"],
-  stories:[
-    {id:"demo1",title:"在雨停之前",author:"某某",tags:["当前主题","雨夜"],date:"2026-08-21",content:"<p>雨落下来的时候，城市像被轻轻按低了声音。</p><p>他站在窗边，没有问她还要不要走。她也没有解释为什么留下。</p><p>后来他们都明白，有些选择并不需要一个郑重其事的答案。</p>",path:"",favorite:false,sourceType:"demo"},
-    {id:"demo2",title:"夏夜、便利店与未寄出的信",author:"某某",tags:["当前主题","夏夜"],date:"2026-08-17",content:"<p>便利店的灯光太亮了，亮得让人忘记现在已经是凌晨。</p><p>她把热饮推过去，说：先拿着吧。至于信，明天再决定。</p>",path:"",favorite:false,sourceType:"demo"},
-    {id:"demo3",title:"如果我们从来没有错过",author:"某某",tags:["暂存","if"],date:"2026-08-09",content:"<p>如果那一天没有下雨，他们也许会走另一条路。</p><p>但人生最奇妙的地方，也许正是没有人知道另一条路通向哪里。</p>",path:"",favorite:false,sourceType:"demo"}
-  ]
+  tags:["全部"],
+
+  stories:[]
 };
 
 let data=JSON.parse(localStorage.getItem(STORAGE)||"null");
 if(!data){data=defaultData;saveData()}
-let newest=true,readerStory=null,editingId=null,folderHandle=null;
+let newest=true;
+let readerStory=null;
+let editingId=null;
+let folderHandle=null;
+let selectedStoryFile=null;
+let selectedStoryHandle=null;
+
+const storySummary=
+  document.getElementById("storySummary");
 
 function saveData(){localStorage.setItem(STORAGE,JSON.stringify(data))}
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
@@ -368,7 +416,19 @@ function pageStories(){
   if(page && page.id!=="all") list=list.filter(s=page.postIds.includes(s.id));
   const q=search.value.trim().toLowerCase();
   if(data.activeTag && data.activeTag!=="全部") list=list.filter(s=>(s.tags||[]).includes(data.activeTag));
-  if(q) list=list.filter(s=>(s.title+" "+s.author+" "+(s.tags||[]).join(" ")+" "+strip(s.content)).toLowerCase().includes(q));
+
+  if(q){
+    list=list.filter(s=>{
+      const haystack=[
+        s.title,
+        s.author,
+        ...(s.tags||[])
+      ].join(" ").toLowerCase();
+
+      return haystack.includes(q);
+    });
+  }
+
   return newest?list:[...list].reverse();
 }
 
@@ -395,10 +455,22 @@ function render(){
     return `<article class="story-row" data-id="${esc(s.id)}">
       <div>
         <h3 class="story-title">${esc(s.title||"无标题")}</h3>
-        <div class="story-excerpt">${esc(strip(s.content).slice(0,230))}</div>
-        <div class="story-meta"><span>${esc(s.author||"未知作者")}</span>${tags}</div>
+
+        <div class="story-meta">
+          <span>${esc(s.author||"未知作者")}</span>
+          ${tags}
+        </div>
+
+        <div class="story-file">
+          ${s.fileName ? `DOCX · ${esc(s.fileName)}` : "本地文章"}
+        </div>
       </div>
-      <div class="story-side"><span class="story-date">${esc(s.date||"")}</span><button class="fav ${s.favorite?'on':''}" data-fav="${esc(s.id)}">${s.favorite?'♥':'♡'}</button></div>
+
+      <div class="story-side">
+        <button class="fav ${s.favorite?'on':''}" data-fav="${esc(s.id)}">
+          ${s.favorite?'♥':'♡'}
+        </button>
+      </div>
     </article>`
   }).join("");
   empty.style.display=list.length?"none":"block";
@@ -408,28 +480,123 @@ function render(){
 function renderAll(){renderNav();render();}
 
 function toggleFav(id){const s=data.stories.find(x=>x.id===id);if(!s)return;s.favorite=!s.favorite;saveData();render()}
-function openStory(id){
-  const s=data.stories.find(x=>x.id===id);if(!s)return;
-  readerStory=s;rTitle.textContent=s.title||"无标题";rMeta.textContent=`${s.author||"未知作者"} · ${s.date||""}${s.path?" · 本地 Word":""}`;
-  rTags.innerHTML=(s.tags||[]).map(t=>`<span>#${esc(t)}</span>`).join("");
-  rContent.innerHTML=s.content||"<p>暂无正文。</p>";
-  rFav.textContent=s.favorite?"♥ 已收藏":"♡ 收藏";
+
+async function openStory(id){
+
+  const s=data.stories.find(x=>x.id===id);
+  if(!s)return;
+
+  readerStory=s;
+
+  rTitle.textContent=s.title||"无标题";
+
+  rMeta.textContent=
+    `${s.author||"未知作者"} · ${s.date||""}`+
+    `${s.fileName?" · "+s.fileName:""}`;
+
+  rTags.innerHTML=
+    (s.tags||[])
+      .map(t=>`<span>#${esc(t)}</span>`)
+      .join("");
+
+  rContent.innerHTML=
+    `<p class="reader-loading">正在读取本地文章……</p>`;
+
+  rFav.textContent=
+    s.favorite ? "♥ 已收藏" : "♡ 收藏";
+
   reader.classList.add("show");
+
+  try{
+
+    const h=await getFileHandle(s.id);
+
+    if(!h){
+      rContent.innerHTML=
+        `<p>找不到这篇文章对应的本地文件。</p>
+         <p class="reader-note">
+         请到“本地文件”重新连接你的 Fanfics 文件夹。
+         </p>`;
+      return;
+    }
+
+    const perm=
+      await h.queryPermission({mode:"read"});
+
+    if(perm!=="granted"){
+      const requested=
+        await h.requestPermission({mode:"read"});
+
+      if(requested!=="granted"){
+        rContent.innerHTML=
+          "<p>没有获得读取这个本地文件的权限。</p>";
+        return;
+      }
+    }
+
+    const f=await h.getFile();
+
+    const raw=await readDocx(f);
+
+    const cleaned=
+      removeDuplicateTitle(raw,s.title);
+
+    rContent.innerHTML=cleaned;
+
+  }catch(e){
+
+    console.error(e);
+
+    rContent.innerHTML=
+      `<p>读取本地文章失败。</p>
+       <p class="reader-note">${esc(e.message)}</p>`;
+  }
 }
+
 readerClose.onclick=()=>reader.classList.remove("show");
 reader.onclick=e=>{if(e.target===reader)reader.classList.remove("show")};
 rFav.onclick=()=>{if(readerStory){toggleFav(readerStory.id);openStory(readerStory.id)}};
 rEdit.onclick=()=>{if(readerStory){reader.classList.remove("show");openStoryEditor(readerStory.id)}};
+
 rOpen.onclick=async()=>{
-  if(!readerStory?.path){alert("这篇文章没有关联的本地 Word 文件。");return}
-  const h=await getFileHandle(readerStory.id);
-  if(!h){alert("浏览器没有保存这篇文章的文件句柄。请重新连接原文件夹。");return}
+
+  if(!readerStory){
+    return;
+  }
+
+  const h=
+    await getFileHandle(readerStory.id);
+
+  if(!h){
+    alert(
+      "找不到这个文件的本地引用。\n\n"+
+      "请重新连接你的 Fanfics 文件夹。"
+    );
+    return;
+  }
+
   try{
-    const perm=await h.requestPermission({mode:"read"});
-    if(perm!=="granted"){alert("没有获得文件读取权限。");return}
+
+    const perm=
+      await h.requestPermission({mode:"read"});
+
+    if(perm!=="granted"){
+      alert("没有获得文件读取权限。");
+      return;
+    }
+
     const f=await h.getFile();
-    alert(`原文件仍在本地：\\n${f.name}\\n\\n正文已经保存在私人图书馆中；编辑网页文章不会修改原 Word 文件。`);
-  }catch(e){alert("无法读取原文件："+e.message)}
+
+    alert(
+      `文件位于你的本地电脑：\n\n${f.name}\n\n`+
+      "网页不会修改这个文件。"
+    );
+
+  }catch(e){
+
+    alert("无法读取原文件："+e.message);
+
+  }
 };
 
 search.oninput=render;
@@ -443,11 +610,21 @@ function openStoryEditor(id=null){
     const s=data.stories.find(x=>x.id===id);
     if(!s)return;
     modeFile.style.display="none";modeManual.style.display="none";
-    storyTitle.value=s.title||"";storyAuthor.value=s.author||"";storyTags.value=(s.tags||[]).join(" ");
-    storyBody.value=htmlToPlain(s.content);
+    storyTitle.value=s.title||"";
+    storyAuthor.value=s.author||"";
+    storyTags.value=(s.tags||[]).join(" ");
+    storySummary.value=s.summary||"";
   }else{
     modeFile.style.display="block";modeManual.style.display="none";
-    storyFile.value="";storyTitle.value="";storyAuthor.value="";storyTags.value="暂存";storyBody.value="";
+    selectedStoryFile=null;
+    selectedStoryHandle=null;
+
+    storyTitle.value="";
+    storyAuthor.value="";
+    storyTags.value="";
+    storySummary.value="";
+    storyFileName.textContent=
+      "选择后，网页只保存这个文件的本地引用，不会复制文章正文。";
     modeFile.classList.add("active");modeManual.classList.remove("active");
   }
   storyOverlay.classList.add("show");
@@ -475,32 +652,60 @@ function plainToHtml(text){
 addBtn.onclick=()=>openStoryEditor();
 storyClose.onclick=closeStoryEditor;storyCancel.onclick=closeStoryEditor;
 storyOverlay.onclick=e=>{if(e.target===storyOverlay)closeStoryEditor()};
-modeFile.onclick=()=>{modeFile.classList.add("active");modeManual.classList.remove("active");fileMode.style.display="block"};
-modeManual.onclick=()=>{modeManual.classList.add("active");modeFile.classList.remove("active");fileMode.style.display="none"};
 
-storyFile.onchange=async()=>{
-  const f=storyFile.files[0];
-  if(!f)return;
-
-  // 从文件名自动生成标题
-  storyTitle.value=f.name.replace(/\.docx?$/i,"");
-  storyAuthor.value="";
+chooseStoryFile.onclick=async()=>{
+  if(!window.showOpenFilePicker){
+    alert("当前浏览器不支持本地文件句柄。请使用最新版 Chrome 或 Edge。");
+    return;
+  }
 
   try{
-    const parsed=await readDocx(f);
+    const [handle]=await window.showOpenFilePicker({
+      multiple:false,
+      types:[
+        {
+          description:"Word 文档",
+          accept:{
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document":[
+              ".docx"
+            ]
+          }
+        }
+      ]
+    });
 
-    // 如果 Word 第一段和标题相同，就自动删除
-    const cleaned=removeDuplicateTitle(parsed,storyTitle.value);
+    selectedStoryHandle=handle;
 
-    // 转成真正的普通文字
-    storyBody.value=htmlToPlain(cleaned);
+    const f=await handle.getFile();
+    selectedStoryFile=f;
 
-    storyTags.value="暂存";
+    storyTitle.value=f.name.replace(/\.docx$/i,"");
+    storyAuthor.value="";
+
+    storyFileName.textContent=
+      `已选择：${f.name}`;
+
+    try{
+      const raw=await readDocx(f);
+      const cleaned=removeDuplicateTitle(
+        raw,
+        storyTitle.value
+      );
+
+      storyBody.value=htmlToPlain(cleaned);
+
+    }catch(e){
+      alert("读取 Word 失败："+e.message);
+      console.error(e);
+    }
+
   }catch(e){
-    alert("读取 Word 失败："+e.message);
-    console.error(e);
+    if(e.name!=="AbortError"){
+      alert("无法选择文件："+e.message);
+    }
   }
 };
+
 function removeDuplicateTitle(html,title){
   const d=document.createElement("div");d.innerHTML=html;
   const first=d.querySelector("p,h1,h2,h3");
@@ -520,25 +725,64 @@ storySave.onclick=async()=>{
   tags.forEach(t=>{if(!data.tags.includes(t))data.tags.push(t)});
   if(editingId){
     const s=data.stories.find(x=>x.id===editingId);if(!s)return;
-    s.title=title;s.author=storyAuthor.value.trim();s.tags=tags;s.content=plainToHtml(storyBody.value);
+    s.title=title;
+    s.author=storyAuthor.value.trim();
+    s.tags=tags;
+    s.summary=storySummary.value.trim();
   }else{
     if(modeFile.classList.contains("active")){
-      const f=storyFile.files[0];
-      if(!f){alert("请选择 Word 文件。");return}
+      const f=selectedStoryFile;
+
+      if(!f || !selectedStoryHandle){
+        alert("请选择一个 .docx 文件。");
+        return;
+      }
       if(!/\.docx$/i.test(f.name)){alert("当前版本暂时只可靠支持 .docx；.doc 请先转换，下一版再处理。");return}
+      
       try{
-        const raw=await readDocx(f);
-        const content=removeDuplicateTitle(raw,title);
-        const id="story_"+Date.now()+"_"+Math.random().toString(36).slice(2,8);
-        const s={id,title,author:storyAuthor.value.trim(),tags,date:new Date().toISOString().slice(0,10),content,path:f.name,favorite:false,sourceType:"word"};
+        // 这里暂时读取一次，只为了检查 DOCX 是否能正常解析。
+        await readDocx(f);
+
+        const id=
+          "story_"+Date.now()+"_"+Math.random()
+          .toString(36).slice(2,8);
+
+        const s={
+          id,
+          title,
+          author:storyAuthor.value.trim(),
+          tags,
+          date:new Date().toISOString().slice(0,10),
+
+          // 只保存文件信息，不保存正文
+          fileName:f.name,
+          path:f.name,
+
+          favorite:false,
+          sourceType:"word"
+        };
+
         data.stories.unshift(s);
-        // 直接选择文件无法得到可长期保存的 handle；仍保存文件名。
-      }catch(e){alert("导入失败："+e.message);return}
+
+        // 把真正的本地文件句柄保存到 IndexedDB
+        await putFileHandle(id,selectedStoryHandle);
+
+      }catch(e){
+        alert("添加失败："+e.message);
+        console.error(e);
+        return;
+      }
     }else{
       data.stories.unshift({id:"manual_"+Date.now(),title,author:storyAuthor.value.trim(),tags,date:new Date().toISOString().slice(0,10),content:plainToHtml(storyBody.value),path:"",favorite:false,sourceType:"manual"});
     }
   }
-  saveData();closeStoryEditor();renderAll();
+  saveData();
+
+  selectedStoryFile=null;
+  selectedStoryHandle=null;
+
+  closeStoryEditor();
+  renderAll();
 };
 deleteStoryBtn.onclick=async()=>{
   if(!editingId)return;
@@ -646,14 +890,44 @@ async function scanFolder(){
     const f=await x.h.getFile();
     let s=data.stories.find(s=>s.path===x.path);
     if(s){await putFileHandle(s.id,x.h);update++;continue}
+    
     try{
-      const raw=await readDocx(f);
-      const title=x.name.replace(/\.docx$/i,"");
-      const content=removeDuplicateTitle(raw,title);
-      const id="file_"+Date.now()+"_"+Math.random().toString(36).slice(2,8);
-      s={id,title,author:"",tags:["暂存"],date:new Date().toISOString().slice(0,10),content,path:x.path,favorite:false,sourceType:"word"};
-      data.stories.unshift(s);await putFileHandle(id,x.h);add++;
-    }catch(e){console.error(e)}
+
+      // 这里只验证文件能够正常读取。
+      await readDocx(f);
+
+      const title=
+        x.name.replace(/\.docx$/i,"");
+
+      const id=
+        "file_"+Date.now()+"_"+Math.random()
+        .toString(36).slice(2,8);
+
+      s={
+        id,
+        title,
+        author:"",
+        tags:[],
+        summary:"",
+        date:new Date().toISOString().slice(0,10),
+
+        // 只保存文件位置，不保存正文
+        fileName:x.name,
+        path:x.path,
+
+        favorite:false,
+        sourceType:"word"
+      };
+
+      data.stories.unshift(s);
+
+      await putFileHandle(id,x.h);
+
+      add++;
+
+    }catch(e){
+      console.error(e);
+    }
   }
   if(add||update)saveData();renderAll();alert(`扫描完成：新增 ${add} 篇，已存在 ${update} 篇。`);
 }
@@ -667,32 +941,28 @@ multiStoryFile.onchange=async()=>{
     if(!/\.docx$/i.test(f.name)){fail++;continue}
     try{
       const raw=await readDocx(f),title=f.name.replace(/\.docx$/i,""),content=removeDuplicateTitle(raw,title);
-      data.stories.unshift({id:"batch_"+Date.now()+"_"+Math.random().toString(36).slice(2,7),title,author:"",tags:["暂存"],date:new Date().toISOString().slice(0,10),content,path:f.name,favorite:false,sourceType:"word"});add++
+      data.stories.unshift({id:"batch_"+Date.now()+"_"+Math.random().toString(36).slice(2,7),title,author:"",tags:[],date:new Date().toISOString().slice(0,10),content,path:f.name,favorite:false,sourceType:"word"});add++
     }catch{fail++}
   }
   saveData();renderAll();multiStoryFile.value="";alert(`导入完成：${add} 篇${fail?`，跳过 ${fail} 篇`:''}。`);
 };
 
 function updateLibraryHero(){
-  heroTitle.textContent=
-    data.settings.title || "私人图书馆";
-
-  heroSubtitle.textContent=
-    data.settings.subtitle || "";
 
   if(data.settings.cover){
-    libraryHero.style.backgroundImage=
+
+    libraryHeroImage.style.backgroundImage=
       `url("${data.settings.cover}")`;
+
   }else{
-    libraryHero.style.backgroundImage="";
+
+    libraryHeroImage.style.backgroundImage="";
   }
 }
 
 function openSettings(){
-  setTitle.value=data.settings.title;
-  setSubtitle.value=data.settings.subtitle;
 
-  coverPreview.style.backgroundImage =
+  coverPreview.style.backgroundImage=
     data.settings.cover
       ? `url("${data.settings.cover}")`
       : "";
@@ -714,7 +984,7 @@ coverFile.onchange=()=>{
     coverPreview.style.backgroundImage=
       `url("${r.result}")`;
 
-    libraryHero.style.backgroundImage=
+    libraryHeroImage.style.backgroundImage=
       `url("${r.result}")`;
   };
 
@@ -722,12 +992,6 @@ coverFile.onchange=()=>{
 };
 
 settingsSave.onclick=()=>{
-  data.settings.title=
-    setTitle.value.trim() || "私人图书馆";
-
-  data.settings.subtitle=
-    setSubtitle.value.trim();
-
   saveData();
 
   settingsOverlay.classList.remove("show");
