@@ -601,21 +601,27 @@ rOpen.onclick=async()=>{
 
 search.oninput=render;
 sortBtn.onclick=()=>{newest=!newest;sortBtn.textContent=newest?"最近加入":"最早加入";render()};
+
 function openStoryEditor(id=null){
   editingId=id;
-  storyDialogTitle.textContent=id?"编辑文章":"添加文章";
-  deleteStoryBtn.style.display=id?"inline-flex":"none";
-  modeRow.style.display=id?"none":"flex";
+
+  storyDialogTitle.textContent=id ? "编辑文章" : "添加文章";
+  deleteStoryBtn.style.display=id ? "inline-flex" : "none";
+
   if(id){
     const s=data.stories.find(x=>x.id===id);
     if(!s)return;
-    modeFile.style.display="none";modeManual.style.display="none";
+
     storyTitle.value=s.title||"";
     storyAuthor.value=s.author||"";
     storyTags.value=(s.tags||[]).join(" ");
     storySummary.value=s.summary||"";
+
+    storyFileName.textContent=
+      s.fileName
+        ? `当前文件：${s.fileName}`
+        : "这篇文章没有连接本地 DOCX。";
   }else{
-    modeFile.style.display="block";modeManual.style.display="none";
     selectedStoryFile=null;
     selectedStoryHandle=null;
 
@@ -623,12 +629,14 @@ function openStoryEditor(id=null){
     storyAuthor.value="";
     storyTags.value="";
     storySummary.value="";
+
     storyFileName.textContent=
-      "选择后，网页只保存这个文件的本地引用，不会复制文章正文。";
-    modeFile.classList.add("active");modeManual.classList.remove("active");
+      "选择后，网页只保存文件引用，不复制文章正文。";
   }
+
   storyOverlay.classList.add("show");
 }
+
 function closeStoryEditor(){storyOverlay.classList.remove("show");editingId=null}
 function htmlToPlain(html){
   const d=document.createElement("div");
@@ -655,7 +663,10 @@ storyOverlay.onclick=e=>{if(e.target===storyOverlay)closeStoryEditor()};
 
 chooseStoryFile.onclick=async()=>{
   if(!window.showOpenFilePicker){
-    alert("当前浏览器不支持本地文件句柄。请使用最新版 Chrome 或 Edge。");
+    alert(
+      "当前浏览器不支持本地文件选择。\n\n"+
+      "请使用最新版 Chrome 或 Edge。"
+    );
     return;
   }
 
@@ -679,30 +690,44 @@ chooseStoryFile.onclick=async()=>{
     const f=await handle.getFile();
     selectedStoryFile=f;
 
-    storyTitle.value=f.name.replace(/\.docx$/i,"");
-    storyAuthor.value="";
+    storyTitle.value=
+      f.name.replace(/\.docx$/i,"");
 
     storyFileName.textContent=
       `已选择：${f.name}`;
 
+    /*
+     * 这里提前读取一次 DOCX。
+     * 目的不是保存正文，而是确认：
+     * 这个文件确实可以被网页读取。
+     */
     try{
       const raw=await readDocx(f);
-      const cleaned=removeDuplicateTitle(
-        raw,
-        storyTitle.value
-      );
 
-      storyBody.value=htmlToPlain(cleaned);
+      const cleaned=
+        removeDuplicateTitle(
+          raw,
+          storyTitle.value
+        );
 
     }catch(e){
-      alert("读取 Word 失败："+e.message);
+      alert(
+        "这个 DOCX 无法读取。\n\n"+
+        e.message
+      );
+
       console.error(e);
     }
 
   }catch(e){
+
     if(e.name!=="AbortError"){
-      alert("无法选择文件："+e.message);
+      alert(
+        "无法选择文件："+
+        e.message
+      );
     }
+
   }
 };
 
@@ -718,72 +743,151 @@ function removeDuplicateTitle(html,title){
 }
 
 storySave.onclick=async()=>{
-  const title=storyTitle.value.trim();
-  if(!title){alert("请填写标题。");return}
-  const tags=normalizeTags(storyTags.value);
-  if(!tags.length)tags.push("暂存");
-  tags.forEach(t=>{if(!data.tags.includes(t))data.tags.push(t)});
+
+  const title=
+    storyTitle.value.trim();
+
+  if(!title){
+    alert("请填写标题。");
+    return;
+  }
+
+  const tags=
+    normalizeTags(storyTags.value);
+
   if(editingId){
-    const s=data.stories.find(x=>x.id===editingId);if(!s)return;
+
+    const s=
+      data.stories.find(
+        x=>x.id===editingId
+      );
+
+    if(!s)return;
+
     s.title=title;
     s.author=storyAuthor.value.trim();
     s.tags=tags;
     s.summary=storySummary.value.trim();
+
   }else{
-    if(modeFile.classList.contains("active")){
-      const f=selectedStoryFile;
 
-      if(!f || !selectedStoryHandle){
-        alert("请选择一个 .docx 文件。");
-        return;
-      }
-      if(!/\.docx$/i.test(f.name)){alert("当前版本暂时只可靠支持 .docx；.doc 请先转换，下一版再处理。");return}
-      
-      try{
-        // 这里暂时读取一次，只为了检查 DOCX 是否能正常解析。
-        await readDocx(f);
+    const f=
+      selectedStoryFile;
 
-        const id=
-          "story_"+Date.now()+"_"+Math.random()
-          .toString(36).slice(2,8);
+    const h=
+      selectedStoryHandle;
 
-        const s={
-          id,
-          title,
-          author:storyAuthor.value.trim(),
-          tags,
-          date:new Date().toISOString().slice(0,10),
+    if(!f || !h){
+      alert("请先选择一个 .docx 文件。");
+      return;
+    }
 
-          // 只保存文件信息，不保存正文
-          fileName:f.name,
-          path:f.name,
+    if(!/\.docx$/i.test(f.name)){
+      alert("目前只支持 .docx 文件。");
+      return;
+    }
 
-          favorite:false,
-          sourceType:"word"
-        };
+    try{
 
-        data.stories.unshift(s);
+      /*
+       * 保存前再次确认 DOCX 能读取。
+       * 正文不会保存进 data。
+       */
+      await readDocx(f);
 
-        // 把真正的本地文件句柄保存到 IndexedDB
-        await putFileHandle(id,selectedStoryHandle);
+      const id=
+        "story_"+
+        Date.now()+
+        "_"+
+        Math.random()
+          .toString(36)
+          .slice(2,8);
 
-      }catch(e){
-        alert("添加失败："+e.message);
-        console.error(e);
-        return;
-      }
-    }else{
-      data.stories.unshift({id:"manual_"+Date.now(),title,author:storyAuthor.value.trim(),tags,date:new Date().toISOString().slice(0,10),content:plainToHtml(storyBody.value),path:"",favorite:false,sourceType:"manual"});
+      const s={
+        id,
+
+        title,
+
+        author:
+          storyAuthor.value.trim(),
+
+        tags,
+
+        summary:
+          storySummary.value.trim(),
+
+        date:
+          new Date()
+            .toISOString()
+            .slice(0,10),
+
+        fileName:
+          f.name,
+
+        /*
+         * 第一阶段：
+         * 这里暂时只有文件名。
+         *
+         * 后面连接总文件夹以后，
+         * 这里会变成：
+         *
+         * 作品 A/fics/xxx.docx
+         */
+        path:
+          f.name,
+
+        favorite:false,
+
+        sourceType:
+          "word"
+      };
+
+      data.stories.unshift(s);
+
+      /*
+       * 现阶段暂时继续使用已有的
+       * IndexedDB 保存 FileHandle。
+       *
+       * 第二阶段我们再把这个设计改成
+       * “总文件夹 + 相对路径”。
+       */
+      await putFileHandle(
+        id,
+        h
+      );
+
+    }catch(e){
+
+      alert(
+        "添加失败："+
+        e.message
+      );
+
+      console.error(e);
+
+      return;
     }
   }
+
+  /*
+   * 更新标签集合
+   */
+  tags.forEach(t=>{
+    if(!data.tags.includes(t)){
+      data.tags.push(t);
+    }
+  });
+
   saveData();
 
   selectedStoryFile=null;
   selectedStoryHandle=null;
 
   closeStoryEditor();
+
   renderAll();
 };
+
 deleteStoryBtn.onclick=async()=>{
   if(!editingId)return;
   const s=data.stories.find(x=>x.id===editingId);
@@ -852,20 +956,141 @@ async function getFileHandle(id){
 async function removeFileHandle(id){
   try{const db=await openFileDB();await new Promise((res,rej)=>{const tx=db.transaction(DB_STORE,"readwrite");tx.objectStore(DB_STORE).delete(id);tx.oncomplete=res;tx.onerror=()=>rej(tx.error)});db.close()}catch{}
 }
+
 async function readDocx(file){
+
   if(!window.JSZip){
-    await new Promise((resolve,reject)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";s.onload=resolve;s.onerror=()=>reject(new Error("无法加载 DOCX 解析模块；请检查网络。"));document.head.appendChild(s)})
+
+    await new Promise((resolve,reject)=>{
+
+      const s=
+        document.createElement("script");
+
+      s.src=
+        "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+
+      s.onload=resolve;
+
+      s.onerror=()=>{
+        reject(
+          new Error(
+            "无法加载 DOCX 解析模块；请检查网络。"
+          )
+        );
+      };
+
+      document.head.appendChild(s);
+
+    });
+
   }
-  const zip=await JSZip.loadAsync(await file.arrayBuffer());
-  const xml=await zip.file("word/document.xml").async("string");
-  const doc=new DOMParser().parseFromString(xml,"application/xml");
-  const paras=[...doc.getElementsByTagName("w:p")];
+
+  const zip=
+    await JSZip.loadAsync(
+      await file.arrayBuffer()
+    );
+
+  const xmlFile=
+    zip.file(
+      "word/document.xml"
+    );
+
+  if(!xmlFile){
+    throw new Error(
+      "这个文件不是有效的 DOCX 文档。"
+    );
+  }
+
+  const xml=
+    await xmlFile.async("string");
+
+  const doc=
+    new DOMParser()
+      .parseFromString(
+        xml,
+        "application/xml"
+      );
+
+  const paras=
+    [...doc.getElementsByTagName("w:p")];
+
   const out=[];
+
   for(const p of paras){
-    const texts=[...p.getElementsByTagName("w:t")].map(t=>t.textContent).join("");
-    if(texts.trim())out.push(`<p>${esc(texts)}</p>`);
+
+    /*
+     * DOCX 中：
+     *
+     * w:t = 普通文字
+     * w:tab = Tab
+     * w:br = 换行
+     *
+     * 我们只提取“文章内容”，
+     * 不继承 Word 的字体、字号、颜色等。
+     */
+
+    let text="";
+
+    for(const node of p.childNodes){
+
+      if(node.nodeType!==1){
+        continue;
+      }
+
+      const name=
+        node.localName;
+
+      if(name==="r"){
+
+        for(
+          const child
+          of node.childNodes
+        ){
+
+          if(child.nodeType!==1){
+            continue;
+          }
+
+          if(child.localName==="t"){
+            text+=
+              child.textContent || "";
+          }
+
+          if(child.localName==="tab"){
+            text+="\t";
+          }
+
+          if(child.localName==="br"){
+            text+="\n";
+          }
+        }
+
+      }else if(name==="hyperlink"){
+
+        text+=
+          [...node.getElementsByTagName("w:t")]
+            .map(x=>x.textContent || "")
+            .join("");
+
+      }
+
+    }
+
+    text=
+      text
+        .replace(/\r/g,"")
+        .trim();
+
+    if(text){
+      out.push(
+        `<p>${esc(text).replace(/\n/g,"<br>")}</p>`
+      );
+    }
+
   }
-  return out.join("")||"<p>空白文档。</p>";
+
+  return out.join("") ||
+    "<p>空白文档。</p>";
 }
 
 async function chooseFolder(){
