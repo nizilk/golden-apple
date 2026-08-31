@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的收藏</title>
+<link id="appFavicon" rel="icon" type="image/png">
+
+<link rel="stylesheet" href="css/style.css">
+
+</head>
+<body>
+
+<div id="connectScreen">
+  <div class="mark">✿</div>
+  <h2 class="serif">我的收藏</h2>
+  <p>选择你已经用来存放收藏图片/视频的那个文件夹（或者新建一个）。这个文件夹里已有的图片和视频会被直接索引使用，不会被复制。收藏数据会以一个叫「【RedNote】」的子文件夹保存在里面。</p>
+  <button class="btn btn-primary" id="connectBtn">选择 / 创建收藏文件夹</button>
+  <p class="folder-name" id="rememberedName" style="margin-top:14px;"></p>
+  <p class="warn" id="unsupportedWarn" style="display:none;">你当前的浏览器不支持直接读写本地文件夹，请用电脑版 Chrome 或 Edge 打开这个文件。</p>
+</div>
+
+<div id="app" class="app-shell" style="display:none;">
+  <aside id="categorySidebar">
+    <div class="sidebar-brand">✿ 我的收藏</div>
+  </aside>
+  <div class="app-main">
+    <div class="app-topbar">
+      <div class="search">
+        <span>🔍</span>
+        <input id="searchInput" type="text" placeholder="搜索标题 / 正文 / 标签 / 来源">
+        <span id="searchClear" style="display:none;">✕</span>
+      </div>
+      <span class="folder-name" id="currentFolderName"></span>
+      <button class="btn btn-icon btn-ghost" id="themeToggle" title="切换深色/浅色">☾</button>
+      <button class="btn btn-ghost" id="switchFolderBtn">更换收藏文件夹</button>
+    </div>
+    <main>
+      <div id="selectionBar" style="display:none;">
+        <div id="pageConfigTags" class="page-config-tags"></div>
+        <span id="selectionCount"></span>
+        <button class="btn btn-primary" id="selectionDoneBtn">完成</button>
+      </div>
+      <div class="grid" id="grid"></div>
+      <div class="empty" id="emptyState" style="display:none;">
+        <div class="big">🌱</div>
+        <div>还没有收藏，点右下角 ＋ 添加第一条</div>
+      </div>
+    </main>
+  </div>
+  <button class="fab" id="addBtn">＋</button>
+</div>
+
+<div class="overlay" id="readerOverlay"><div class="reader-sheet" id="readerSheet"></div></div>
+
+<div class="overlay" id="editorOverlay">
+  <div class="sheet">
+    <button class="sheet-close" id="editorClose">✕</button>
+    <h2 class="serif" id="editorHeading" style="margin-top:0;">新建收藏</h2>
+
+    <div class="field">
+      <label>标题</label>
+      <input type="text" id="fTitle" placeholder="给这条收藏起个标题">
+    </div>
+
+    <div class="field">
+      <label>图片 / 视频</label>
+      <div class="media-gallery" id="mediaGallery"></div>
+      <div class="media-buttons">
+        <button class="btn btn-ghost" type="button" id="addFromLibraryBtn">从收藏文件夹选择</button>
+        <button class="btn btn-ghost" type="button" id="addUploadBtn">上传新文件</button>
+      </div>
+      <input type="file" id="galleryFileInput" accept="image/*,video/*" style="display:none" multiple>
+      <div class="hint">优先从你连接的收藏文件夹里直接选择已有的图片/视频，不会复制；上传新文件才会另外保存一份</div>
+    </div>
+
+    <div class="field">
+      <label>正文</label>
+      <div class="toolbar">
+        <button type="button" data-cmd="bold"><b>B</b></button>
+        <button type="button" data-cmd="italic"><i>I</i></button>
+        <button type="button" data-cmd="quote">❝ 引用</button>
+        <button type="button" data-cmd="hr">— 分隔线</button>
+      </div>
+      <div class="editor-body" id="fBody" contenteditable="true"></div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>发帖者</label>
+        <input type="text" id="fAuthor" placeholder="我">
+      </div>
+      <div class="field">
+        <label>来源平台</label>
+        <input type="text" id="fSource" placeholder="小红书 / 知乎 / ...">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>标签（用空格或逗号分隔）</label>
+      <input type="text" id="fTags" placeholder="独处 成长 生活">
+    </div>
+
+    <div class="field">
+      <label>讨论 / 评论</label>
+      <div class="comment-list-edit" id="commentListEdit"></div>
+      <div class="reply-hint" id="replyHint"></div>
+      <div class="comment-row">
+        <input type="text" id="cAuthor" placeholder="昵称">
+        <textarea id="cText" placeholder="评论内容" rows="1"></textarea>
+        <button class="btn btn-ghost" id="cAdd" type="button">添加</button>
+      </div>
+    </div>
+
+    <div class="footer-actions">
+      <button class="btn btn-ghost" id="deleteBtn" style="display:none; color:#c0394a; border-color:#f0c9d0;">删除</button>
+      <button class="btn btn-primary" id="saveBtn">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="renameOverlay">
+  <div class="page-name-sheet">
+    <button class="page-name-close" id="renameClose" type="button">✕</button>
+
+    <input
+      type="text"
+      id="renameInput"
+      class="page-name-input"
+      placeholder="页面名称"
+      autocomplete="off"
+    >
+
+    <div class="page-name-actions">
+      <button class="btn btn-primary" id="renameSave" type="button">保存</button>
+      <button class="btn btn-ghost" id="renameCancel" type="button">取消</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="pickerOverlay">
+  <div class="sheet" style="max-width:560px;">
+    <button class="sheet-close" id="pickerClose">✕</button>
+    <h3 class="serif" style="margin-top:0;">从收藏文件夹选择</h3>
+    <div id="pickerBrowse">
+      <input type="text" id="pickerSearch" placeholder="搜索文件名 / 路径...">
+      <button class="btn btn-ghost" id="pickerBack" style="display:none;margin-bottom:10px;">⬅ 上一级</button>
+      <div id="pickerGrid"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/app.js"></script>
+
+</body>
+</html>
