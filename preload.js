@@ -94,5 +94,18 @@ contextBridge.exposeInMainWorld(
 
       },
 
+    readSettings:
+      () =>
+        ipcRenderer.invoke(
+          "settings:read"
+        ),
+
+    writeSettings:
+      settings =>
+        ipcRenderer.invoke(
+          "settings:write",
+          settings
+        ),
+
   }
 );
