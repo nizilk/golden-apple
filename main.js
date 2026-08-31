@@ -12,7 +12,9 @@ let mainWindow = null;
 let resourceRootPath = null;
 
 
-// 资源
+// ============================================================
+// 选择资源文件夹
+// ============================================================
 ipcMain.handle(
   "resource:choose",
   async () => {
@@ -439,35 +441,6 @@ async function ensureDataDirectories() {
 }
 
 
-// ============================================================
-// 选择资源文件夹
-// ============================================================
-
-ipcMain.handle(
-  "resource:choose",
-  async () => {
-
-    const result =
-      await dialog.showOpenDialog(
-        mainWindow,
-        {
-          properties: [
-            "openDirectory"
-          ]
-        }
-      );
-
-    if (
-      result.canceled ||
-      result.filePaths.length === 0
-    ) {
-      return null;
-    }
-
-    return result.filePaths[0];
-
-  }
-);
 
 
 // ============================================================
