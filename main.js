@@ -389,6 +389,11 @@ const XHS_DATA_ROOT = path.join(
   "private-xhs"
 );
 
+const SETTINGS_FILE = path.join(
+  DATA_ROOT,
+  "settings.json"
+);
+
 
 // ============================================================
 // 安全的数据路径
@@ -655,6 +660,65 @@ app.on(
       app.quit();
 
     }
+
+  }
+);
+
+
+// ============================================================
+// settings
+// ============================================================
+
+ipcMain.handle(
+  "settings:read",
+  async () => {
+
+    try {
+
+      const text =
+        await fs.readFile(
+          SETTINGS_FILE,
+          "utf8"
+        );
+
+      return JSON.parse(text);
+
+    } catch (error) {
+
+      if(error.code === "ENOENT") {
+        return {};
+      }
+
+      throw error;
+
+    }
+
+  }
+);
+
+
+ipcMain.handle(
+  "settings:write",
+  async (event, settings) => {
+
+    await fs.mkdir(
+      DATA_ROOT,
+      {
+        recursive: true
+      }
+    );
+
+    await fs.writeFile(
+      SETTINGS_FILE,
+      JSON.stringify(
+        settings,
+        null,
+        2
+      ),
+      "utf8"
+    );
+
+    return true;
 
   }
 );
