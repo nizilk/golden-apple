@@ -1,0 +1,12 @@
+{
+  "name": "golden-apple",
+  "version": "1.0.0",
+  "description": "GoldenApple local application",
+  "main": "main/main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^44.0.0"
+  }
+}
