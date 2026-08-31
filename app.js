@@ -137,6 +137,19 @@ async function init(){
 
   };
 
+  // 启动时尝试恢复上次使用的资源文件夹
+  const savedPath =
+    await window.electronAPI
+      .getSavedResourceFolder();
+
+  if(savedPath){
+
+    await connectFolder(
+      savedPath
+    );
+
+  }
+
 }
 
 
@@ -157,21 +170,31 @@ document.getElementById(
 };
 
 
-async function connectFolder(){
+async function connectFolder(
+  savedPath = null
+){
 
   try{
 
-    const selectedPath =
-      await window.electronAPI.chooseResourceFolder();
+    let selectedPath =
+        savedPath;
 
     if(!selectedPath){
 
-      return;
+        selectedPath =
+            await window.electronAPI
+            .chooseResourceFolder();
+
+        if(!selectedPath){
+
+            return;
+
+        }
 
     }
 
     resourceRootPath =
-      selectedPath;
+        selectedPath;
 
 
     // 资源文件夹连接成功后，
