@@ -137,10 +137,11 @@ async function init(){
 
   };
 
-  // 启动时尝试恢复上次使用的资源文件夹
+  // Electron 启动时已经尝试恢复资源目录。
+  // 这里直接询问 main.js 当前有没有可用路径。
   const savedPath =
     await window.electronAPI
-      .getSavedResourceFolder();
+      .getCurrentResourceFolder();
 
   if(savedPath){
 
@@ -171,19 +172,18 @@ document.getElementById(
 
 
 async function connectFolder(
-  savedPath = null
+  existingPath = null
 ){
 
   try{
 
     let selectedPath =
-        savedPath;
+        existingPath;
 
     if(!selectedPath){
 
         selectedPath =
-            await window.electronAPI
-            .chooseResourceFolder();
+            await window.electronAPI.chooseResourceFolder();
 
         if(!selectedPath){
 
