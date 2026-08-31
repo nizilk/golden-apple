@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>私人图书馆</title>
+<link rel="stylesheet" href="css/style-lib.css">
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand">私人图书馆<small>PRIVATE LIBRARY</small></div>
+  <nav class="nav" id="nav"></nav>
+  <div class="sidebar-tools">
+    <button id="managePagesBtn">页面管理</button>
+    <button id="manageLibraryBtn">本地文件</button>
+    <button id="settingsBtn">书房设置</button>
+  </div>
+</aside>
+
+<main class="main">
+<header class="top">
+  <div class="top-right">
+    <input class="search" id="search" placeholder="搜索标题 / 作者 / 标签">
+    <button class="small-btn" id="sortBtn">最近加入</button>
+  </div>
+</header>
+
+
+<div class="content-wrap">
+  <div class="library-hero" id="libraryHero">
+    <div class="library-hero-image" id="libraryHeroImage"></div>
+  </div>
+  <div class="page-intro">
+    <h2 id="sectionTitle">故事</h2><small id="count"></small>
+  </div>
+  <div class="tags-bar" id="tagsBar"></div>
+  <section class="story-list" id="storyList"></section>
+  <div class="empty" id="empty">这里还没有故事。<br>点击右下角的 ＋，导入一篇 Word 或手动创建文章。</div>
+</div>
+</main>
+</div>
+
+<button class="fab" id="addBtn" title="添加文章">＋</button>
+
+<!-- 添加 / 编辑 -->
+<div class="overlay" id="storyOverlay">
+<div class="dialog">
+<button class="dialog-close" id="storyClose">×</button>
+<h2 id="storyDialogTitle">添加文章</h2>
+
+<div class="mode-row" id="modeRow">
+  <button class="mode-btn active" id="modeFile">
+    添加本地 .docx
+  </button>
+</div>
+
+<div id="fileMode">
+  <div class="field">
+    <label>本地 Word 文件</label>
+
+    <div class="filebox">
+      <button class="btn" id="chooseStoryFile" type="button">
+        选择 .docx 文件
+      </button>
+
+    </div>
+  </div>
+</div>
+
+<div id="editFields">
+
+  <div class="form-row">
+    <div class="field">
+      <label>标题</label>
+      <input id="storyTitle" placeholder="文章标题">
+    </div>
+
+    <div class="field">
+      <label>作者</label>
+      <input id="storyAuthor" placeholder="作者名">
+    </div>
+  </div>
+
+  <div class="field">
+    <label>来源平台</label>
+    <input id="storyPlatform" placeholder="例如：AO3、LOFTER、微博">
+  </div>
+
+  <div class="field">
+    <label>原文链接（可选）</label>
+    <input id="storySourceUrl" placeholder="https://……">
+  </div>
+
+  <div class="field">
+    <label>标签（可输入多个，用空格或逗号分隔）</label>
+    <input id="storyTags" placeholder="例如：太中 同人 暂存">
+  </div>
+
+  <div class="field">
+    <label>简介</label>
+    <textarea
+      id="storySummary"
+      style="min-height:110px"
+      placeholder="给这篇文章写一小段私人简介……"
+    ></textarea>
+  </div>
+
+  <div class="field" id="contentAdjustField">
+    <label>正文整理</label>
+
+    <div id="contentPreview" class="content-preview">
+    </div>
+  </div>
+
+</div>
+
+<div class="dialog-actions">
+  <button class="btn danger" id="deleteStoryBtn" style="display:none">删除文章</button>
+  <div class="right"><button class="btn" id="storyCancel">取消</button><button class="btn primary" id="storySave">保存</button></div>
+</div>
+</div>
+</div>
+
+<!-- 阅读 -->
+<div class="reader" id="reader">
+<article class="read-sheet">
+<button class="read-close" id="readerClose">×</button>
+<div class="read-kicker">PRIVATE LIBRARY</div>
+<h2 id="rTitle"></h2>
+<div class="read-meta" id="rMeta"></div>
+<div class="read-tags" id="rTags"></div>
+<div class="article-body" id="rContent"></div>
+<div class="read-actions">
+  <button id="rEdit">编辑</button>
+</div>
+</article>
+</div>
+
+<!-- 页面管理 -->
+<div class="overlay" id="pagesOverlay">
+<div class="dialog">
+<button class="dialog-close" id="pagesClose">×</button>
+<h2>页面</h2>
+<div class="field"><label>新建页面</label><div class="form-row"><input id="newPageName" placeholder=""><button class="btn primary" id="addPage">新建</button></div></div>
+<div class="manage-pages" id="pageList"></div>
+</div>
+</div>
+
+<!-- 页面配置 -->
+<div class="overlay" id="pageConfigOverlay">
+<div class="dialog">
+<button class="dialog-close" id="pageConfigClose">×</button>
+<h2 id="pageConfigTitle">页面内容</h2>
+<div class="field"><label>包含哪些文章</label>
+<div id="pagePostList" class="manage-pages"></div></div>
+</div>
+</div>
+
+<!-- 本地文件 -->
+<div class="overlay" id="libraryOverlay">
+<div class="dialog">
+<button class="dialog-close" id="libraryClose">×</button>
+<h2>本地文件</h2>
+<div class="field"><label>连接文件夹</label>
+<div class="folder-box" id="folderBox">尚未连接本地文件夹<br><br><button class="btn" id="chooseFolder">选择文件夹</button></div>
+</div>
+
+</div>
+</div>
+
+<!-- 书房设置 -->
+<div class="overlay" id="settingsOverlay">
+<div class="dialog">
+<button class="dialog-close" id="settingsClose">×</button>
+<h2>书房设置</h2>
+<div class="field">
+  <label>书房头图</label>
+
+  <div class="cover-preview" id="coverPreview"></div>
+
+  <input type="file" id="coverFile" accept="image/*">
+
+</div>
+<div class="dialog-actions"><span></span><button class="btn primary" id="settingsSave">保存</button></div>
+</div>
+</div>
+
+<script src="js/app-lib.js"></script>
+
+</body>
+</html>
