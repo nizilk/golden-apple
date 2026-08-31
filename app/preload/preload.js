@@ -14,10 +14,10 @@ contextBridge.exposeInMainWorld(
           "resource:choose"
         ),
 
-    getSavedResourceFolder:
+    getCurrentResourceFolder:
       () =>
         ipcRenderer.invoke(
-          "resource:getSaved"
+          "resource:getCurrent"
         ),
 
     getXhsDataDirectory:
