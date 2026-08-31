@@ -49,12 +49,6 @@ contextBridge.exposeInMainWorld(
           relativePath
         ),
 
-    chooseResourceFolder:
-      () =>
-        ipcRenderer.invoke(
-          "resource:choose"
-        ),
-
     listResourceDirectory:
       (relativePath) =>
         ipcRenderer.invoke(
