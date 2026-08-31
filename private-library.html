@@ -455,14 +455,29 @@ let selectedStoryFile=null;
 let importedParagraphs=[];
 let contentAdjustments=[];
 
-const storySummary=
-  document.getElementById("storySummary");
+const storyTitle =
+  document.getElementById("storyTitle");
 
-const storyPlatform=
+const storyAuthor =
+  document.getElementById("storyAuthor");
+
+const storyPlatform =
   document.getElementById("storyPlatform");
 
-const storySourceUrl=
+const storySourceUrl =
   document.getElementById("storySourceUrl");
+
+const storyTags =
+  document.getElementById("storyTags");
+
+const storySummary =
+  document.getElementById("storySummary");
+
+const storyFileName =
+  document.getElementById("storyFileName");
+
+const contentPreview =
+  document.getElementById("contentPreview");
 
 async function saveData(){
 
@@ -682,7 +697,6 @@ function openStoryEditor(id=null){
         : "这篇文章没有连接本地 DOCX。";
   }else{
     selectedStoryFile=null;
-    selectedStoryHandle=null;
 
     importedParagraphs=[];
     contentAdjustments=[];
@@ -756,8 +770,6 @@ chooseStoryFile.onclick=async()=>{
         ]
 
       });
-
-    selectedStoryHandle=handle;
 
     const f=
       await handle.getFile();
@@ -1031,7 +1043,6 @@ storySave.onclick=async()=>{
   saveData();
 
   selectedStoryFile=null;
-  selectedStoryHandle=null;
 
   importedParagraphs=[];
   contentAdjustments=[];
@@ -1238,6 +1249,21 @@ async function readDocxParagraphs(file){
   }
 
   return out;
+}
+
+function getInitialTitle(paragraphs,fileName){
+
+  const first =
+    paragraphs
+      .find(p=>p.text.trim());
+
+  if(first && first.text.trim()){
+    return first.text.trim();
+  }
+
+  return fileName
+    .replace(/\.docx$/i,"")
+    .trim();
 }
 
 async function chooseFolder(){
