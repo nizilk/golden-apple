@@ -42,64 +42,54 @@ ipcMain.handle(
     resourceRootPath =
       result.filePaths[0];
 
-    // 记住资源文件夹
+    // 保存为 GoldenApple 的全局资源目录。
+    // XHS、Library 等功能以后共用这里。
+    let settings = {};
+
     try{
 
-      let settings = {};
+      const text =
+        await fs.readFile(
+          SETTINGS_FILE,
+          "utf8"
+        );
 
-      try{
-
-        const text =
-          await fs.readFile(
-            SETTINGS_FILE,
-            "utf8"
-          );
-
-        settings =
-          JSON.parse(text);
-
-      }catch(error){
-
-        if(error.code !== "ENOENT"){
-          throw error;
-        }
-
-      }
-
-      settings.version =
-        settings.version || 1;
-
-      settings.resources =
-        settings.resources || {};
-
-      settings.resources.xhs =
-        resourceRootPath;
-
-      await fs.mkdir(
-        DATA_ROOT,
-        {
-          recursive: true
-        }
-      );
-
-      await fs.writeFile(
-        SETTINGS_FILE,
-        JSON.stringify(
-          settings,
-          null,
-          2
-        ),
-        "utf8"
-      );
+      settings =
+        JSON.parse(text);
 
     }catch(error){
 
-      console.error(
-        "保存资源文件夹路径失败：",
-        error
-      );
+      if(error.code !== "ENOENT"){
+        console.warn(
+          "读取 settings.json 失败：",
+          error
+        );
+      }
 
     }
+
+    settings.version =
+      settings.version || 1;
+
+    settings.resourceRoot =
+      resourceRootPath;
+
+    await fs.mkdir(
+      DATA_ROOT,
+      {
+        recursive: true
+      }
+    );
+
+    await fs.writeFile(
+      SETTINGS_FILE,
+      JSON.stringify(
+        settings,
+        null,
+        2
+      ),
+      "utf8"
+    );
 
     return resourceRootPath;
 
@@ -108,13 +98,58 @@ ipcMain.handle(
 
 
 ipcMain.handle(
-  "resource:getSaved",
+  "resource:getCurrent",
   async () => {
 
-    return resourceRootPath;
+    // 如果当前 Electron 进程已经有路径，
+    // 直接返回。
+    if(resourceRootPath){
+
+      return resourceRootPath;
+
+    }
+
+    // 否则从全局 settings.json 恢复。
+    try{
+
+      const text =
+        await fs.readFile(
+          SETTINGS_FILE,
+          "utf8"
+        );
+
+      const settings =
+        JSON.parse(text);
+
+      const savedPath =
+        settings.resourceRoot;
+
+      if(!savedPath){
+        return null;
+      }
+
+      // 确认路径仍然存在。
+      await fs.access(
+        savedPath
+      );
+
+      resourceRootPath =
+        savedPath;
+
+      return resourceRootPath;
+
+    }catch(error){
+
+      resourceRootPath =
+        null;
+
+      return null;
+
+    }
 
   }
 );
+
 
 function getSafeResourcePath(
   relativePath
@@ -763,7 +798,40 @@ app.whenReady().then(
 
     await ensureDataDirectories();
 
-    await loadSavedResourcePath();
+    // 启动时恢复上一次使用的资源文件夹。
+    try{
+
+      const text =
+        await fs.readFile(
+          SETTINGS_FILE,
+          "utf8"
+        );
+
+      const settings =
+        JSON.parse(text);
+
+      const savedPath =
+        settings.resourceRoot;
+
+      if(savedPath){
+
+        await fs.access(
+          savedPath
+        );
+
+        resourceRootPath =
+          savedPath;
+
+      }
+
+    }catch(error){
+
+      // settings 不存在、路径失效或 JSON 损坏，
+      // 都不阻止程序启动。
+      resourceRootPath =
+        null;
+
+    }
 
     createWindow();
 
