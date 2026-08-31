@@ -442,10 +442,9 @@ function renderTags(){
   tagsBar.innerHTML=allTags().map(t=>`<button class="tag-chip ${data.activeTag===t?'on':''}" data-tag="${esc(t)}">#${esc(t)}</button>`).join("");
   tagsBar.querySelectorAll("[data-tag]").forEach(b=>b.onclick=()=>{data.activeTag=b.dataset.tag;render()});
 }
+
 function render(){
   const page=getPage();
-  pageTitle.textContent=page.name;
-  pageSubtitle.textContent=data.settings.subtitle||"";
   sectionTitle.textContent=page.id==="all"?"故事":page.name;
   renderTags();
   const list=pageStories();
@@ -1160,17 +1159,8 @@ manageLibraryBtn.onclick=()=>libraryOverlay.classList.add("show");
 libraryClose.onclick=()=>libraryOverlay.classList.remove("show");
 libraryOverlay.onclick=e=>{if(e.target===libraryOverlay)libraryOverlay.classList.remove("show")};
 chooseFolder.onclick=chooseFolder;
-multiStoryFile.onchange=async()=>{
-  const fs=[...multiStoryFile.files];let add=0,fail=0;
-  for(const f of fs){
-    if(!/\.docx$/i.test(f.name)){fail++;continue}
-    try{
-      const raw=await readDocx(f),title=f.name.replace(/\.docx$/i,""),content=removeDuplicateTitle(raw,title);
-      data.stories.unshift({id:"batch_"+Date.now()+"_"+Math.random().toString(36).slice(2,7),title,author:"",tags:[],date:new Date().toISOString().slice(0,10),content,path:f.name,favorite:false,sourceType:"word"});add++
-    }catch{fail++}
-  }
-  saveData();renderAll();multiStoryFile.value="";alert(`导入完成：${add} 篇${fail?`，跳过 ${fail} 篇`:''}。`);
-};
+
+
 
 function updateLibraryHero(){
 
