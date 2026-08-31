@@ -15,6 +15,7 @@ let resourceRootPath = null;
 // ============================================================
 // 选择资源文件夹
 // ============================================================
+
 ipcMain.handle(
   "resource:choose",
   async () => {
@@ -29,7 +30,6 @@ ipcMain.handle(
         }
       );
 
-
     if(
       result.canceled ||
       result.filePaths.length === 0
@@ -39,16 +39,82 @@ ipcMain.handle(
 
     }
 
-
     resourceRootPath =
       result.filePaths[0];
 
+    // 记住资源文件夹
+    try{
+
+      let settings = {};
+
+      try{
+
+        const text =
+          await fs.readFile(
+            SETTINGS_FILE,
+            "utf8"
+          );
+
+        settings =
+          JSON.parse(text);
+
+      }catch(error){
+
+        if(error.code !== "ENOENT"){
+          throw error;
+        }
+
+      }
+
+      settings.version =
+        settings.version || 1;
+
+      settings.resources =
+        settings.resources || {};
+
+      settings.resources.xhs =
+        resourceRootPath;
+
+      await fs.mkdir(
+        DATA_ROOT,
+        {
+          recursive: true
+        }
+      );
+
+      await fs.writeFile(
+        SETTINGS_FILE,
+        JSON.stringify(
+          settings,
+          null,
+          2
+        ),
+        "utf8"
+      );
+
+    }catch(error){
+
+      console.error(
+        "保存资源文件夹路径失败：",
+        error
+      );
+
+    }
 
     return resourceRootPath;
 
   }
 );
 
+
+ipcMain.handle(
+  "resource:getSaved",
+  async () => {
+
+    return resourceRootPath;
+
+  }
+);
 
 function getSafeResourcePath(
   relativePath
@@ -394,6 +460,54 @@ const SETTINGS_FILE = path.join(
   "settings.json"
 );
 
+async function loadSavedResourcePath(){
+
+  try{
+
+    const text =
+      await fs.readFile(
+        SETTINGS_FILE,
+        "utf8"
+      );
+
+    const settings =
+      JSON.parse(text);
+
+    const savedPath =
+      settings?.resources?.xhs;
+
+    if(!savedPath){
+      return false;
+    }
+
+    // 检查原来的文件夹是否还存在
+    await fs.access(
+      savedPath
+    );
+
+    resourceRootPath =
+      savedPath;
+
+    return true;
+
+  }catch(error){
+
+    if(error.code !== "ENOENT"){
+      console.warn(
+        "无法恢复已保存的资源文件夹：",
+        error
+      );
+    }
+
+    resourceRootPath =
+      null;
+
+    return false;
+
+  }
+
+}
+
 
 // ============================================================
 // 安全的数据路径
@@ -596,6 +710,12 @@ function createWindow() {
 
       height: 900,
 
+      icon:
+        path.join(
+          XHS_DATA_ROOT,
+          "favicon.png"
+        ),
+
       minWidth: 1000,
 
       minHeight: 700,
@@ -642,6 +762,8 @@ app.whenReady().then(
   async () => {
 
     await ensureDataDirectories();
+
+    await loadSavedResourcePath();
 
     createWindow();
 
