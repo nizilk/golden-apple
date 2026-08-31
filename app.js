@@ -5,65 +5,73 @@
 const electronStorage = {
 
   async readText(path) {
-    return await window.electronAPI.readDataFile(path);
+
+    return await window.electronAPI
+      .readDataFile(path);
+
   },
+
 
   async writeText(path, text) {
-    return await window.electronAPI.writeDataFile(
-      path,
-      text
-    );
+
+    return await window.electronAPI
+      .writeDataFile(
+        path,
+        text
+      );
+
   },
+
 
   async delete(path) {
-    return await window.electronAPI.deleteDataFile(path);
+
+    return await window.electronAPI
+      .deleteDataFile(path);
+
   },
 
+
   async mkdir(path) {
-    return await window.electronAPI.createDataDirectory(path);
+
+    return await window.electronAPI
+      .createDataDirectory(path);
+
+  },
+
+
+  async list(path) {
+
+    return await window.electronAPI
+      .listDataDirectory(path);
+
   }
 
 };
 
 
 
-/* ================= handle persistence ================= */
-let handleDB;
-function openHandleDB(){
-  return new Promise((resolve)=>{
-    const req = indexedDB.open("myXHS_handle", 1);
-    req.onupgradeneeded = e => { e.target.result.createObjectStore("handles"); };
-    req.onsuccess = e => { handleDB = e.target.result; resolve(); };
-  });
-}
-function saveHandle(h, key){
-  return new Promise((resolve, reject)=>{
-    try{
-      const tx = handleDB.transaction("handles","readwrite");
-      tx.objectStore("handles").put(h, key);
-      tx.oncomplete = ()=> resolve();
-      tx.onerror = ()=> reject(tx.error);
-    }catch(err){ reject(err); }
-  });
-}
-function loadHandle(key){
-  return new Promise((resolve)=>{
-    const tx = handleDB.transaction("handles","readonly");
-    const req = tx.objectStore("handles").get(key);
-    req.onsuccess = ()=> resolve(req.result || null);
-    req.onerror = ()=> resolve(null);
-  });
-}
 
 /* ================= state ================= */
-let rootHandle=null, appDirHandle=null, postsDirHandle=null, mediaDirHandle=null;
+let resourceRootPath = null;
 let faviconObjectUrl = null;
-let allPosts=[];
-let activeTag=null, activePage=null, searchTerm="";
-let pages=[];
-let homePageId=null, editingPageId=null;
-let editingId=null, editingComments=[], replyTarget=null, editingMedia=[], editingCommentId=null;
-const dbFolderName = "【RedNote】";
+
+let allPosts = [];
+
+let activeTag = null;
+let activePage = null;
+let searchTerm = "";
+
+let pages = [];
+
+let homePageId = null;
+let editingPageId = null;
+
+let editingId = null;
+let editingComments = [];
+let replyTarget = null;
+let editingMedia = [];
+let editingCommentId = null;
+
 const pendingUploads = new Map();
 
 function genId(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
@@ -96,100 +104,139 @@ document.getElementById("themeToggle").onclick = ()=>{
 applyTheme(localStorage.getItem("myXHS_theme") || "light");
 
 /* ================= Icon ================= */
+
 async function loadFavicon(){
-  const link = document.getElementById("appFavicon");
-  if(!link || !appDirHandle) return;
+
+  const link =
+    document.getElementById("appFavicon");
+
+  if(!link || !resourceRootPath) return;
 
   try{
-    const fh = await appDirHandle.getFileHandle("favicon.png");
-    const file = await fh.getFile();
+
+    const dataUrl =
+      await window.electronAPI.readResourceDataURL(
+        "favicon.png"
+      );
 
     if(faviconObjectUrl){
-      URL.revokeObjectURL(faviconObjectUrl);
+      URL.revokeObjectURL(
+        faviconObjectUrl
+      );
     }
 
-    faviconObjectUrl = URL.createObjectURL(file);
-    link.href = faviconObjectUrl;
+    faviconObjectUrl = dataUrl;
+
+    link.href = dataUrl;
+
   }catch(e){
-    // RedNote/favicon.png 不存在时，不做任何处理
-    console.warn("未找到 【RedNote】/favicon.png");
+
+    console.warn(
+      "未找到资源文件夹中的 favicon.png"
+    );
+
   }
+
 }
 
-/* ================= connect root folder (also the media library) ================= */
+
+/* ================= connect resource folder ================= */
+
 async function init(){
-  if(!window.showDirectoryPicker){
-    document.getElementById("unsupportedWarn").style.display = "block";
-    document.getElementById("connectBtn").disabled = true;
-    return;
-  }
-  await openHandleDB();
-  document.getElementById("connectBtn").onclick = async ()=>{
-    await connectFolder(null);
+
+  const connectBtn =
+    document.getElementById("connectBtn");
+
+  connectBtn.onclick = async () => {
+
+    await connectFolder();
+
   };
-  const remembered = await loadHandle("root");
-  if(remembered){
-    document.getElementById("rememberedName").textContent = `上次使用的文件夹：「${remembered.name}」`;
-    try{
-      const perm = await remembered.queryPermission({mode:"readwrite"});
-      if(perm === "granted"){
-        await connectFolder(remembered);
-      }
-    }catch(e){}
-  }
+
 }
 
-document.getElementById("switchFolderBtn").onclick = ()=>{
-  rootHandle = null;
-  document.getElementById("app").style.display = "none";
-  document.getElementById("connectScreen").style.display = "flex";
-};
-async function connectFolder(remembered){
-  rootHandle = null;
-  if(remembered){
-    try{
-      const perm = await remembered.requestPermission({mode:"readwrite"});
-      if(perm === "granted"){
-        await remembered.entries().next();
-        rootHandle = remembered;
-      }
-    }catch(err){ rootHandle = null; }
-  }
-  if(!rootHandle){
-    try{
-      rootHandle = await window.showDirectoryPicker({mode:"readwrite"});
-      await saveHandle(rootHandle, "root");
-    }catch(err){
-      if(err.name === "AbortError") return;
-      showToast(`无法选择文件夹：${err.name}`);
-      return;
-    }
-  }
-  try{
-    appDirHandle = await rootHandle.getDirectoryHandle(dbFolderName, {create:true});
-    postsDirHandle = await appDirHandle.getDirectoryHandle("posts", {create:true});
-    mediaDirHandle = await appDirHandle.getDirectoryHandle("media", {create:true});
 
+document.getElementById(
+  "switchFolderBtn"
+).onclick = () => {
+
+  resourceRootPath = null;
+
+  document.getElementById(
+    "app"
+  ).style.display = "none";
+
+  document.getElementById(
+    "connectScreen"
+  ).style.display = "flex";
+
+};
+
+
+async function connectFolder(){
+
+  try{
+
+    const selectedPath =
+      await window.electronAPI.chooseResourceFolder();
+
+    if(!selectedPath){
+
+      return;
+
+    }
+
+    resourceRootPath =
+      selectedPath;
+
+
+    // 资源文件夹连接成功后，
+    // 数据文件夹完全由 Electron 自动管理。
     await loadFavicon();
 
-    const pagesData = await loadPagesData();
 
-    pages = pagesData.list;
-    homePageId = pagesData.home;
+    const pagesData =
+      await loadPagesData();
 
-    // 有效的自定义首页 → 启动时进入首页
-    // 没有首页 → 仍然进入“全部”
-    activePage = homePageId || null;
 
-    document.getElementById("connectScreen").style.display = "none";
-    document.getElementById("app").style.display = "flex";
-    document.getElementById("currentFolderName").textContent = `📁 ${rootHandle.name}`;
+    pages =
+      pagesData.list || [];
+
+    homePageId =
+      pagesData.home || null;
+
+
+    activePage =
+      homePageId || null;
+
+
+    document.getElementById(
+      "connectScreen"
+    ).style.display = "none";
+
+    document.getElementById(
+      "app"
+    ).style.display = "flex";
+
+
+    document.getElementById(
+      "currentFolderName"
+    ).textContent =
+      `📁 ${selectedPath.split("\\").pop()}`;
+
 
     await reload();
+
   }catch(err){
+
     console.error(err);
-    showToast(`初始化失败：${err.name}`);
+
+    showToast(
+      `初始化失败：${err.message || err.name}`
+    );
+
   }
+
 }
 
 
@@ -203,82 +250,170 @@ function isVideoName(name){
   return /\.(mp4|webm|mov|m4v)$/i.test(name);
 }
 
-/*
- * 只读取当前文件夹这一层。
- * 不递归，不提前扫描子文件夹。
- */
-async function getPickerChildrenFromDisk(dirHandle, prefix){
+
+async function getPickerChildrenFromDisk(
+  prefix
+){
+
+  const entries =
+    await window.electronAPI
+      .listResourceDirectory(
+        prefix
+      );
+
+
   const folders = [];
   const files = [];
 
-  for await (const [name, handle] of dirHandle.entries()){
-    try{
-      if(handle.kind === "directory"){
-        // 根目录下的 RedNote 数据目录不显示
-        if(prefix === "" && name === dbFolderName) continue;
 
-        folders.push({
-          name,
-          path: prefix + name + "/",
-          handle
-        });
-      }else if(handle.kind === "file" && isMediaName(name)){
-        files.push({
-          name,
-          path: prefix + name,
-          handle
-        });
-      }
-    }catch(e){
-      console.warn("跳过：", prefix + name, e);
+  for(const entry of entries){
+
+    const fullPath =
+      prefix
+        ? `${prefix}/${entry.name}`
+        : entry.name;
+
+
+    if(entry.isDirectory){
+
+      folders.push({
+
+        name: entry.name,
+
+        path:
+          `${fullPath}/`
+
+      });
+
     }
+
+
+    else if(
+      entry.isFile &&
+      isMediaName(entry.name)
+    ){
+
+      files.push({
+
+        name: entry.name,
+
+        path: fullPath
+
+      });
+
+    }
+
   }
 
-  folders.sort((a,b)=>a.name.localeCompare(b.name, "zh-CN"));
-  files.sort((a,b)=>a.name.localeCompare(b.name, "zh-CN"));
 
-  return {folders, files};
+  folders.sort(
+    (a,b) =>
+      a.name.localeCompare(
+        b.name,
+        "zh-CN"
+      )
+  );
+
+
+  files.sort(
+    (a,b) =>
+      a.name.localeCompare(
+        b.name,
+        "zh-CN"
+      )
+  );
+
+
+  return {
+    folders,
+    files
+  };
+
 }
 
-async function loadPagesData() {
 
-  try {
+async function loadPagesData(){
+
+  try{
 
     const text =
       await electronStorage.readText(
         "pages.json"
       );
 
-    if (!text) {
-      return [];
+
+    if(!text){
+
+      return {
+        home: null,
+        list: []
+      };
+
     }
 
-    return JSON.parse(text);
 
-  } catch (error) {
+    const data =
+      JSON.parse(text);
+
+
+    return {
+
+      home:
+        data.home || null,
+
+      list:
+        Array.isArray(data.list)
+          ? data.list
+          : []
+
+    };
+
+  }catch(error){
 
     console.error(
       "读取 pages.json 失败：",
       error
     );
 
-    return [];
+
+    return {
+
+      home: null,
+
+      list: []
+
+    };
 
   }
 
 }
 
-async function savePagesDataWithList(list, home = homePageId){
-  const fh = await appDirHandle.getFileHandle("pages.json", {create:true});
-  const w = await fh.createWritable();
+async function savePagesDataWithList(
+  list,
+  home = homePageId
+){
 
-  await w.write(JSON.stringify({
-    home: home || null,
-    list
-  }, null, 2));
+  await electronStorage.writeText(
 
-  await w.close();
+    "pages.json",
+
+    JSON.stringify(
+
+      {
+        home: home || null,
+        list: list || []
+      },
+
+      null,
+
+      2
+
+    )
+
+  );
+
 }
+
 
 async function savePagesData(){
   await savePagesDataWithList(pages, homePageId);
@@ -300,29 +435,138 @@ async function togglePageMembership(pg, p){
 
 /* ================= disk I/O: posts stored as one .html file each (original design, kept) ================= */
 async function getAllPostsFromDisk(){
+
   const posts = [];
-  for await (const [name, handle] of postsDirHandle.entries()){
-    if(handle.kind !== "file" || !name.endsWith(".html")) continue;
-    try{
-      const html = await (await handle.getFile()).text();
-      const doc = new DOMParser().parseFromString(html, "text/html");
-      const meta = k => doc.querySelector(`meta[name="${k}"]`)?.content || "";
-      posts.push({
-        id: meta("xhs-id") || name.replace(".html",""),
-        title: meta("xhs-title"),
-        author: meta("xhs-author"),
-        source: meta("xhs-source"),
-        tags: meta("xhs-tags") ? meta("xhs-tags").split("|").filter(Boolean) : [],
-        createdAt: Number(meta("xhs-created")) || 0,
-        body: doc.querySelector("#xhs-body")?.innerHTML.trim() || "",
-        comments: decodeJSONSafe(meta("xhs-comments-b64")),
-        media: decodeJSONSafe(meta("xhs-media-b64"))
-      });
-    }catch(e){ console.warn("读取帖子失败：", name, e); }
+
+
+  try{
+
+    const entries =
+      await electronStorage.list(
+        "posts"
+      );
+
+
+    for(const entry of entries){
+
+      if(
+        !entry.isFile ||
+        !entry.name.endsWith(".html")
+      ){
+
+        continue;
+
+      }
+
+
+      try{
+
+        const html =
+          await electronStorage.readText(
+            `posts/${entry.name}`
+          );
+
+
+        const doc =
+          new DOMParser().parseFromString(
+            html,
+            "text/html"
+          );
+
+
+        const meta =
+          k =>
+            doc.querySelector(
+              `meta[name="${k}"]`
+            )?.content || "";
+
+
+        posts.push({
+
+          id:
+            meta("xhs-id") ||
+            entry.name.replace(
+              ".html",
+              ""
+            ),
+
+          title:
+            meta("xhs-title"),
+
+          author:
+            meta("xhs-author"),
+
+          source:
+            meta("xhs-source"),
+
+          tags:
+            meta("xhs-tags")
+              ? meta("xhs-tags")
+                  .split("|")
+                  .filter(Boolean)
+              : [],
+
+          createdAt:
+            Number(
+              meta("xhs-created")
+            ) || 0,
+
+          body:
+            doc.querySelector(
+              "#xhs-body"
+            )?.innerHTML.trim() || "",
+
+          comments:
+            decodeJSONSafe(
+              meta(
+                "xhs-comments-b64"
+              )
+            ),
+
+          media:
+            decodeJSONSafe(
+              meta(
+                "xhs-media-b64"
+              )
+            )
+
+        });
+
+
+      }catch(e){
+
+        console.warn(
+          "读取帖子失败：",
+          entry.name,
+          e
+        );
+
+      }
+
+    }
+
+
+    posts.sort(
+      (a,b) =>
+        b.createdAt -
+        a.createdAt
+    );
+
+
+  }catch(e){
+
+    console.error(
+      "读取 posts 目录失败：",
+      e
+    );
+
   }
-  posts.sort((a,b)=> b.createdAt - a.createdAt);
+
+
   return posts;
+
 }
+
 async function writePostToDisk(post){
   const html = `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -345,42 +589,110 @@ ${post.body}
 </article>
 </body>
 </html>`;
-  const fh = await postsDirHandle.getFileHandle(`${post.id}.html`, {create:true});
-  const w = await fh.createWritable();
-  await w.write(html);
-  await w.close();
+  await electronStorage.writeText(
+    `posts/${post.id}.html`,
+    html
+  );
 }
+
 async function deletePostFromDisk(post){
-  try{ await postsDirHandle.removeEntry(`${post.id}.html`); }catch(e){}
-  for(const m of (post.media||[])){
-    if(m.type === "file"){ try{ await mediaDirHandle.removeEntry(m.ref); }catch(e){} }
+
+  try{
+
+    await electronStorage.delete(
+      `posts/${post.id}.html`
+    );
+
+  }catch(e){
+
+    console.warn(
+      "删除帖子失败：",
+      e
+    );
+
   }
+
+
+  for(
+    const m of (post.media || [])
+  ){
+
+    if(m.type === "file"){
+
+      try{
+
+        await electronStorage.delete(
+          `media/${m.ref}`
+        );
+
+      }catch(e){
+
+        console.warn(
+          "删除素材失败：",
+          m.ref,
+          e
+        );
+
+      }
+
+    }
+
+  }
+
 }
-async function writeMediaFile(filename, blob){
-  const fh = await mediaDirHandle.getFileHandle(filename, {create:true});
-  const w = await fh.createWritable();
-  await w.write(blob);
-  await w.close();
+
+async function writeMediaFile(
+  filename,
+  blob
+){
+
+  await window.electronAPI.writeDataBinary(
+    `media/${filename}`,
+    blob
+  );
+
 }
-async function readMediaBlobURL(filename){
-  const file = await (await mediaDirHandle.getFileHandle(filename)).getFile();
-  return URL.createObjectURL(file);
+
+
+async function readMediaBlobURL(
+  filename
+){
+
+  return await window.electronAPI.readDataURL(
+    `media/${filename}`
+  );
+
 }
-async function getLibraryFileHandle(path){
-  const parts = path.split("/");
-  let dir = rootHandle;
-  for(let i=0;i<parts.length-1;i++) dir = await dir.getDirectoryHandle(parts[i]);
-  return await dir.getFileHandle(parts[parts.length-1]);
-}
-async function readLibraryBlobURL(path){
-  const file = await (await getLibraryFileHandle(path)).getFile();
-  return URL.createObjectURL(file);
+
+async function readLibraryBlobURL(
+  resourcePath
+){
+
+  return await window.electronAPI
+    .readResourceDataURL(
+      resourcePath
+    );
+
 }
 
 async function getMediaFile(m){
-  if(m.type === "file") return await (await mediaDirHandle.getFileHandle(m.ref)).getFile();
-  return await (await getLibraryFileHandle(m.ref)).getFile();
+
+  if(m.type === "file"){
+
+    return await window.electronAPI
+      .readDataURL(
+        `media/${m.ref}`
+      );
+
+  }
+
+  return await window.electronAPI
+    .readResourceDataURL(
+      m.ref
+    );
+
 }
+
 function fileToDataURL(file){
   return new Promise((resolve)=>{
     const r = new FileReader();
@@ -429,9 +741,10 @@ async function exportPostSnapshot(p){
     const isAsset = el.hasAttribute("data-asset-path");
     if(!isFile && !isAsset) continue;
     try{
-      const m = isFile ? {type:"file", ref: el.getAttribute("data-file")} : {type:"asset", ref: el.getAttribute("data-asset-path")};
-      const file = await getMediaFile(m);
-      el.setAttribute("src", await fileToDataURL(file));
+        const m = isFile ? {type:"file", ref: el.getAttribute("data-file")} : {type:"asset", ref: el.getAttribute("data-asset-path")};
+        const dataUrl = await getMediaFile(m);
+
+        el.setAttribute("src", dataUrl);
     }catch(e){}
   }
 
@@ -479,13 +792,23 @@ ${clone.outerHTML}
 ${carouselScript}
 </body></html>`;
 
-  const dir = await appDirHandle.getDirectoryHandle("exports", {create:true});
-  const filename = `${(p.title||"未命名").replace(/[\\/:*?"<>|]/g,"").trim().slice(0,40) || "未命名"}-${p.id.slice(-5)}.html`;
-  const fh = await dir.getFileHandle(filename, {create:true});
-  const w = await fh.createWritable();
-  await w.write(html);
-  await w.close();
-  showToast(`已导出到文件夹：${filename}`);
+    const filename =
+    `${(p.title||"未命名")
+        .replace(/[\\/:*?"<>|]/g,"")
+        .trim()
+        .slice(0,40)
+        || "未命名"
+    }-${p.id.slice(-5)}.html`;
+
+    await electronStorage.writeText(
+    `exports/${filename}`,
+    html
+    );
+
+    showToast(
+    `已导出到文件夹：${filename}`
+    );
+
 }
 
 async function hydrateMedia(containerEl){
@@ -1486,7 +1809,6 @@ document.getElementById("galleryFileInput").onchange = (e)=>{
 /* ================= lazy library picker ================= */
 
 let pickerPath = "";
-let pickerDirHandle = null;
 
 /*
  * 打开选择器时，只把根目录作为当前目录。
@@ -1494,7 +1816,6 @@ let pickerDirHandle = null;
  */
 function openPicker(){
   pickerPath = "";
-  pickerDirHandle = rootHandle;
 
   document.getElementById("pickerSearch").value = "";
   document.getElementById("pickerOverlay").classList.add("show");
@@ -1538,16 +1859,11 @@ async function renderPickerList(term){
   const grid = document.getElementById("pickerGrid");
   const backBtn = document.getElementById("pickerBack");
 
-  if(!pickerDirHandle){
-    grid.innerHTML = `<div class="hint">没有可用的文件夹</div>`;
-    return;
-  }
-
   grid.innerHTML = `<div class="hint">正在读取当前文件夹…</div>`;
 
   try{
     const {folders, files} =
-      await getPickerChildrenFromDisk(pickerDirHandle, pickerPath);
+      await getPickerChildrenFromDisk(pickerPath);
 
     /*
      * 搜索现在只搜索当前已经打开的这一层。
@@ -1601,7 +1917,6 @@ async function renderPickerList(term){
           if(!folder) return;
 
           pickerPath = folder.path;
-          pickerDirHandle = folder.handle;
 
           document.getElementById("pickerSearch").value = "";
 
@@ -1665,7 +1980,6 @@ async function renderPickerList(term){
         if(!folder) return;
 
         pickerPath = folder.path;
-        pickerDirHandle = folder.handle;
 
         document.getElementById("pickerSearch").value = "";
 
@@ -1690,41 +2004,35 @@ async function renderPickerList(term){
   }
 }
 
-document.getElementById("pickerBack").onclick = async ()=>{
+document.getElementById(
+  "pickerBack"
+).onclick = async () => {
+
   if(!pickerPath) return;
 
-  const parts = pickerPath.split("/").filter(Boolean);
+
+  const parts =
+    pickerPath
+      .split("/")
+      .filter(Boolean);
+
 
   parts.pop();
 
-  const parentPath =
+
+  pickerPath =
     parts.length
       ? parts.join("/") + "/"
       : "";
 
-  /*
-   * FileSystemDirectoryHandle 没有 parent 属性，
-   * 所以返回上一级时重新从 rootHandle 逐层取得。
-   *
-   * 这里只读取目录句柄，不读取目录里的文件。
-   */
-  let dir = rootHandle;
 
-  try{
-    for(const part of parts){
-      dir = await dir.getDirectoryHandle(part);
-    }
+  document.getElementById(
+    "pickerSearch"
+  ).value = "";
 
-    pickerPath = parentPath;
-    pickerDirHandle = dir;
 
-    document.getElementById("pickerSearch").value = "";
+  await renderPickerList("");
 
-    await renderPickerList("");
-  }catch(err){
-    console.error(err);
-    showToast("无法返回上一级文件夹");
-  }
 };
 
 document.getElementById("pickerSearch").oninput = (e)=>{
