@@ -66,7 +66,6 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
 .story-meta .tag{color:var(--accent)}
 .story-side{display:flex;align-items:center;gap:9px;padding-top:3px}
 .story-date{font-size:9.5px;color:var(--muted);white-space:nowrap}
-.fav{border:0;background:transparent;color:#b8aaa1;font-size:17px;padding:0}.fav.on{color:#ad655e}
 .empty{text-align:center;color:var(--muted);font-family:"Songti SC","Noto Serif SC",serif;font-size:13px;line-height:2;padding:80px 20px;display:none}
 .fab{
   position:fixed;right:30px;bottom:28px;width:55px;height:55px;border:0;border-radius:50%;
@@ -297,9 +296,6 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
         选择 .docx 文件
       </button>
 
-      <div class="hint" id="storyFileName">
-        选择后，网页只保存这个文件的本地引用，不会复制文章正文。
-      </div>
     </div>
   </div>
 </div>
@@ -345,12 +341,7 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
   <div class="field" id="contentAdjustField">
     <label>正文整理</label>
 
-    <div class="hint" style="margin-bottom:10px">
-      这里不会修改你的原始 DOCX。勾选“删除”只表示网页阅读时不显示这一段。
-    </div>
-
     <div id="contentPreview" class="content-preview">
-      <div class="hint">选择 DOCX 后，这里会显示正文段落。</div>
     </div>
   </div>
 
@@ -374,8 +365,6 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
 <div class="article-body" id="rContent"></div>
 <div class="read-actions">
   <button id="rEdit">编辑</button>
-  <button id="rFav">♡ 收藏</button>
-  <button id="rOpen">打开原文件</button>
 </div>
 </article>
 </div>
@@ -385,8 +374,7 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
 <div class="dialog">
 <button class="dialog-close" id="pagesClose">×</button>
 <h2>页面</h2>
-<div class="field"><label>新建页面</label><div class="form-row"><input id="newPageName" placeholder="例如：太中 / 夏日 / 暂存"><button class="btn primary" id="addPage">新建</button></div></div>
-<div class="hint" style="margin-bottom:13px">页面不是标签。标签描述文章；页面则决定“这一页展示哪些文章”。一篇文章可以属于多个页面。</div>
+<div class="field"><label>新建页面</label><div class="form-row"><input id="newPageName" placeholder=""><button class="btn primary" id="addPage">新建</button></div></div>
 <div class="manage-pages" id="pageList"></div>
 </div>
 </div>
@@ -396,7 +384,7 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
 <div class="dialog">
 <button class="dialog-close" id="pageConfigClose">×</button>
 <h2 id="pageConfigTitle">页面内容</h2>
-<div class="field"><label>包含哪些文章</label><div class="hint" style="margin-bottom:10px">勾选后，这些文章会出现在这个页面。取消勾选不会删除文章。</div>
+<div class="field"><label>包含哪些文章</label>
 <div id="pagePostList" class="manage-pages"></div></div>
 </div>
 </div>
@@ -408,11 +396,6 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
 <h2>本地文件</h2>
 <div class="field"><label>连接文件夹</label>
 <div class="folder-box" id="folderBox">尚未连接本地文件夹<br><br><button class="btn" id="chooseFolder">选择文件夹</button></div>
-</div>
-
-<div class="hint">
-  连接后，网页会读取这个文件夹中的 .docx，并建立本地索引。
-  文章正文仍然只存在于你的原始 Word 文件中。
 </div>
 
 </div>
@@ -430,18 +413,15 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
 
   <input type="file" id="coverFile" accept="image/*">
 
-  <div class="hint">
-    这张图片只用于网页界面，不属于任何文章。
-    推荐使用横向图片。
-  </div>
 </div>
 <div class="dialog-actions"><span></span><button class="btn primary" id="settingsSave">保存</button></div>
 </div>
 </div>
 
 <script>
-const STORAGE="privateLibraryV3";
-const DB_NAME="privateLibraryFilesV3", DB_STORE="handles";
+
+const LIBRARY_FILE = "library.json";
+let libraryDirectoryHandle = null;
 
 const defaultData={
   settings:{
@@ -465,14 +445,12 @@ const defaultData={
   stories:[]
 };
 
-let data=JSON.parse(localStorage.getItem(STORAGE)||"null");
-if(!data){data=defaultData;saveData()}
+let data=structuredClone(defaultData);
+
 let newest=true;
 let readerStory=null;
 let editingId=null;
-let folderHandle=null;
 let selectedStoryFile=null;
-let selectedStoryHandle=null;
 
 let importedParagraphs=[];
 let contentAdjustments=[];
@@ -486,7 +464,28 @@ const storyPlatform=
 const storySourceUrl=
   document.getElementById("storySourceUrl");
 
-function saveData(){localStorage.setItem(STORAGE,JSON.stringify(data))}
+async function saveData(){
+
+  if(!libraryDirectoryHandle){
+    throw new Error("尚未连接 Fanfics 文件夹。");
+  }
+
+  const fileHandle=
+    await libraryDirectoryHandle.getFileHandle(
+      LIBRARY_FILE,
+      {create:true}
+    );
+
+  const writable=
+    await fileHandle.createWritable();
+
+  await writable.write(
+    JSON.stringify(data,null,2)
+  );
+
+  await writable.close();
+}
+  
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function strip(html){const d=document.createElement("div");d.innerHTML=html||"";return d.textContent||""}
 function normalizeTags(raw){
@@ -551,19 +550,13 @@ function render(){
       </div>
 
       <div class="story-side">
-        <button class="fav ${s.favorite?'on':''}" data-fav="${esc(s.id)}">
-          ${s.favorite?'♥':'♡'}
-        </button>
       </div>
     </article>`
   }).join("");
   empty.style.display=list.length?"none":"block";
   storyList.querySelectorAll(".story-row").forEach(r=>r.onclick=()=>openStory(r.dataset.id));
-  storyList.querySelectorAll("[data-fav]").forEach(b=>b.onclick=e=>{e.stopPropagation();toggleFav(b.dataset.fav)});
 }
 function renderAll(){renderNav();render();}
-
-function toggleFav(id){const s=data.stories.find(x=>x.id===id);if(!s)return;s.favorite=!s.favorite;saveData();render()}
 
 async function openStory(id){
 
@@ -595,39 +588,38 @@ async function openStory(id){
   rContent.innerHTML=
     `<p class="reader-loading">正在读取本地文章……</p>`;
 
-  rFav.textContent=
-    s.favorite ? "♥ 已收藏" : "♡ 收藏";
-
   reader.classList.add("show");
 
   try{
 
-    const h=await getFileHandle(s.id);
+    if(!s.path){
 
-    if(!h){
       rContent.innerHTML=
-        `<p>找不到这篇文章对应的本地文件。</p>
-         <p class="reader-note">
-         请到“本地文件”重新连接你的 Fanfics 文件夹。
-         </p>`;
+        `<p>这篇文章没有记录本地文件路径。</p>`;
+
       return;
     }
 
-    const perm=
-      await h.queryPermission({mode:"read"});
+    let f;
 
-    if(perm!=="granted"){
-      const requested=
-        await h.requestPermission({mode:"read"});
+    try{
 
-      if(requested!=="granted"){
-        rContent.innerHTML=
-          "<p>没有获得读取这个本地文件的权限。</p>";
-        return;
-      }
+      f=
+        await getFileByPath(s.path);
+
+    }catch(e){
+
+      rContent.innerHTML=
+        `<p>找不到原始 DOCX。</p>
+        <p class="reader-note">
+          路径：${esc(s.path)}
+        </p>
+        <p class="reader-note">
+          请确认文件仍然位于你的 Fanfics 文件夹中。
+        </p>`;
+
+      return;
     }
-
-    const f=await h.getFile();
 
     const paragraphs=
       await readDocxParagraphs(f);
@@ -661,49 +653,8 @@ async function openStory(id){
 
 readerClose.onclick=()=>reader.classList.remove("show");
 reader.onclick=e=>{if(e.target===reader)reader.classList.remove("show")};
-rFav.onclick=()=>{if(readerStory){toggleFav(readerStory.id);openStory(readerStory.id)}};
 rEdit.onclick=()=>{if(readerStory){reader.classList.remove("show");openStoryEditor(readerStory.id)}};
 
-rOpen.onclick=async()=>{
-
-  if(!readerStory){
-    return;
-  }
-
-  const h=
-    await getFileHandle(readerStory.id);
-
-  if(!h){
-    alert(
-      "找不到这个文件的本地引用。\n\n"+
-      "请重新连接你的 Fanfics 文件夹。"
-    );
-    return;
-  }
-
-  try{
-
-    const perm=
-      await h.requestPermission({mode:"read"});
-
-    if(perm!=="granted"){
-      alert("没有获得文件读取权限。");
-      return;
-    }
-
-    const f=await h.getFile();
-
-    alert(
-      `文件位于你的本地电脑：\n\n${f.name}\n\n`+
-      "网页不会修改这个文件。"
-    );
-
-  }catch(e){
-
-    alert("无法读取原文件："+e.message);
-
-  }
-};
 
 search.oninput=render;
 sortBtn.onclick=()=>{newest=!newest;sortBtn.textContent=newest?"最近加入":"最早加入";render()};
@@ -993,11 +944,13 @@ storySave.onclick=async()=>{
     const f=
       selectedStoryFile;
 
-    const h=
-      selectedStoryHandle;
+    const path=
+      selectedStoryPath;
 
-    if(!f || !h){
+    if(!f || !path){
+
       alert("请先选择一个 .docx 文件。");
+
       return;
     }
 
@@ -1008,12 +961,6 @@ storySave.onclick=async()=>{
 
     try{
 
-      /*
-       * 保存前再次确认 DOCX 能读取。
-       * 正文不会保存进 data。
-       */
-      await readDocx(f);
-
       const id=
         "story_"+
         Date.now()+
@@ -1023,11 +970,8 @@ storySave.onclick=async()=>{
           .slice(2,8);
 
       const s={
-
         id,
-
         title,
-
         author:
           storyAuthor.value.trim(),
 
@@ -1047,11 +991,7 @@ storySave.onclick=async()=>{
             .toISOString()
             .slice(0,10),
 
-        fileName:
-          f.name,
-
-        path:
-          f.name,
+        path:path,
 
         favorite:false,
 
@@ -1065,18 +1005,6 @@ storySave.onclick=async()=>{
       };
 
       data.stories.unshift(s);
-
-      /*
-       * 现阶段暂时继续使用已有的
-       * IndexedDB 保存 FileHandle。
-       *
-       * 第二阶段我们再把这个设计改成
-       * “总文件夹 + 相对路径”。
-       */
-      await putFileHandle(
-        id,
-        h
-      );
 
     }catch(e){
 
@@ -1118,7 +1046,7 @@ deleteStoryBtn.onclick=async()=>{
   if(!s||!confirm(`删除《${s.title}》？`))return;
   data.stories=data.stories.filter(x=>x.id!==editingId);
   data.pages.forEach(p=>p.postIds=p.postIds.filter(id=>id!==editingId));
-  await removeFileHandle(editingId);saveData();closeStoryEditor();renderAll();
+  await saveData();closeStoryEditor();renderAll();
 };
 
 function openPages(){renderPageList();pagesOverlay.classList.add("show")}
@@ -1163,159 +1091,41 @@ function openPageConfig(id){
 pageConfigClose.onclick=()=>pageConfigOverlay.classList.remove("show");
 pageConfigOverlay.onclick=e=>{if(e.target===pageConfigOverlay)pageConfigOverlay.classList.remove("show")};
 
-const DB={};
-function openFileDB(){
-  return new Promise((resolve,reject)=>{
-    const req=indexedDB.open(DB_NAME,1);
-    req.onupgradeneeded=()=>req.result.createObjectStore(DB_STORE);
-    req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
-  });
-}
-async function putFileHandle(id,h){
-  if(!h)return;try{const db=await openFileDB();await new Promise((res,rej)=>{const tx=db.transaction(DB_STORE,"readwrite");tx.objectStore(DB_STORE).put(h,id);tx.oncomplete=res;tx.onerror=()=>rej(tx.error)});db.close()}catch(e){}
-}
-async function getFileHandle(id){
-  try{const db=await openFileDB();const h=await new Promise((res,rej)=>{const tx=db.transaction(DB_STORE);const r=tx.objectStore(DB_STORE).get(id);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});db.close();return h||null}catch{return null}
-}
-async function removeFileHandle(id){
-  try{const db=await openFileDB();await new Promise((res,rej)=>{const tx=db.transaction(DB_STORE,"readwrite");tx.objectStore(DB_STORE).delete(id);tx.oncomplete=res;tx.onerror=()=>rej(tx.error)});db.close()}catch{}
-}
+async function getFileByPath(relativePath){
 
-async function readDocx(file){
-
-  if(!window.JSZip){
-
-    await new Promise((resolve,reject)=>{
-
-      const s=
-        document.createElement("script");
-
-      s.src=
-        "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
-
-      s.onload=resolve;
-
-      s.onerror=()=>{
-        reject(
-          new Error(
-            "无法加载 DOCX 解析模块；请检查网络。"
-          )
-        );
-      };
-
-      document.head.appendChild(s);
-
-    });
-
+  if(!libraryDirectoryHandle){
+    throw new Error("尚未连接 Fanfics 文件夹。");
   }
 
-  const zip=
-    await JSZip.loadAsync(
-      await file.arrayBuffer()
-    );
+  const parts=
+    relativePath
+      .split("/")
+      .filter(Boolean);
 
-  const xmlFile=
-    zip.file(
-      "word/document.xml"
-    );
-
-  if(!xmlFile){
-    throw new Error(
-      "这个文件不是有效的 DOCX 文档。"
-    );
+  if(!parts.length){
+    throw new Error("文章路径为空。");
   }
 
-  const xml=
-    await xmlFile.async("string");
+  let dir=
+    libraryDirectoryHandle;
 
-  const doc=
-    new DOMParser()
-      .parseFromString(
-        xml,
-        "application/xml"
+  for(let i=0;i<parts.length-1;i++){
+
+    dir=
+      await dir.getDirectoryHandle(
+        parts[i]
       );
 
-  const paras=
-    [...doc.getElementsByTagName("w:p")];
-
-  const out=[];
-
-  for(const p of paras){
-
-    /*
-     * DOCX 中：
-     *
-     * w:t = 普通文字
-     * w:tab = Tab
-     * w:br = 换行
-     *
-     * 我们只提取“文章内容”，
-     * 不继承 Word 的字体、字号、颜色等。
-     */
-
-    let text="";
-
-    for(const node of p.childNodes){
-
-      if(node.nodeType!==1){
-        continue;
-      }
-
-      const name=
-        node.localName;
-
-      if(name==="r"){
-
-        for(
-          const child
-          of node.childNodes
-        ){
-
-          if(child.nodeType!==1){
-            continue;
-          }
-
-          if(child.localName==="t"){
-            text+=
-              child.textContent || "";
-          }
-
-          if(child.localName==="tab"){
-            text+="\t";
-          }
-
-          if(child.localName==="br"){
-            text+="\n";
-          }
-        }
-
-      }else if(name==="hyperlink"){
-
-        text+=
-          [...node.getElementsByTagName("w:t")]
-            .map(x=>x.textContent || "")
-            .join("");
-
-      }
-
-    }
-
-    text=
-      text
-        .replace(/\r/g,"")
-        .trim();
-
-    if(text){
-      out.push(
-        `<p>${esc(text).replace(/\n/g,"<br>")}</p>`
-      );
-    }
-
   }
 
-  return out.join("") ||
-    "<p>空白文档。</p>";
+  const fileHandle=
+    await dir.getFileHandle(
+      parts[parts.length-1]
+    );
+
+  return fileHandle.getFile();
 }
+
 
 async function readDocxParagraphs(file){
 
@@ -1430,87 +1240,261 @@ async function readDocxParagraphs(file){
   return out;
 }
 
-function guessMetadata(paragraphs,fileName){
-
-  const first=
-    paragraphs[0]?.text?.trim() || "";
-
-  const second=
-    paragraphs[1]?.text?.trim() || "";
-
-  return {
-    title:
-      first ||
-      fileName.replace(/\.docx$/i,""),
-
-    author:
-      second
-  };
-}
-
 async function chooseFolder(){
-  if(!window.showDirectoryPicker){alert("当前浏览器不支持选择本地文件夹。请使用最新版 Chrome / Edge。");return}
+
+  if(!window.showDirectoryPicker){
+
+    alert(
+      "当前浏览器不支持选择本地文件夹。\n\n"+
+      "请使用最新版 Chrome 或 Edge。"
+    );
+
+    return;
+  }
+
   try{
-    folderHandle=await showDirectoryPicker({mode:"read"});
-    folderBox.innerHTML=`已连接：<strong>${esc(folderHandle.name)}</strong><br><br><button class="btn" id="scanFolder">扫描 / 更新 .docx</button>`;
-    scanFolder.onclick=scanFolder;
-  }catch{}
-}
-async function scanFolder(){
-  const files=[];
-  async function walk(dir,path=""){
-    for await(const [name,h] of dir.entries()){
-      if(h.kind==="file"&&/\.docx$/i.test(name))files.push({name,h,path:(path?path+"/":"")+name});
-      else if(h.kind==="directory")await walk(h,path?path+"/"+name:name);
-    }
-  }
-  await walk(folderHandle);
-  let add=0,update=0;
-  for(const x of files){
-    const f=await x.h.getFile();
-    let s=data.stories.find(s=>s.path===x.path);
-    if(s){await putFileHandle(s.id,x.h);update++;continue}
-    
-    try{
 
-      // 这里只验证文件能够正常读取。
-      await readDocx(f);
+    const handle=
+      await window.showDirectoryPicker({
+        mode:"readwrite"
+      });
 
-      const title=
-        x.name.replace(/\.docx$/i,"");
+    libraryDirectoryHandle=
+      handle;
 
-      const id=
-        "file_"+Date.now()+"_"+Math.random()
-        .toString(36).slice(2,8);
+    folderBox.innerHTML=
+      `已连接：<strong>${esc(handle.name)}</strong>
+       <br><br>
+       <button class="btn" id="scanFolder">
+         扫描 / 更新 DOCX
+       </button>`;
 
-      s={
-        id,
-        title,
-        author:"",
-        tags:[],
-        summary:"",
-        date:new Date().toISOString().slice(0,10),
+    document
+      .getElementById("scanFolder")
+      .onclick=scanFolder;
 
-        // 只保存文件位置，不保存正文
-        fileName:x.name,
-        path:x.path,
+    /*
+     * 尝试读取已有 library.json。
+     *
+     * 如果不存在，就创建新的。
+     */
 
-        favorite:false,
-        sourceType:"word"
-      };
+    await loadLibrary();
 
-      data.stories.unshift(s);
+    renderAll();
 
-      await putFileHandle(id,x.h);
+  }catch(e){
 
-      add++;
+    if(e.name!=="AbortError"){
 
-    }catch(e){
       console.error(e);
+
+      alert(
+        "连接文件夹失败：\n\n"+
+        e.message
+      );
+
     }
+
   }
-  if(add||update)saveData();renderAll();alert(`扫描完成：新增 ${add} 篇，已存在 ${update} 篇。`);
+
 }
+
+async function loadLibrary(){
+
+  if(!libraryDirectoryHandle){
+    return;
+  }
+
+  try{
+
+    const fileHandle=
+      await libraryDirectoryHandle.getFileHandle(
+        LIBRARY_FILE
+      );
+
+    const file=
+      await fileHandle.getFile();
+
+    const text=
+      await file.text();
+
+    const saved=
+      JSON.parse(text);
+
+    data={
+      ...structuredClone(defaultData),
+      ...saved
+    };
+
+    if(!Array.isArray(data.stories)){
+      data.stories=[];
+    }
+
+    if(!Array.isArray(data.pages)){
+      data.pages=
+        structuredClone(defaultData.pages);
+    }
+
+    if(!Array.isArray(data.tags)){
+      data.tags=["全部"];
+    }
+
+  }catch(e){
+
+    /*
+     * library.json 不存在。
+     *
+     * 这是第一次使用。
+     */
+
+    if(e.name==="NotFoundError"){
+
+      data=
+        structuredClone(defaultData);
+
+      await saveData();
+
+      return;
+    }
+
+    throw e;
+  }
+
+}
+
+async function scanFolder(){
+
+  if(!libraryDirectoryHandle){
+
+    alert("请先连接 Fanfics 文件夹。");
+
+    return;
+  }
+
+  const files=[];
+
+  async function walk(
+    dir,
+    path=""
+  ){
+
+    for await(
+      const [name,h]
+      of dir.entries()
+    ){
+
+      const currentPath=
+        path
+          ? `${path}/${name}`
+          : name;
+
+      if(
+        h.kind==="file" &&
+        /\.docx$/i.test(name)
+      ){
+
+        files.push({
+          name,
+          path:currentPath,
+          handle:h
+        });
+
+      }else if(
+        h.kind==="directory"
+      ){
+
+        await walk(
+          h,
+          currentPath
+        );
+
+      }
+
+    }
+
+  }
+
+  await walk(
+    libraryDirectoryHandle
+  );
+
+  let add=0;
+  let existing=0;
+
+  for(const file of files){
+
+    const exists=
+      data.stories.some(
+        s=>s.path===file.path
+      );
+
+    if(exists){
+
+      existing++;
+
+      continue;
+
+    }
+
+    const id=
+      "story_"+
+      Date.now()+
+      "_"+
+      Math.random()
+        .toString(36)
+        .slice(2,8);
+
+    data.stories.unshift({
+
+      id,
+
+      title:
+        file.name
+          .replace(/\.docx$/i,""),
+
+      author:"",
+
+      platform:"",
+
+      sourceUrl:"",
+
+      tags:[],
+
+      summary:"",
+
+      date:
+        new Date()
+          .toISOString()
+          .slice(0,10),
+
+      path:
+        file.path,
+
+      favorite:false,
+
+      sourceType:"word",
+
+      contentAdjustments:{
+        removed:[]
+      }
+
+    });
+
+    add++;
+
+  }
+
+  await saveData();
+
+  renderAll();
+
+  alert(
+    `扫描完成：新增 ${add} 篇，已有 ${existing} 篇。`
+  );
+
+}
+
 manageLibraryBtn.onclick=()=>libraryOverlay.classList.add("show");
 libraryClose.onclick=()=>libraryOverlay.classList.remove("show");
 libraryOverlay.onclick=e=>{if(e.target===libraryOverlay)libraryOverlay.classList.remove("show")};
