@@ -160,6 +160,49 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
   letter-spacing:.02em;
 }
 
+.content-preview{
+  border:1px solid var(--line);
+  background:#fbf8f2;
+  border-radius:8px;
+  padding:10px;
+  max-height:420px;
+  overflow:auto;
+}
+
+.content-preview-item{
+  border-bottom:1px solid var(--line);
+  padding:10px 8px;
+}
+
+.content-preview-item:last-child{
+  border-bottom:0;
+}
+
+.content-preview-control{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:6px;
+  color:var(--muted);
+  font-size:10px;
+}
+
+.content-preview-text{
+  font-family:"Songti SC","Noto Serif SC","STSong",serif;
+  font-size:12.5px;
+  line-height:1.8;
+  white-space:pre-wrap;
+  color:var(--ink);
+}
+
+.content-preview-item.removed{
+  opacity:.45;
+}
+
+.content-preview-item.removed .content-preview-text{
+  text-decoration:line-through;
+}
+
 /* responsive */
 @media(max-width:760px){
  .app{display:block}.sidebar{position:static;width:auto;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:18px 16px}
@@ -262,6 +305,7 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
 </div>
 
 <div id="editFields">
+
   <div class="form-row">
     <div class="field">
       <label>标题</label>
@@ -274,18 +318,21 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
     </div>
   </div>
 
-  <div class="form-row">
-    <div class="field">
-      <label>来源平台</label>
-      <input id="storyPlatform" placeholder="例如：AO3、LOFTER、微博">
-    </div>
+  <div class="field">
+    <label>来源平台</label>
+    <input id="storyPlatform" placeholder="例如：AO3、LOFTER、微博">
   </div>
 
   <div class="field">
     <label>原文链接（可选）</label>
     <input id="storySourceUrl" placeholder="https://……">
   </div>
-  <div class="field"><label>标签（可输入多个，用空格或逗号分隔）</label><input id="storyTags" placeholder="例如：太中 同人 暂存"></div>
+
+  <div class="field">
+    <label>标签（可输入多个，用空格或逗号分隔）</label>
+    <input id="storyTags" placeholder="例如：太中 同人 暂存">
+  </div>
+
   <div class="field">
     <label>简介</label>
     <textarea
@@ -294,6 +341,19 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
       placeholder="给这篇文章写一小段私人简介……"
     ></textarea>
   </div>
+
+  <div class="field" id="contentAdjustField">
+    <label>正文整理</label>
+
+    <div class="hint" style="margin-bottom:10px">
+      这里不会修改你的原始 DOCX。勾选“删除”只表示网页阅读时不显示这一段。
+    </div>
+
+    <div id="contentPreview" class="content-preview">
+      <div class="hint">选择 DOCX 后，这里会显示正文段落。</div>
+    </div>
+  </div>
+
 </div>
 
 <div class="dialog-actions">
@@ -413,6 +473,9 @@ let editingId=null;
 let folderHandle=null;
 let selectedStoryFile=null;
 let selectedStoryHandle=null;
+
+let importedParagraphs=[];
+let contentAdjustments=[];
 
 const storySummary=
   document.getElementById("storySummary");
@@ -566,12 +629,25 @@ async function openStory(id){
 
     const f=await h.getFile();
 
-    const raw=await readDocx(f);
+    const paragraphs=
+      await readDocxParagraphs(f);
 
-    const cleaned=
-      removeDuplicateTitle(raw,s.title);
+    const removed=
+      new Set(
+        s.contentAdjustments?.removed || []
+      );
 
-    rContent.innerHTML=cleaned;
+    const visible=
+      paragraphs.filter(
+        p=>!removed.has(p.index)
+      );
+
+    rContent.innerHTML=
+      visible
+        .map(p=>`<p>${esc(p.text).replace(/\n/g,"<br>")}</p>`)
+        .join("")
+        ||
+        "<p>正文为空。</p>";
 
   }catch(e){
 
@@ -657,6 +733,9 @@ function openStoryEditor(id=null){
     selectedStoryFile=null;
     selectedStoryHandle=null;
 
+    importedParagraphs=[];
+    contentAdjustments=[];
+
     storyTitle.value="";
     storyAuthor.value="";
     storyPlatform.value="";
@@ -696,84 +775,179 @@ storyClose.onclick=closeStoryEditor;storyCancel.onclick=closeStoryEditor;
 storyOverlay.onclick=e=>{if(e.target===storyOverlay)closeStoryEditor()};
 
 chooseStoryFile.onclick=async()=>{
+
   if(!window.showOpenFilePicker){
+
     alert(
       "当前浏览器不支持本地文件选择。\n\n"+
       "请使用最新版 Chrome 或 Edge。"
     );
+
     return;
   }
 
   try{
-    const [handle]=await window.showOpenFilePicker({
-      multiple:false,
-      types:[
-        {
-          description:"Word 文档",
-          accept:{
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document":[
-              ".docx"
-            ]
+
+    const [handle]=
+      await window.showOpenFilePicker({
+
+        multiple:false,
+
+        types:[
+          {
+            description:"Word 文档",
+            accept:{
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document":[
+                ".docx"
+              ]
+            }
           }
-        }
-      ]
-    });
+        ]
+
+      });
 
     selectedStoryHandle=handle;
 
-    const f=await handle.getFile();
-    selectedStoryFile=f;
+    const f=
+      await handle.getFile();
 
-    storyTitle.value=
-      f.name.replace(/\.docx$/i,"");
+    selectedStoryFile=f;
 
     storyFileName.textContent=
       `已选择：${f.name}`;
 
     /*
-     * 这里提前读取一次 DOCX。
-     * 目的不是保存正文，而是确认：
-     * 这个文件确实可以被网页读取。
+     * 读取 DOCX。
+     *
+     * 注意：
+     * 这里读取的是内存中的文件内容。
+     * 不会写入 localStorage。
+     * 不会写入 IndexedDB。
+     * 不会修改 DOCX。
      */
-    try{
-      const raw=await readDocx(f);
 
-      const cleaned=
-        removeDuplicateTitle(
-          raw,
-          storyTitle.value
-        );
+    importedParagraphs=
+      await readDocxParagraphs(f);
 
-    }catch(e){
-      alert(
-        "这个 DOCX 无法读取。\n\n"+
-        e.message
+    contentAdjustments=[];
+
+    /*
+     * 根据正文提供“候选标题 / 作者”。
+     * 用户仍然可以手动修改。
+     */
+
+    const guessed=
+      guessMetadata(
+        importedParagraphs,
+        f.name
       );
 
-      console.error(e);
-    }
+    storyTitle.value=
+      guessed.title;
+
+    /*
+     * 作者先不要盲猜。
+     *
+     * 因为不同 Fanfics 的格式差异太大。
+     * 如果第二段很明显像作者，你可以手动填。
+     */
+
+    storyAuthor.value="";
+
+    renderContentPreview();
 
   }catch(e){
 
     if(e.name!=="AbortError"){
+
       alert(
-        "无法选择文件："+
+        "无法读取 DOCX：\n\n"+
         e.message
       );
+
+      console.error(e);
+
     }
 
   }
+
 };
 
-function removeDuplicateTitle(html,title){
-  const d=document.createElement("div");d.innerHTML=html;
-  const first=d.querySelector("p,h1,h2,h3");
-  if(first){
-    const a=(first.textContent||"").trim().replace(/\s+/g," ");
-    const b=String(title||"").trim().replace(/\s+/g," ");
-    if(a && b && (a===b || a.toLowerCase()===b.toLowerCase())) first.remove();
+
+function renderContentPreview(){
+
+  if(!importedParagraphs.length){
+
+    contentPreview.innerHTML=
+      `<div class="hint">没有可显示的正文段落。</div>`;
+
+    return;
   }
-  return d.innerHTML;
+
+  contentPreview.innerHTML=
+    importedParagraphs.map((p,index)=>{
+
+      const removed=
+        contentAdjustments.includes(index);
+
+      return `
+        <div
+          class="content-preview-item ${removed?"removed":""}"
+          data-paragraph="${index}"
+        >
+
+          <div class="content-preview-control">
+
+            <label>
+              <input
+                type="checkbox"
+                data-remove-paragraph="${index}"
+                ${removed?"checked":""}
+              >
+              删除这一段
+            </label>
+
+          </div>
+
+          <div class="content-preview-text">
+            ${esc(p.text)}
+          </div>
+
+        </div>
+      `;
+
+    }).join("");
+
+  contentPreview
+    .querySelectorAll("[data-remove-paragraph]")
+    .forEach(box=>{
+
+      box.onchange=()=>{
+
+        const index=
+          Number(box.dataset.removeParagraph);
+
+        if(box.checked){
+
+          if(!contentAdjustments.includes(index)){
+            contentAdjustments.push(index);
+          }
+
+        }else{
+
+          contentAdjustments=
+            contentAdjustments.filter(
+              x=>x!==index
+            );
+
+        }
+
+        renderContentPreview();
+
+      };
+
+    });
+
 }
 
 storySave.onclick=async()=>{
@@ -849,6 +1023,7 @@ storySave.onclick=async()=>{
           .slice(2,8);
 
       const s={
+
         id,
 
         title,
@@ -880,8 +1055,13 @@ storySave.onclick=async()=>{
 
         favorite:false,
 
-        sourceType:
-          "word"
+        sourceType:"word",
+
+        contentAdjustments:{
+          removed:
+            [...contentAdjustments]
+        }
+
       };
 
       data.stories.unshift(s);
@@ -925,8 +1105,10 @@ storySave.onclick=async()=>{
   selectedStoryFile=null;
   selectedStoryHandle=null;
 
-  closeStoryEditor();
+  importedParagraphs=[];
+  contentAdjustments=[];
 
+  closeStoryEditor();
   renderAll();
 };
 
@@ -1133,6 +1315,137 @@ async function readDocx(file){
 
   return out.join("") ||
     "<p>空白文档。</p>";
+}
+
+async function readDocxParagraphs(file){
+
+  if(!window.JSZip){
+
+    await new Promise((resolve,reject)=>{
+
+      const s=document.createElement("script");
+
+      s.src=
+        "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+
+      s.onload=resolve;
+
+      s.onerror=()=>{
+        reject(
+          new Error(
+            "无法加载 DOCX 解析模块；请检查网络。"
+          )
+        );
+      };
+
+      document.head.appendChild(s);
+
+    });
+
+  }
+
+  const zip=
+    await JSZip.loadAsync(
+      await file.arrayBuffer()
+    );
+
+  const xmlFile=
+    zip.file("word/document.xml");
+
+  if(!xmlFile){
+    throw new Error("这个文件不是有效的 DOCX 文档。");
+  }
+
+  const xml=
+    await xmlFile.async("string");
+
+  const doc=
+    new DOMParser().parseFromString(
+      xml,
+      "application/xml"
+    );
+
+  const paras=
+    [...doc.getElementsByTagName("w:p")];
+
+  const out=[];
+
+  for(const p of paras){
+
+    let text="";
+
+    for(const node of p.childNodes){
+
+      if(node.nodeType!==1) continue;
+
+      const name=node.localName;
+
+      if(name==="r"){
+
+        for(const child of node.childNodes){
+
+          if(child.nodeType!==1) continue;
+
+          if(child.localName==="t"){
+            text+=child.textContent||"";
+          }
+
+          if(child.localName==="tab"){
+            text+="\t";
+          }
+
+          if(child.localName==="br"){
+            text+="\n";
+          }
+
+        }
+
+      }else if(name==="hyperlink"){
+
+        text+=
+          [...node.getElementsByTagName("w:t")]
+            .map(x=>x.textContent||"")
+            .join("");
+
+      }
+
+    }
+
+    text=
+      text
+        .replace(/\r/g,"")
+        .trim();
+
+    if(text){
+
+      out.push({
+        index:out.length,
+        text
+      });
+
+    }
+
+  }
+
+  return out;
+}
+
+function guessMetadata(paragraphs,fileName){
+
+  const first=
+    paragraphs[0]?.text?.trim() || "";
+
+  const second=
+    paragraphs[1]?.text?.trim() || "";
+
+  return {
+    title:
+      first ||
+      fileName.replace(/\.docx$/i,""),
+
+    author:
+      second
+  };
 }
 
 async function chooseFolder(){
