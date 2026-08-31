@@ -438,199 +438,185 @@ async function getAllPostsFromDisk(){
 
   const posts = [];
 
-
   try{
 
     const entries =
-      await electronStorage.list(
-        "posts"
+      await electronStorage.list("posts");
+
+    const jsonFiles =
+      entries.filter(
+        entry =>
+          entry.isFile &&
+          entry.name
+            .toLowerCase()
+            .endsWith(".json")
       );
 
-
-    for(const entry of entries){
-
-      if(
-        !entry.isFile ||
-        !entry.name.endsWith(".html")
-      ){
-
-        continue;
-
-      }
-
+    for(
+      const entry of jsonFiles
+    ){
 
       try{
 
-        const html =
+        const text =
           await electronStorage.readText(
             `posts/${entry.name}`
           );
 
+        const post =
+          JSON.parse(text);
 
-        const doc =
-          new DOMParser().parseFromString(
-            html,
-            "text/html"
-          );
+        if(!post.id){
 
-
-        const meta =
-          k =>
-            doc.querySelector(
-              `meta[name="${k}"]`
-            )?.content || "";
-
-
-        posts.push({
-
-          id:
-            meta("xhs-id") ||
+          post.id =
             entry.name.replace(
-              ".html",
+              /\.json$/i,
               ""
-            ),
+            );
 
-          title:
-            meta("xhs-title"),
+        }
 
-          author:
-            meta("xhs-author"),
+        if(!Array.isArray(post.tags)){
+          post.tags = [];
+        }
 
-          source:
-            meta("xhs-source"),
+        if(!Array.isArray(post.comments)){
+          post.comments = [];
+        }
 
-          tags:
-            meta("xhs-tags")
-              ? meta("xhs-tags")
-                  .split("|")
-                  .filter(Boolean)
-              : [],
+        if(!Array.isArray(post.media)){
+          post.media = [];
+        }
 
-          createdAt:
-            Number(
-              meta("xhs-created")
-            ) || 0,
+        posts.push(post);
 
-          body:
-            doc.querySelector(
-              "#xhs-body"
-            )?.innerHTML.trim() || "",
+      }catch(error){
 
-          comments:
-            decodeJSONSafe(
-              meta(
-                "xhs-comments-b64"
-              )
-            ),
-
-          media:
-            decodeJSONSafe(
-              meta(
-                "xhs-media-b64"
-              )
-            )
-
-        });
-
-
-      }catch(e){
-
-        console.warn(
-          "读取帖子失败：",
-          entry.name,
-          e
+        console.error(
+          `读取帖子失败：${entry.name}`,
+          error
         );
 
       }
 
     }
 
-
-    posts.sort(
-      (a,b) =>
-        b.createdAt -
-        a.createdAt
-    );
-
-
-  }catch(e){
+  }catch(error){
 
     console.error(
       "读取 posts 目录失败：",
-      e
+      error
     );
 
   }
 
+  posts.sort(
+    (a,b) =>
+      (b.createdAt || 0) -
+      (a.createdAt || 0)
+  );
 
   return posts;
 
 }
 
+
+
 async function writePostToDisk(post){
-  const html = `<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="xhs-id" content="${escapeHtml(post.id)}">
-<meta name="xhs-title" content="${escapeHtml(post.title)}">
-<meta name="xhs-author" content="${escapeHtml(post.author)}">
-<meta name="xhs-source" content="${escapeHtml(post.source)}">
-<meta name="xhs-tags" content="${escapeHtml(post.tags.join("|"))}">
-<meta name="xhs-created" content="${post.createdAt}">
-<meta name="xhs-reader-width" content="${post.readerWidth || ""}">
-<meta name="xhs-comments-b64" content="${encodeJSONSafe(post.comments)}">
-<meta name="xhs-media-b64" content="${encodeJSONSafe(post.media)}">
-<title>${escapeHtml(post.title || "我的收藏")}</title>
-</head>
-<body>
-<article id="xhs-body">
-${post.body}
-</article>
-</body>
-</html>`;
-  await electronStorage.writeText(
-    `posts/${post.id}.html`,
-    html
-  );
-}
 
-async function deletePostFromDisk(post){
+  if(!post || !post.id){
 
-  try{
-
-    await electronStorage.delete(
-      `posts/${post.id}.html`
-    );
-
-  }catch(e){
-
-    console.warn(
-      "删除帖子失败：",
-      e
+    throw new Error(
+      "无法保存帖子：缺少 post.id"
     );
 
   }
 
+  const now =
+    Date.now();
+
+  if(!post.createdAt){
+
+    post.createdAt =
+      now;
+
+  }
+
+  post.updatedAt =
+    now;
+
+  if(!Array.isArray(post.tags)){
+    post.tags = [];
+  }
+
+  if(!Array.isArray(post.comments)){
+    post.comments = [];
+  }
+
+  if(!Array.isArray(post.media)){
+    post.media = [];
+  }
+
+  await electronStorage.writeText(
+
+    `posts/${post.id}.json`,
+
+    JSON.stringify(
+      post,
+      null,
+      2
+    )
+
+  );
+
+}
+
+
+async function deletePostFromDisk(post){
+
+  if(!post || !post.id){
+    return;
+  }
+
+  try{
+
+    await electronStorage.delete(
+      `posts/${post.id}.json`
+    );
+
+  }catch(error){
+
+    console.warn(
+      "删除帖子 JSON 失败：",
+      error
+    );
+
+  }
 
   for(
-    const m of (post.media || [])
+    const media of (
+      post.media || []
+    )
   ){
 
-    if(m.type === "file"){
+    if(
+      media &&
+      media.type === "file" &&
+      media.ref
+    ){
 
       try{
 
         await electronStorage.delete(
-          `media/${m.ref}`
+          `media/${media.ref}`
         );
 
-      }catch(e){
+      }catch(error){
 
         console.warn(
-          "删除素材失败：",
-          m.ref,
-          e
+          "删除媒体文件失败：",
+          media.ref,
+          error
         );
 
       }
@@ -640,6 +626,8 @@ async function deletePostFromDisk(post){
   }
 
 }
+
+
 
 async function writeMediaFile(
   filename,
@@ -1966,11 +1954,6 @@ async function renderPickerList(term){
       </div>
     `;
 
-    /*
-     * 点文件夹：
-     * 不再从 libraryFiles 找，
-     * 直接使用这个文件夹自己的 FileSystemDirectoryHandle。
-     */
     grid.querySelectorAll("[data-folder]").forEach(el=>{
       el.onclick = async ()=>{
         const folder = folders.find(
