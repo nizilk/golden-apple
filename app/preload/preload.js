@@ -133,6 +133,12 @@ contextBridge.exposeInMainWorld(
           articleId
         ),
 
+    chooseLibraryArticleFile:
+      () =>
+        ipcRenderer.invoke(
+          "library:chooseArticleFile"
+        ),
+
     loadLibraryPages:
       () =>
         ipcRenderer.invoke(
