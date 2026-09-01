@@ -216,8 +216,9 @@ async function connectFolder(
     currentFolderName.textContent =
       `📁 ${selectedPath.split("\\").pop()}`;
 
-    currentFolderName.onclick =
-      chooseFolder;
+    currentFolderName.onclick = () => {
+      connectFolder();
+    };
 
 
     await reload();
