@@ -133,5 +133,18 @@ contextBridge.exposeInMainWorld(
           articleId
         ),
 
+    loadLibraryPages:
+      () =>
+        ipcRenderer.invoke(
+          "library:readPages"
+        ),
+
+    saveLibraryPages:
+      pagesData =>
+        ipcRenderer.invoke(
+          "library:savePages",
+          pagesData
+        ),
+
   }
 );
