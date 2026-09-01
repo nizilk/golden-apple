@@ -16,6 +16,7 @@ let newest=true;
 let readerArticle=null;
 let editingId=null;
 let selectedArticleFile=null;
+let selectedArticlePath = null;
 
 let importedParagraphs=[];
 let contentAdjustments=[];
@@ -234,21 +235,48 @@ function renderNav(){
 }
 
 function renderTags(){
-  tagsBar.innerHTML=allTags().map(t=>`<button class="tag-chip ${data.activeTag===t?'on':''}" data-tag="${esc(t)}">#${esc(t)}</button>`).join("");
-  tagsBar.querySelectorAll("[data-tag]").forEach(b=>b.onclick=()=>{data.activeTag=b.dataset.tag;render()});
+
+  tagsBar.innerHTML =
+    allTags()
+      .map(
+        tag => `
+          <button
+            class="tag-chip ${
+              data.activeTag === tag
+                ? "on"
+                : ""
+            }"
+            data-tag="${esc(tag)}"
+          >
+            #${esc(tag)}
+          </button>
+        `
+      )
+      .join("");
+
+  tagsBar
+    .querySelectorAll(
+      "[data-tag]"
+    )
+    .forEach(button => {
+
+      button.onclick = () => {
+
+        const tag =
+          button.dataset.tag;
+
+        data.activeTag =
+          data.activeTag === tag
+            ? null
+            : tag;
+
+        render();
+
+      };
+
+    });
+
 }
-
-
-b.onclick = () => {
-
-  data.activeTag =
-    data.activeTag === b.dataset.tag
-      ? null
-      : b.dataset.tag;
-
-  render();
-
-};
 
 
 function render(){
@@ -496,102 +524,82 @@ addBtn.onclick=()=>openArticleEditor();
 articleClose.onclick=closeArticleEditor;articleCancel.onclick=closeArticleEditor;
 articleOverlay.onclick=e=>{if(e.target===articleOverlay)closeArticleEditor()};
 
-chooseArticleFile.onclick=async()=>{
-
-  if(!window.showOpenFilePicker){
-
-    alert(
-      "当前浏览器不支持本地文件选择。\n\n"+
-      "请使用最新版 Chrome 或 Edge。"
-    );
-
-    return;
-  }
+chooseArticleFile.onclick=async()=>
+  async function chooseArticleFile(){
 
   try{
 
-    const [handle]=
-      await window.showOpenFilePicker({
+    const result =
+      await window.electronAPI
+        .chooseLibraryArticleFile();
 
-        multiple:false,
+    if(!result){
+      return;
+    }
 
-        types:[
-          {
-            description:"Word 文档",
-            accept:{
-              "application/vnd.openxmlformats-officedocument.wordprocessingml.document":[
-                ".docx"
-              ]
-            }
-          }
-        ]
+    selectedArticlePath =
+      result.path;
 
-      });
-
-    const f=
-      await handle.getFile();
-
-    selectedArticleFile=f;
-
-    articleFileName.textContent=
-      `已选择：${f.name}`;
-
-    /*
-     * 读取 DOCX。
-     *
-     * 注意：
-     * 这里读取的是内存中的文件内容。
-     * 不会写入 localStorage。
-     * 不会写入 IndexedDB。
-     * 不会修改 DOCX。
-     */
-
-    importedParagraphs=
-      await readDocxParagraphs(f);
-
-    contentAdjustments=[];
-
-    /*
-     * 根据正文提供“候选标题 / 作者”。
-     * 用户仍然可以手动修改。
-     */
-
-    const guessed=
-      guessMetadata(
-        importedParagraphs,
-        f.name
+    selectedArticleFile =
+      new File(
+        [
+          Uint8Array.from(
+            atob(result.data),
+            char => char.charCodeAt(0)
+          )
+        ],
+        result.name,
+        {
+          type:
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        }
       );
 
-    articleTitle.value=
+    articleFileName.textContent =
+      `已选择：${result.name}`;
+
+    importedParagraphs =
+      await readDocxParagraphs(
+        selectedArticleFile
+      );
+
+    contentAdjustments = [];
+
+    const guessed =
+      guessMetadata(
+        importedParagraphs,
+        result.name
+      );
+
+    articleTitle.value =
       guessed.title;
 
-    /*
-     * 作者先不要盲猜。
-     *
-     * 因为不同 Fanfics 的格式差异太大。
-     * 如果第二段很明显像作者，你可以手动填。
-     */
-
-    articleAuthor.value="";
+    articleAuthor.value =
+      "";
 
     renderContentPreview();
 
-  }catch(e){
+  }catch(error){
 
-    if(e.name!=="AbortError"){
+    console.error(error);
 
-      alert(
-        "无法读取 DOCX：\n\n"+
-        e.message
-      );
-
-      console.error(e);
-
+    if(
+      error.name ===
+      "AbortError"
+    ){
+      return;
     }
+
+    alert(
+      "无法读取 DOCX：\n\n" +
+      error.message
+    );
 
   }
 
-};
+}
+
+  
 
 
 function renderContentPreview(){
@@ -832,32 +840,203 @@ deleteArticleBtn.onclick=async()=>{
 };
 
 function openPages(){renderPageList();pagesOverlay.classList.add("show")}
+
 function renderPageList(){
-  pageList.innerHTML=data.pages.map(p=>`<div class="manage-page">
-    <span>${esc(p.name)}${p.id==="all"?"（固定）":""}</span>
-    <button data-config="${esc(p.id)}">${p.id==="all"?"—":"选择文章"}</button>
-    ${p.id!=="all"?`<button data-rename="${esc(p.id)}">改名</button><button data-delete="${esc(p.id)}">删除</button>`:""}
-  </div>`).join("");
-  pageList.querySelectorAll("[data-config]").forEach(b=>b.onclick=()=>openPageConfig(b.dataset.config));
-  pageList.querySelectorAll("[data-rename]").forEach(b=>b.onclick=()=>{
-    const p=data.pages.find(x=>x.id===b.dataset.rename);if(!p)return;
-    const n=prompt("页面名称",p.name);if(n&&n.trim()){p.name=n.trim();savePages();renderPageList();renderNav()}
-  });
-  pageList.querySelectorAll("[data-delete]").forEach(b=>b.onclick=()=>{
-    const id=b.dataset.delete;if(!confirm("删除页面？文章不会被删除。"))return;
-    data.pages=data.pages.filter(x=>x.id!==id);
-    if(data.activePage===id){
-      data.activePage = null;
-    }
-    if(data.homePageId === id){
-      data.homePageId = null;
-    }
-    savePages();
-    renderPageList();
-    renderNav();
-    render();
-  });
+
+  pageList.innerHTML =
+    data.pages
+      .map(page => {
+
+        return `
+          <div class="manage-page">
+
+            <span>
+              ${esc(page.name)}
+
+              ${
+                page.id === data.homePageId
+                  ? "（首页）"
+                  : ""
+              }
+            </span>
+
+            <button
+              data-config="${esc(page.id)}"
+            >
+              选择文章
+            </button>
+
+            <button
+              data-home="${esc(page.id)}"
+            >
+              ${
+                page.id === data.homePageId
+                  ? "取消首页"
+                  : "设为首页"
+              }
+            </button>
+
+            <button
+              data-rename="${esc(page.id)}"
+            >
+              改名
+            </button>
+
+            <button
+              data-delete="${esc(page.id)}"
+            >
+              删除
+            </button>
+
+          </div>
+        `;
+
+      })
+      .join("");
+
+  pageList
+    .querySelectorAll("[data-config]")
+    .forEach(button => {
+
+      button.onclick = () => {
+
+        openPageConfig(
+          button.dataset.config
+        );
+
+      };
+
+    });
+
+  pageList
+    .querySelectorAll("[data-home]")
+    .forEach(button => {
+
+      button.onclick = async () => {
+
+        const id =
+          button.dataset.home;
+
+        if(data.homePageId === id){
+
+          data.homePageId = null;
+
+        }else{
+
+          data.homePageId = id;
+
+        }
+
+        await savePages();
+
+        renderPageList();
+        renderNav();
+
+      };
+
+    });
+
+  pageList
+    .querySelectorAll("[data-rename]")
+    .forEach(button => {
+
+      button.onclick = async () => {
+
+        const page =
+          data.pages.find(
+            item =>
+              item.id ===
+              button.dataset.rename
+          );
+
+        if(!page){
+          return;
+        }
+
+        const name =
+          prompt(
+            "页面名称",
+            page.name
+          );
+
+        if(
+          !name ||
+          !name.trim()
+        ){
+          return;
+        }
+
+        page.name =
+          name.trim();
+
+        await savePages();
+
+        renderPageList();
+        renderNav();
+
+      };
+
+    });
+
+  pageList
+    .querySelectorAll("[data-delete]")
+    .forEach(button => {
+
+      button.onclick = async () => {
+
+        const id =
+          button.dataset.delete;
+
+        const page =
+          data.pages.find(
+            item =>
+              item.id === id
+          );
+
+        if(!page){
+          return;
+        }
+
+        if(
+          !confirm(
+            `删除页面「${page.name}」？\n\n文章不会被删除。`
+          )
+        ){
+          return;
+        }
+
+        data.pages =
+          data.pages.filter(
+            item =>
+              item.id !== id
+          );
+
+        if(
+          data.activePage === id
+        ){
+          data.activePage =
+            null;
+        }
+
+        if(
+          data.homePageId === id
+        ){
+          data.homePageId =
+            null;
+        }
+
+        await savePages();
+
+        renderPageList();
+        renderNav();
+        render();
+
+      };
+
+    });
+
 }
+
 managePagesBtn.onclick=openPages;
 pagesClose.onclick=()=>pagesOverlay.classList.remove("show");
 pagesOverlay.onclick=e=>{if(e.target===pagesOverlay)pagesOverlay.classList.remove("show")};
@@ -1219,8 +1398,22 @@ async function loadPages(){
   data.homePageId =
     result?.home || null;
 
+  const homeExists =
+    data.pages.some(
+      page =>
+        page.id ===
+        data.homePageId
+    );
+
+  if(!homeExists){
+
+    data.homePageId =
+      null;
+
+  }
+
   data.activePage =
-    data.homePageId || null;
+    data.homePageId;
 
 }
 
@@ -1242,6 +1435,16 @@ async function savePages(){
 
 
 async function loadLibrary(){
+
+  const settings =
+    await window.electronAPI
+      .readSettings();
+
+  data.settings =
+    settings &&
+    typeof settings === "object"
+      ? settings
+      : {};
 
   const result =
     await window.electronAPI
@@ -1343,16 +1546,32 @@ coverFile.onchange=()=>{
   r.readAsDataURL(f);
 };
 
-settingsSave.onclick=()=>{
-  await window.electronAPI.writeSettings(
-    data.settings
-  );
+settingsSave.onclick = async () => {
 
-  settingsOverlay.classList.remove("show");
+  try {
 
-  render();
+    await window.electronAPI.writeSettings(
+      data.settings
+    );
 
-  updateLibraryHero();
+    settingsOverlay.classList.remove(
+      "show"
+    );
+
+    render();
+    updateLibraryHero();
+
+  } catch(error) {
+
+    console.error(error);
+
+    alert(
+      "保存设置失败：\n\n" +
+      error.message
+    );
+
+  }
+
 };
 
 document.addEventListener("keydown",e=>{
