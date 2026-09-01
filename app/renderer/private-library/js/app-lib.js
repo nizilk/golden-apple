@@ -42,31 +42,63 @@ const contentPreview =
   document.getElementById("contentPreview");
 
 
-async function saveData(){
-
-  await window.electronAPI
-    .saveLibraryData(data);
-
-}
-
   
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function strip(html){const d=document.createElement("div");d.innerHTML=html||"";return d.textContent||""}
 function normalizeTags(raw){
   return [...new Set(String(raw||"").split(/[\s,，、]+/).map(x=>x.trim()).filter(Boolean))];
 }
+
 function allTags(){
-  const set=new Set(["全部"]);
-  data.articles.forEach(s=>(s.tags||[]).forEach(t=>set.add(t)));
+
+  const set =
+    new Set();
+
+  data.articles.forEach(
+    article=>{
+      (article.tags||[])
+        .forEach(
+          tag=>set.add(tag)
+        );
+    }
+  );
+
   return [...set];
+
 }
-function getPage(){return data.pages.find(p=>p.id===data.currentPage)||data.pages[0]}
+
+
+
+function getPage(){
+
+  if(!data.currentPage){
+    return null;
+  }
+
+  return data.pages.find(
+    p=>p.id===data.currentPage
+  ) || null;
+
+}
+
+
 function pageArticles(){
   const page=getPage();
   let list=data.articles;
-  if(page && page.id!=="all") list=list.filter(s=page.postIds.includes(s.id));
+  if(page){
+
+    list =
+      list.filter(
+        article =>
+          Array.isArray(page.articleIds) &&
+          page.articleIds.includes(
+            article.id
+          )
+      );
+
+  }
   const q=search.value.trim().toLowerCase();
-  if(data.activeTag && data.activeTag!=="全部") list=list.filter(s=>(s.tags||[]).includes(data.activeTag));
+  if(data.activeTag) list=list.filter(s=>(s.tags||[]).includes(data.activeTag));
 
   if(q){
     list=list.filter(s=>{
@@ -86,7 +118,7 @@ function pageArticles(){
 function renderNav(){
   nav.innerHTML=data.pages.map(p=>`<button class="${p.id===data.currentPage?'active':''}" data-page="${esc(p.id)}">${esc(p.name)}</button>`).join("");
   nav.querySelectorAll("[data-page]").forEach(b=>b.onclick=()=>{
-    data.currentPage=b.dataset.page;data.activeTag="全部";saveData();renderAll()
+    data.currentPage=b.dataset.page;data.activeTag=null;savePages();renderAll()
   });
 }
 function renderTags(){
@@ -94,32 +126,84 @@ function renderTags(){
   tagsBar.querySelectorAll("[data-tag]").forEach(b=>b.onclick=()=>{data.activeTag=b.dataset.tag;render()});
 }
 
+
 function render(){
-  const page=getPage();
-  sectionTitle.textContent=page.id==="all"?"故事":page.name;
+
+  const page =
+    getPage();
+
   renderTags();
-  const list=pageArticles();
-  count.textContent=`${list.length} 篇`;
-  articleList.innerHTML=list.map(s=>{
-    const tags=(s.tags||[]).slice(0,4).map(t=>`<span class="tag">#${esc(t)}</span>`).join("");
-    return `<article class="article-row" data-id="${esc(s.id)}">
-      <div>
-        <h3 class="article-title">${esc(s.title||"无标题")}</h3>
 
-        <div class="article-meta">
-          <span>${esc(s.author||"未知作者")}</span>
-          ${tags}
-        </div>
+  const list =
+    pageArticles();
 
-      </div>
+  sectionTitle.textContent =
+    page
+      ? page.name
+      : "全部文章";
 
-      <div class="article-side">
-      </div>
-    </article>`
-  }).join("");
-  empty.style.display=list.length?"none":"block";
-  articleList.querySelectorAll(".article-row").forEach(r=>r.onclick=()=>openArticle(r.dataset.id));
+  count.textContent =
+    `${list.length} 篇`;
+
+  articleList.innerHTML =
+    list.map(
+      article=>{
+
+        const tags =
+          (article.tags||[])
+            .slice(0,4)
+            .map(
+              tag =>
+                `<span class="tag">
+                  #${esc(tag)}
+                </span>`
+            )
+            .join("");
+
+        return `
+          <article
+            class="article-row"
+            data-id="${esc(article.id)}"
+          >
+            <div>
+              <h3 class="article-title">
+                ${esc(article.title||"无标题")}
+              </h3>
+
+              <div class="article-meta">
+                <span>
+                  ${esc(article.author||"未知作者")}
+                </span>
+                ${tags}
+              </div>
+            </div>
+
+            <div class="article-side"></div>
+          </article>
+        `;
+
+      }
+    )
+    .join("");
+
+  empty.style.display =
+    list.length
+      ? "none"
+      : "block";
+
+  articleList
+    .querySelectorAll(".article-row")
+    .forEach(
+      row =>
+        row.onclick=() =>
+          openArticle(
+            row.dataset.id
+          )
+    );
+
 }
+
+
 function renderAll(){renderNav();render();}
 
 async function openArticle(id){
@@ -589,7 +673,7 @@ articleSave.onclick=async()=>{
     }
   });
 
-  saveData();
+  await saveArticle(s);
 
   selectedArticleFile=null;
 
@@ -605,8 +689,19 @@ deleteArticleBtn.onclick=async()=>{
   const s=data.articles.find(x=>x.id===editingId);
   if(!s||!confirm(`删除《${s.title}》？`))return;
   data.articles=data.articles.filter(x=>x.id!==editingId);
-  data.pages.forEach(p=>p.postIds=p.postIds.filter(id=>id!==editingId));
   
+  for(const page of data.pages){
+
+    page.articleIds =
+      (page.articleIds||[])
+        .filter(
+          id=>id!==editingId
+        );
+
+  }
+
+  await savePages();
+
   await window.electronAPI.deleteLibraryArticle(editingId);
   closeArticleEditor();
   renderAll();
@@ -622,20 +717,51 @@ function renderPageList(){
   pageList.querySelectorAll("[data-config]").forEach(b=>b.onclick=()=>openPageConfig(b.dataset.config));
   pageList.querySelectorAll("[data-rename]").forEach(b=>b.onclick=()=>{
     const p=data.pages.find(x=>x.id===b.dataset.rename);if(!p)return;
-    const n=prompt("页面名称",p.name);if(n&&n.trim()){p.name=n.trim();saveData();renderPageList();renderNav()}
+    const n=prompt("页面名称",p.name);if(n&&n.trim()){p.name=n.trim();savePages();renderPageList();renderNav()}
   });
   pageList.querySelectorAll("[data-delete]").forEach(b=>b.onclick=()=>{
     const id=b.dataset.delete;if(!confirm("删除页面？文章不会被删除。"))return;
-    data.pages=data.pages.filter(x=>x.id!==id);if(data.currentPage===id)data.currentPage="all";saveData();renderPageList();renderNav();render()
+    data.pages=data.pages.filter(x=>x.id!==id);if(data.currentPage===id)data.currentPage="all";savePages();renderPageList();renderNav();render()
   });
 }
 managePagesBtn.onclick=openPages;
 pagesClose.onclick=()=>pagesOverlay.classList.remove("show");
 pagesOverlay.onclick=e=>{if(e.target===pagesOverlay)pagesOverlay.classList.remove("show")};
-addPage.onclick=()=>{
-  const n=newPageName.value.trim();if(!n)return;
-  const id="page_"+Date.now();data.pages.push({id,name:n,postIds:[]});data.currentPage=id;data.activeTag="全部";newPageName.value="";saveData();renderAll();renderPageList();
+
+addPage.onclick=async()=>{
+
+  const name =
+    newPageName.value.trim();
+
+  if(!name)return;
+
+  const page={
+    id:
+      "page_"+
+      Date.now(),
+
+    name,
+
+    articleIds:[]
+  };
+
+  data.pages.push(page);
+
+  data.currentPage =
+    page.id;
+
+  data.activeTag =
+    null;
+
+  newPageName.value="";
+
+  await savePages();
+
+  renderAll();
+  renderPageList();
+
 };
+
 function openPageConfig(id){
   const p=data.pages.find(x=>x.id===id);if(!p||id==="all")return;
   pageConfigTitle.textContent=`${p.name} · 选择文章`;
@@ -647,7 +773,7 @@ function openPageConfig(id){
     const id=cb.dataset.post;
     if(cb.checked&&!p.postIds.includes(id))p.postIds.push(id);
     if(!cb.checked)p.postIds=p.postIds.filter(x=>x!==id);
-    saveData();render();
+    savePages();render();
   });
   pageConfigOverlay.classList.add("show");
 }
@@ -841,27 +967,63 @@ async function chooseFolder(){
 }
 
 
+async function loadPages(){
+
+  const result =
+    await window.electronAPI
+      .loadLibraryPages();
+
+  data.pages =
+    Array.isArray(result)
+      ? result
+      : [];
+
+}
+
+
+async function savePages(){
+
+  await window.electronAPI
+    .saveLibraryPages(
+      data.pages
+    );
+
+}
+
+
 async function loadLibrary(){
 
   const result =
     await window.electronAPI
       .listLibraryArticles();
 
-  data.articles = Array.isArray(result)
-    ? result
-    : [];
+  data.articles =
+    Array.isArray(result)
+      ? result
+      : [];
 
-  if(!Array.isArray(data.tags)){
-    data.tags = [];
-  }
+  await loadPages();
 
-  if(!Array.isArray(data.pages)){
-    data.pages = [];
-  }
+  data.tags=[];
 
-  if(!data.settings){
-    data.settings = {};
-  }
+  data.articles.forEach(
+    article=>{
+
+      (article.tags||[])
+        .forEach(
+          tag=>{
+
+            if(
+              !data.tags.includes(tag)
+            ){
+              data.tags.push(tag);
+            }
+
+          }
+        );
+
+    }
+  );
 
 }
 
