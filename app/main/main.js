@@ -502,7 +502,7 @@ const LIB_ARTICLES_ROOT =
     "articles"
   );
 
-const LIB_PAGES_ROOT =
+const LIB_PAGES_FILE =
   path.join(
     LIB_DATA_ROOT,
     "pages.json"
@@ -1120,7 +1120,7 @@ ipcMain.handle(
   "library:readPages",
   async () => {
 
-    try{
+    try {
 
       const text =
         await fs.readFile(
@@ -1128,19 +1128,28 @@ ipcMain.handle(
           "utf8"
         );
 
-      const pages =
+      const data =
         JSON.parse(text);
 
-      return Array.isArray(pages)
-        ? pages
-        : [];
+      return {
+        home:
+          data?.home || null,
 
-    }catch(error){
+        list:
+          Array.isArray(data?.list)
+            ? data.list
+            : []
+      };
 
-      if(
-        error.code === "ENOENT"
-      ){
-        return [];
+    } catch(error) {
+
+      if(error.code === "ENOENT") {
+
+        return {
+          home: null,
+          list: []
+        };
+
       }
 
       throw error;
@@ -1155,26 +1164,41 @@ ipcMain.handle(
   "library:savePages",
   async (
     _event,
-    pages
+    pagesData
   ) => {
 
-    if(!Array.isArray(pages)){
+    if(
+      !pagesData ||
+      typeof pagesData !== "object"
+    ){
+
       throw new Error(
         "Library pages 数据无效。"
       );
+
     }
+
+    const data = {
+      home:
+        pagesData.home || null,
+
+      list:
+        Array.isArray(pagesData.list)
+          ? pagesData.list
+          : []
+    };
 
     await fs.mkdir(
       LIB_DATA_ROOT,
       {
-        recursive:true
+        recursive: true
       }
     );
 
     await fs.writeFile(
       LIB_PAGES_FILE,
       JSON.stringify(
-        pages,
+        data,
         null,
         2
       ),
@@ -1185,4 +1209,3 @@ ipcMain.handle(
 
   }
 );
-
