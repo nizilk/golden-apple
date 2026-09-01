@@ -6,7 +6,10 @@ let data = {
   articles: [],
   pages: [],
   tags: [],
-  settings: {}
+  settings: {},
+  homePageId: null,
+  activePage: null,
+  activeTag: null
 };
 
 let newest=true;
@@ -71,20 +74,28 @@ function allTags(){
 
 function getPage(){
 
-  if(!data.currentPage){
+  if(!data.activePage){
     return null;
   }
 
   return data.pages.find(
-    p=>p.id===data.currentPage
+    page =>
+      page.id === data.activePage
   ) || null;
 
 }
 
 
 function pageArticles(){
-  const page=getPage();
-  let list=data.articles;
+
+  const page =
+    getPage();
+
+  let list =
+    data.articles;
+
+  // 没有选择自定义 page
+  // = 全部文章
   if(page){
 
     list =
@@ -97,34 +108,147 @@ function pageArticles(){
       );
 
   }
-  const q=search.value.trim().toLowerCase();
-  if(data.activeTag) list=list.filter(s=>(s.tags||[]).includes(data.activeTag));
 
-  if(q){
-    list=list.filter(s=>{
-      const haystack=[
-        s.title,
-        s.author,
-        ...(s.tags||[])
-      ].join(" ").toLowerCase();
+  if(data.activeTag){
 
-      return haystack.includes(q);
-    });
+    list =
+      list.filter(
+        article =>
+          (article.tags || [])
+            .includes(
+              data.activeTag
+            )
+      );
+
   }
 
-  return newest?list:[...list].reverse();
+  const q =
+    search.value
+      .trim()
+      .toLowerCase();
+
+  if(q){
+
+    list =
+      list.filter(
+        article => {
+
+          const text = [
+            article.title,
+            article.author,
+            article.platform,
+            ...(article.tags || [])
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+
+          return text.includes(q);
+
+        }
+      );
+
+  }
+
+  return newest
+    ? list
+    : [...list].reverse();
+
 }
 
+
 function renderNav(){
-  nav.innerHTML=data.pages.map(p=>`<button class="${p.id===data.currentPage?'active':''}" data-page="${esc(p.id)}">${esc(p.name)}</button>`).join("");
-  nav.querySelectorAll("[data-page]").forEach(b=>b.onclick=()=>{
-    data.currentPage=b.dataset.page;data.activeTag=null;savePages();renderAll()
-  });
+
+  const homePage =
+    data.pages.find(
+      page =>
+        page.id === data.homePageId
+    );
+
+  const otherPages =
+    data.pages.filter(
+      page =>
+        page.id !== data.homePageId
+    );
+
+  let html = "";
+
+  // 自定义首页
+  if(homePage){
+
+    html += `
+      <button
+        class="${data.activePage===homePage.id ? "active" : ""}"
+        data-page="${esc(homePage.id)}"
+      >
+        ${esc(homePage.name)}
+      </button>
+    `;
+
+  }
+
+  // “全部”是缺省项，不属于 pages
+  html += `
+    <button
+      class="${data.activePage===null ? "active" : ""}"
+      data-page=""
+    >
+      全部
+    </button>
+  `;
+
+  // 其他自定义页面
+  html +=
+    otherPages
+      .map(
+        page => `
+          <button
+            class="${data.activePage===page.id ? "active" : ""}"
+            data-page="${esc(page.id)}"
+          >
+            ${esc(page.name)}
+          </button>
+        `
+      )
+      .join("");
+
+  nav.innerHTML = html;
+
+  nav
+    .querySelectorAll("[data-page]")
+    .forEach(button => {
+
+      button.onclick = () => {
+
+        data.activePage =
+          button.dataset.page || null;
+
+        data.activeTag = null;
+
+        renderAll();
+
+      };
+
+    });
+
 }
+
 function renderTags(){
   tagsBar.innerHTML=allTags().map(t=>`<button class="tag-chip ${data.activeTag===t?'on':''}" data-tag="${esc(t)}">#${esc(t)}</button>`).join("");
   tagsBar.querySelectorAll("[data-tag]").forEach(b=>b.onclick=()=>{data.activeTag=b.dataset.tag;render()});
 }
+
+
+b.onclick = () => {
+
+  data.activeTag =
+    data.activeTag === b.dataset.tag
+      ? null
+      : b.dataset.tag;
+
+  render();
+
+};
 
 
 function render(){
@@ -721,7 +845,17 @@ function renderPageList(){
   });
   pageList.querySelectorAll("[data-delete]").forEach(b=>b.onclick=()=>{
     const id=b.dataset.delete;if(!confirm("删除页面？文章不会被删除。"))return;
-    data.pages=data.pages.filter(x=>x.id!==id);if(data.currentPage===id)data.currentPage="all";savePages();renderPageList();renderNav();render()
+    data.pages=data.pages.filter(x=>x.id!==id);
+    if(data.activePage===id){
+      data.activePage = null;
+    }
+    if(data.homePageId === id){
+      data.homePageId = null;
+    }
+    savePages();
+    renderPageList();
+    renderNav();
+    render();
   });
 }
 managePagesBtn.onclick=openPages;
@@ -747,7 +881,7 @@ addPage.onclick=async()=>{
 
   data.pages.push(page);
 
-  data.currentPage =
+  data.activePage =
     page.id;
 
   data.activeTag =
@@ -762,21 +896,125 @@ addPage.onclick=async()=>{
 
 };
 
+
 function openPageConfig(id){
-  const p=data.pages.find(x=>x.id===id);if(!p||id==="all")return;
-  pageConfigTitle.textContent=`${p.name} · 选择文章`;
-  pagePostList.innerHTML=data.articles.map(s=>`<label class="manage-page" style="cursor:pointer">
-    <input type="checkbox" data-post="${esc(s.id)}" ${p.postIds.includes(s.id)?"checked":""}>
-    <span>${esc(s.title)}<small style="display:block;color:var(--muted);font-size:9px">${esc((s.tags||[]).join(" · "))}</small></span>
-  </label>`).join("");
-  pagePostList.querySelectorAll("[data-post]").forEach(cb=>cb.onchange=()=>{
-    const id=cb.dataset.post;
-    if(cb.checked&&!p.postIds.includes(id))p.postIds.push(id);
-    if(!cb.checked)p.postIds=p.postIds.filter(x=>x!==id);
-    savePages();render();
-  });
-  pageConfigOverlay.classList.add("show");
+
+  const page =
+    data.pages.find(
+      p => p.id === id
+    );
+
+  if(!page){
+    return;
+  }
+
+  pageConfigTitle.textContent =
+    `${page.name} · 选择文章`;
+
+  const articleIds =
+    Array.isArray(page.articleIds)
+      ? page.articleIds
+      : [];
+
+  pagePostList.innerHTML =
+    data.articles
+      .map(
+        article => {
+
+          const checked =
+            articleIds.includes(
+              article.id
+            );
+
+          return `
+            <label
+              class="manage-page"
+              style="cursor:pointer"
+            >
+
+              <input
+                type="checkbox"
+                data-article="${esc(article.id)}"
+                ${checked ? "checked" : ""}
+              >
+
+              <span>
+                ${esc(article.title)}
+
+                <small
+                  style="
+                    display:block;
+                    color:var(--muted);
+                    font-size:9px
+                  "
+                >
+                  ${esc(
+                    (article.tags || [])
+                      .join(" · ")
+                  )}
+                </small>
+
+              </span>
+
+            </label>
+          `;
+
+        }
+      )
+      .join("");
+
+  pagePostList
+    .querySelectorAll(
+      "[data-article]"
+    )
+    .forEach(
+      checkbox => {
+
+        checkbox.onchange =
+          async () => {
+
+            const articleId =
+              checkbox.dataset.article;
+
+            if(checkbox.checked){
+
+              if(
+                !page.articleIds
+                  .includes(articleId)
+              ){
+
+                page.articleIds.push(
+                  articleId
+                );
+
+              }
+
+            }else{
+
+              page.articleIds =
+                page.articleIds.filter(
+                  id =>
+                    id !== articleId
+                );
+
+            }
+
+            await savePages();
+
+            render();
+
+          };
+
+      }
+    );
+
+  pageConfigOverlay.classList.add(
+    "show"
+  );
+
 }
+
+
 pageConfigClose.onclick=()=>pageConfigOverlay.classList.remove("show");
 pageConfigOverlay.onclick=e=>{if(e.target===pageConfigOverlay)pageConfigOverlay.classList.remove("show")};
 
@@ -974,9 +1212,15 @@ async function loadPages(){
       .loadLibraryPages();
 
   data.pages =
-    Array.isArray(result)
-      ? result
+    Array.isArray(result?.list)
+      ? result.list
       : [];
+
+  data.homePageId =
+    result?.home || null;
+
+  data.activePage =
+    data.homePageId || null;
 
 }
 
@@ -984,9 +1228,15 @@ async function loadPages(){
 async function savePages(){
 
   await window.electronAPI
-    .saveLibraryPages(
-      data.pages
-    );
+    .saveLibraryPages({
+
+      home:
+        data.homePageId || null,
+
+      list:
+        data.pages
+
+    });
 
 }
 
@@ -1094,7 +1344,9 @@ coverFile.onchange=()=>{
 };
 
 settingsSave.onclick=()=>{
-  saveData();
+  await window.electronAPI.writeSettings(
+    data.settings
+  );
 
   settingsOverlay.classList.remove("show");
 
