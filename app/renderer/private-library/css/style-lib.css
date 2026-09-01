@@ -469,12 +469,12 @@ body.dark .library-hero-image{
   background-color:#171717;
 }
 
-.story-file{
+/* .story-file{
   margin-top:9px;
   color:var(--muted);
   font-size:9.5px;
   letter-spacing:.02em;
-}
+} */
 
 .content-preview-item{
   display:grid;
@@ -496,8 +496,6 @@ body.dark .library-hero-image{
   display:flex;
   align-items:center;
   justify-content:center;
-
-  border-right:1px solid var(--line);
 }
 
 .content-preview-control input{
@@ -512,15 +510,14 @@ body.dark .library-hero-image{
 .content-preview-text{
   min-width:0;
 
-  padding:7px 10px;
+  padding:10px;
 
   color:var(--ink);
 
   font-family:"Songti SC","Noto Serif SC","STSong",serif;
-  font-size:11.5px;
+  font-size:12px;
   line-height:1.55;
 
-  white-space:pre-wrap;
   overflow-wrap:anywhere;
 }
 
