@@ -1284,3 +1284,27 @@ ipcMain.handle(
 
   }
 );
+
+
+ipcMain.handle(
+  "library:readArticleFile",
+  async (
+    _event,
+    filePath
+  ) => {
+
+    if(
+      typeof filePath !== "string" ||
+      !filePath
+    ){
+      throw new Error(
+        "无效的文章文件路径。"
+      );
+    }
+
+    return await fs.readFile(
+      filePath
+    );
+
+  }
+);
