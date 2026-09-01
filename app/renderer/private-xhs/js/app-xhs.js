@@ -695,7 +695,7 @@ async function getMediaFile(m){
   }
 
   return await window.electronAPI
-    .readResourceDataURL(
+    .readFileDataURL(
       m.ref
     );
 
