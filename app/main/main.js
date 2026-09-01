@@ -490,6 +490,24 @@ const XHS_DATA_ROOT = path.join(
   "private-xhs"
 );
 
+const LIB_DATA_ROOT =
+  path.join(
+    DATA_ROOT,
+    "private-library"
+  );
+
+const LIB_ARTICLES_ROOT =
+  path.join(
+    LIBRARY_DATA_ROOT,
+    "articles"
+  );
+
+const LIB_PAGES_ROOT =
+  path.join(
+    LIBRARY_DATA_ROOT,
+    "pages"
+  );
+
 const SETTINGS_FILE = path.join(
   DATA_ROOT,
   "settings.json"
@@ -587,6 +605,20 @@ async function ensureDataDirectories() {
 
   await fs.mkdir(
     XHS_DATA_ROOT,
+    {
+      recursive: true
+    }
+  );
+
+  await fs.mkdir(
+    LIB_ARTICLES_ROOT,
+    {
+      recursive: true
+    }
+  );
+
+  await fs.mkdir(
+    LIB_PAGES_ROOT,
     {
       recursive: true
     }
@@ -907,6 +939,179 @@ ipcMain.handle(
       ),
       "utf8"
     );
+
+    return true;
+
+  }
+);
+
+
+
+// ============================================================
+// 读取所有文章
+// ============================================================
+
+ipcMain.handle(
+  "library:listArticles",
+  async () => {
+
+    await fs.mkdir(
+      LIB_ARTICLES_ROOT,
+      {
+        recursive: true
+      }
+    );
+
+    const files =
+      await fs.readdir(
+        LIB_ARTICLES_ROOT
+      );
+
+    const articles = [];
+
+    for(const file of files){
+
+      if(
+        !file.toLowerCase().endsWith(".json")
+      ){
+        continue;
+      }
+
+      try{
+
+        const fullPath =
+          path.join(
+            LIB_ARTICLES_ROOT,
+            file
+          );
+
+        const text =
+          await fs.readFile(
+            fullPath,
+            "utf8"
+          );
+
+        const article =
+          JSON.parse(text);
+
+        if(article && article.id){
+          articles.push(article);
+        }
+
+      }catch(error){
+
+        console.warn(
+          "无法读取 Library JSON:",
+          file,
+          error
+        );
+
+      }
+
+    }
+
+    return articles;
+
+  }
+);
+
+
+// ============================================================
+// 保存单篇文章
+// ============================================================
+
+ipcMain.handle(
+  "library:saveArticle",
+  async (
+    event,
+    article
+  ) => {
+
+    if(
+      !article ||
+      typeof article !== "object" ||
+      !article.id
+    ){
+
+      throw new Error(
+        "无效的 Library 文章数据。"
+      );
+
+    }
+
+    await fs.mkdir(
+      LIB_ARTICLES_ROOT,
+      {
+        recursive: true
+      }
+    );
+
+    const filename =
+      `${story.id}.json`;
+
+    const filePath =
+      path.join(
+        LIB_ARTICLES_ROOT,
+        filename
+      );
+
+    await fs.writeFile(
+      filePath,
+      JSON.stringify(
+        story,
+        null,
+        2
+      ),
+      "utf8"
+    );
+
+    return true;
+
+  }
+);
+
+
+// ============================================================
+// 删除文章
+// ============================================================
+
+ipcMain.handle(
+  "library:deleteArticle",
+  async (
+    event,
+    articleId
+  ) => {
+
+    if(
+      typeof articleId !== "string" ||
+      !articleId
+    ){
+
+      throw new Error(
+        "无效的文章 ID。"
+      );
+
+    }
+
+    const filePath =
+      path.join(
+        LIB_ARTICLES_ROOT,
+        `${articleId}.json`
+      );
+
+    try{
+
+      await fs.unlink(
+        filePath
+      );
+
+    }catch(error){
+
+      if(error.code !== "ENOENT"){
+        throw error;
+      }
+
+    }
 
     return true;
 
