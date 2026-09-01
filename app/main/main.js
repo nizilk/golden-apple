@@ -464,7 +464,7 @@ ipcMain.handle(
 // 路径
 // ============================================================
 
-// main.js:
+// main.js:DATA_ROOT
 // D:\GoldenApple\app\main\main.js
 
 const APP_ROOT = path.resolve(
@@ -498,13 +498,13 @@ const LIB_DATA_ROOT =
 
 const LIB_ARTICLES_ROOT =
   path.join(
-    LIBRARY_DATA_ROOT,
+    LIB_DATA_ROOT,
     "articles"
   );
 
 const LIB_PAGES_ROOT =
   path.join(
-    LIBRARY_DATA_ROOT,
+    LIB_DATA_ROOT,
     "pages"
   );
 
