@@ -195,6 +195,74 @@ function getSafeResourcePath(
 
 }
 
+
+ipcMain.handle(
+  "resource:relativePath",
+  async (
+    _event,
+    absolutePath
+  ) => {
+
+    if(!resourceRootPath){
+      throw new Error(
+        "尚未选择资源文件夹"
+      );
+    }
+
+    const root =
+      path.resolve(
+        resourceRootPath
+      );
+
+    const target =
+      path.resolve(
+        absolutePath
+      );
+
+    if(
+      target !== root &&
+      !target.startsWith(
+        root + path.sep
+      )
+    ){
+      throw new Error(
+        "所选文件不在当前资源文件夹内。"
+      );
+    }
+
+    return path
+      .relative(root, target)
+      .split(path.sep)
+      .join("/");
+
+  }
+);
+
+
+ipcMain.handle(
+  "resource:readBinary",
+  async (
+    _event,
+    relativePath
+  ) => {
+
+    const filePath =
+      getSafeResourcePath(
+        relativePath
+      );
+
+    const buffer =
+      await fs.readFile(
+        filePath
+      );
+
+    return new Uint8Array(buffer);
+
+  }
+);
+
+
+
 ipcMain.handle(
   "resource:list",
   async (
