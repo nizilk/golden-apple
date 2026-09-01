@@ -13,6 +13,9 @@ let data = {
 let newest=true;
 let readerArticle=null;
 let editingId=null;
+
+let editingFromReader=false;
+
 let selectedArticleFile=null;
 let selectedArticlePath = null;
 
@@ -296,7 +299,6 @@ function renderNav(){
 }
 
 
-
 function render(){
 
   const page =
@@ -325,25 +327,50 @@ function render(){
 
         return `
           <div
-            class="content-preview-item ${removed?"removed":""}"
-            data-paragraph="${index}"
+            class="article-row"
+            data-id="${article.id}"
           >
 
-            <div class="content-preview-control">
-              <input
-                type="checkbox"
-                data-remove-paragraph="${index}"
-                ${removed?"checked":""}
-              >
-            </div>
+            <div class="article-main">
 
-            <div class="content-preview-text">
-              ${esc(p.text)}
+              <h3 class="article-title">
+                ${esc(article.title||"无标题")}
+              </h3>
+
+              ${
+                article.author
+                  ? `
+                    <div class="article-author">
+                      ${esc(article.author)}
+                    </div>
+                  `
+                  : ""
+              }
+
+              ${
+                article.summary
+                  ? `
+                    <div class="article-summary">
+                      ${esc(article.summary)}
+                    </div>
+                  `
+                  : ""
+              }
+
+              ${
+                tags
+                  ? `
+                    <div class="article-tags">
+                      ${tags}
+                    </div>
+                  `
+                  : ""
+              }
+
             </div>
 
           </div>
         `;
-
       }
     )
     .join("");
@@ -357,7 +384,7 @@ function render(){
     .querySelectorAll(".article-row")
     .forEach(
       row =>
-        row.onclick=() =>
+        row.onclick = () =>
           openArticle(
             row.dataset.id
           )
@@ -470,15 +497,28 @@ async function openArticle(id){
 
 readerClose.onclick=()=>reader.classList.remove("show");
 reader.onclick=e=>{if(e.target===reader)reader.classList.remove("show")};
-rEdit.onclick=()=>{if(readerArticle){reader.classList.remove("show");openArticleEditor(readerArticle.id)}};
+
+rEdit.onclick=()=>{
+  if(readerArticle){
+    openArticleEditor(
+      readerArticle.id,
+      true
+    );
+  }
+};
 
 
 search.oninput=render;
 
 
-async function openArticleEditor(id=null){
+async function openArticleEditor(
+  id=null,
+  fromReader=false
+){
 
   editingId = id;
+
+  editingFromReader = fromReader;
 
   articleDialogTitle.textContent =
     id
@@ -599,7 +639,12 @@ async function openArticleEditor(id=null){
 }
 
 
-function closeArticleEditor(){articleOverlay.classList.remove("show");editingId=null}
+function closeArticleEditor(){
+  articleOverlay.classList.remove("show");
+  editingId=null;
+  editingFromReader=false;
+}
+
 function htmlToPlain(html){
   const d=document.createElement("div");
   d.innerHTML=html||"";
@@ -693,26 +738,21 @@ function renderContentPreview(){
   contentPreview.innerHTML=
     importedParagraphs.map((p,index)=>{
 
-      const removed=
+      const removed =
         contentAdjustments.includes(index);
 
       return `
         <div
-          class="content-preview-item ${removed?"removed":""}"
+          class="content-preview-item ${removed ? "removed" : ""}"
           data-paragraph="${index}"
         >
 
           <div class="content-preview-control">
-
-            <label>
-              <input
-                type="checkbox"
-                data-remove-paragraph="${index}"
-                ${removed?"checked":""}
-              >
-              删除这一段
-            </label>
-
+            <input
+              type="checkbox"
+              data-remove-paragraph="${index}"
+              ${removed ? "checked" : ""}
+            >
           </div>
 
           <div class="content-preview-text">
@@ -725,23 +765,29 @@ function renderContentPreview(){
     }).join("");
 
   contentPreview
-    .querySelectorAll("[data-remove-paragraph]")
+    .querySelectorAll(
+      "[data-remove-paragraph]"
+    )
     .forEach(box=>{
 
       box.onchange=()=>{
 
-        const index=
-          Number(box.dataset.removeParagraph);
+        const index =
+          Number(
+            box.dataset.removeParagraph
+          );
 
         if(box.checked){
 
-          if(!contentAdjustments.includes(index)){
+          if(
+            !contentAdjustments.includes(index)
+          ){
             contentAdjustments.push(index);
           }
 
         }else{
 
-          contentAdjustments=
+          contentAdjustments =
             contentAdjustments.filter(
               x=>x!==index
             );
