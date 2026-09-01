@@ -324,40 +324,24 @@ function render(){
             .join("");
 
         return `
-          <article
-            class="article-row"
-            data-id="${esc(article.id)}"
+          <div
+            class="content-preview-item ${removed?"removed":""}"
+            data-paragraph="${index}"
           >
 
-            <h3 class="article-title">
-              ${esc(article.title||"无标题")}
-            </h3>
-
-            <div class="article-author">
-              ${esc(article.author||"未知作者")}
+            <div class="content-preview-control">
+              <input
+                type="checkbox"
+                data-remove-paragraph="${index}"
+                ${removed?"checked":""}
+              >
             </div>
 
-            ${
-              article.summary
-                ? `
-                  <div class="article-summary">
-                    ${esc(article.summary)}
-                  </div>
-                `
-                : ""
-            }
+            <div class="content-preview-text">
+              ${esc(p.text)}
+            </div>
 
-            ${
-              tags
-                ? `
-                  <div class="article-tags">
-                    ${tags}
-                  </div>
-                `
-                : ""
-            }
-
-          </article>
+          </div>
         `;
 
       }
