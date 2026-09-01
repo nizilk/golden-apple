@@ -124,21 +124,10 @@ async function loadFavicon(){
 
 }
 
-/* ================= connect resource folder ================= */
+
 
 async function init(){
 
-  const connectBtn =
-    document.getElementById("connectBtn");
-
-  connectBtn.onclick = async () => {
-
-    await connectFolder();
-
-  };
-
-  // Electron 启动时已经尝试恢复资源目录。
-  // 这里直接询问 main.js 当前有没有可用路径。
   const savedPath =
     await window.electronAPI
       .getCurrentResourceFolder();
@@ -149,9 +138,29 @@ async function init(){
       savedPath
     );
 
+  }else{
+
+    await loadFavicon();
+
+    const pagesData =
+      await loadPagesData();
+
+    pages =
+      pagesData.list || [];
+
+    homePageId =
+      pagesData.home || null;
+
+    activePage =
+      homePageId || null;
+
+    await reload();
+
   }
 
 }
+
+
 
 
 document.getElementById(
@@ -215,15 +224,6 @@ async function connectFolder(
 
     activePage =
       homePageId || null;
-
-
-    document.getElementById(
-      "connectScreen"
-    ).style.display = "none";
-
-    document.getElementById(
-      "app"
-    ).style.display = "flex";
 
 
     document.getElementById(
