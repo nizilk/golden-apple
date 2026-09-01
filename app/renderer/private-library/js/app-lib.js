@@ -1626,13 +1626,6 @@ async function saveArticle(article){
 
 
 
-manageLibraryBtn.onclick=()=>libraryOverlay.classList.add("show");
-libraryClose.onclick=()=>libraryOverlay.classList.remove("show");
-libraryOverlay.onclick=e=>{if(e.target===libraryOverlay)libraryOverlay.classList.remove("show")};
-chooseFolder.onclick=chooseFolder;
-
-
-
 function updateLibraryHero(){
 
   if(data.settings.cover){
@@ -1716,27 +1709,11 @@ async function init(){
 
     await loadSettings();
 
-    resourceRootPath =
-      await window.electronAPI
-        .getCurrentResourceFolder();
-
-    if(resourceRootPath){
-
-      folderBox.innerHTML =
-        `已连接：
-        <strong>
-          ${esc(resourceRootPath)}
-        </strong>`;
-
-      await loadLibrary();
-
-    }
+    await loadLibrary();
 
     renderAll();
 
     updateLibraryHero();
-
-
 
   }catch(e){
 
