@@ -162,24 +162,6 @@ async function init(){
 
 
 
-
-document.getElementById(
-  "switchFolderBtn"
-).onclick = () => {
-
-  resourceRootPath = null;
-
-  document.getElementById(
-    "app"
-  ).style.display = "none";
-
-  document.getElementById(
-    "connectScreen"
-  ).style.display = "flex";
-
-};
-
-
 async function connectFolder(
   existingPath = null
 ){
@@ -226,10 +208,16 @@ async function connectFolder(
       homePageId || null;
 
 
-    document.getElementById(
-      "currentFolderName"
-    ).textContent =
+    const currentFolderName =
+      document.getElementById(
+        "currentFolderName"
+      );
+
+    currentFolderName.textContent =
       `📁 ${selectedPath.split("\\").pop()}`;
+
+    currentFolderName.onclick =
+      chooseFolder;
 
 
     await reload();
