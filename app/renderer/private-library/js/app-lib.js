@@ -51,6 +51,52 @@ function normalizeTags(raw){
   return [...new Set(String(raw||"").split(/[\s,，、]+/).map(x=>x.trim()).filter(Boolean))];
 }
 
+
+function applyTheme(theme){
+
+  document.body.classList.toggle(
+    "dark",
+    theme === "dark"
+  );
+
+  localStorage.setItem(
+    "library_theme",
+    theme
+  );
+
+  const btn =
+    document.getElementById(
+      "themeToggle"
+    );
+
+  if(btn){
+    btn.textContent =
+      theme === "dark"
+        ? "☀"
+        : "☾";
+  }
+
+}
+
+document.getElementById(
+  "themeToggle"
+).onclick = () => {
+
+  applyTheme(
+    document.body.classList.contains("dark")
+      ? "light"
+      : "dark"
+  );
+
+};
+
+applyTheme(
+  localStorage.getItem(
+    "library_theme"
+  ) || "light"
+);
+
+
 function allTags(){
 
   const set =
@@ -315,29 +361,35 @@ function render(){
             class="article-row"
             data-id="${esc(article.id)}"
           >
-            <div>
-              <h3 class="article-title">
-                ${esc(article.title||"无标题")}
-              </h3>
 
-              <div class="article-meta">
-                <span>
-                  ${esc(article.author||"未知作者")}
-                </span>
-                ${tags}
-              </div>
+            <h3 class="article-title">
+              ${esc(article.title||"无标题")}
+            </h3>
 
-              ${article.summary
+            <div class="article-author">
+              ${esc(article.author||"未知作者")}
+            </div>
+
+            ${
+              article.summary
                 ? `
                   <div class="article-summary">
                     ${esc(article.summary)}
                   </div>
                 `
                 : ""
-              }
-            </div>
+            }
 
-            <div class="article-side"></div>
+            ${
+              tags
+                ? `
+                  <div class="article-tags">
+                    ${tags}
+                  </div>
+                `
+                : ""
+            }
+
           </article>
         `;
 
@@ -661,7 +713,7 @@ chooseArticleFile.onclick = async () => {
 
     contentAdjustments = [];
 
-    articleTitle.value = result.name;
+    articleTitle.value = result.name.substring(0, result.name.lastIndexOf('.'));
 
     articleAuthor.value = "";
 
@@ -1605,49 +1657,124 @@ async function saveArticle(article){
 
 
 
-function updateLibraryHero(){
+async function updateLibraryHero(){
+
+  if(!data.settings.cover){
+
+    libraryHeroImage.style.backgroundImage =
+      "";
+
+    return;
+
+  }
+
+  try{
+
+    const dataUrl =
+      await window.electronAPI
+        .readFileDataURL(
+          data.settings.cover
+        );
+
+    libraryHeroImage.style.backgroundImage =
+      `url("${dataUrl}")`;
+
+  }catch(error){
+
+    console.error(
+      "无法读取书房头图：",
+      error
+    );
+
+    libraryHeroImage.style.backgroundImage =
+      "";
+
+  }
+
+}
+
+
+async function openSettings(){
+
+  coverPreview.style.backgroundImage =
+    "";
 
   if(data.settings.cover){
 
-    libraryHeroImage.style.backgroundImage=
-      `url("${data.settings.cover}")`;
+    try{
 
-  }else{
+      const dataUrl =
+        await window.electronAPI
+          .readFileDataURL(
+            data.settings.cover
+          );
 
-    libraryHeroImage.style.backgroundImage="";
+      coverPreview.style.backgroundImage =
+        `url("${dataUrl}")`;
+
+    }catch(error){
+
+      console.error(
+        "无法读取书房头图：",
+        error
+      );
+
+    }
+
   }
+
+  settingsOverlay.classList.add(
+    "show"
+  );
+
 }
 
-function openSettings(){
 
-  coverPreview.style.backgroundImage=
-    data.settings.cover
-      ? `url("${data.settings.cover}")`
-      : "";
-
-  settingsOverlay.classList.add("show");
-}
 settingsBtn.onclick=openSettings;settingsClose.onclick=()=>settingsOverlay.classList.remove("show");
 settingsOverlay.onclick=e=>{if(e.target===settingsOverlay)settingsOverlay.classList.remove("show")};
 
-coverFile.onchange=()=>{
-  const f=coverFile.files[0];
-  if(!f)return;
 
-  const r=new FileReader();
+coverFile.onclick =
+  async () => {
 
-  r.onload=()=>{
-    data.settings.cover=r.result;
+    try{
 
-    coverPreview.style.backgroundImage=
-      `url("${r.result}")`;
+      const filePath =
+        await window.electronAPI
+          .chooseLibraryCoverFile();
 
-    libraryHeroImage.style.backgroundImage=
-      `url("${r.result}")`;
+      if(!filePath){
+        return;
+      }
+
+      data.settings.cover =
+        filePath;
+
+      const dataUrl =
+        await window.electronAPI
+          .readFileDataURL(
+            filePath
+          );
+
+      coverPreview.style.backgroundImage =
+        `url("${dataUrl}")`;
+
+      libraryHeroImage.style.backgroundImage =
+        `url("${dataUrl}")`;
+
+    }catch(error){
+
+      console.error(error);
+
+      alert(
+        "读取头图失败：\n\n" +
+        error.message
+      );
+
+    }
+
   };
 
-  r.readAsDataURL(f);
-};
 
 settingsSave.onclick = async () => {
 
