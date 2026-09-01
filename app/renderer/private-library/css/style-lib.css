@@ -202,7 +202,7 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
   font-size:13px;
   line-height:1.85;
 
-  white-space:pre-wrap;
+  white-space:pre-line;
 
   display:-webkit-box;
   -webkit-line-clamp:3;
@@ -259,10 +259,11 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
   position:fixed;
   top:18px;
   right:24px;
-  z-index:5;
+  z-index:60;
+
   display:flex;
   align-items:center;
-  gap:7px;
+  gap:8px;
 }
 
 .reader-tools button{
@@ -287,22 +288,7 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
   font-size:17px;
 }
 
-.read-close{
-  position:fixed;
-  right:24px;
-  top:18px;
-  width:34px;
-  height:34px;
-  border:0;
-  border-radius:50%;
-  color:var(--muted);
-  font-size:18px;
-  z-index:5;
-}
 
-.read-close:hover{
-  color:var(--ink);
-}
 
 .read-summary{
   max-width:760px;
@@ -467,8 +453,8 @@ body.dark .library-hero-image{
 
   border:1px solid var(--line);
   background:var(--paper);
-  border-radius:8px;
 
+  border-radius:8px;
   padding:6px;
 
   max-height:420px;
@@ -481,25 +467,13 @@ body.dark .library-hero-image{
   align-items:start;
 
   border-bottom:1px solid var(--line);
-
   padding:10px 8px;
-
   border-radius:6px;
 }
 
 .content-preview-item:last-child{
   border-bottom:0;
 }
-
-.content-preview-item.removed{
-  background:transparent;
-}
-
-.content-preview-item.removed .content-preview-text{
-  color:var(--muted);
-  opacity:.55;
-}
-
 
 .content-preview-control{
   display:flex;
@@ -517,47 +491,20 @@ body.dark .library-hero-image{
 
 .content-preview-text{
   min-width:0;
-
   color:var(--ink);
-
   font-family:"Songti SC","Noto Serif SC","STSong",serif;
   font-size:12px;
   line-height:1.8;
-
   white-space:pre-wrap;
   overflow-wrap:anywhere;
 }
 
-/* responsive */
-@media(max-width:760px){
- .app{display:block}.sidebar{position:static;width:auto;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:18px 16px}
- .brand{margin-bottom:12px}.nav{flex-direction:row;overflow:auto}.nav button{white-space:nowrap}
- .sidebar-tools{position:static;flex-direction:row;justify-content:center;margin-top:8px}.sidebar-tools button{padding:5px 8px}
+.content-preview-item.removed{
+  background:transparent;
+  opacity:1;
+}
 
-  .top{
-    padding:18px 20px 10px;
-    align-items:flex-start;
-  }
-
-  .top-right{
-    width:100%;
-    display:flex;
-  }
-
-  .search{
-    flex:1;
-    width:auto;
-  }
-
-  .content-wrap{
-    padding:18px 20px 80px;
-  }
-
-  .library-hero{
-    aspect-ratio:1.6 / 1;
-    min-height:220px;
-    max-height:300px;
-    margin-bottom:22px;
-  }
-
+.content-preview-item.removed .content-preview-text{
+  color:var(--muted);
+  opacity:.55;
 }
