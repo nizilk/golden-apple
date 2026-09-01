@@ -43,6 +43,8 @@ const articleFileName =
 const contentPreview =
   document.getElementById("contentPreview");
 
+const rSummary = document.getElementById("rSummary");
+
 
   
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
@@ -53,14 +55,13 @@ function normalizeTags(raw){
 
 
 function applyTheme(theme){
-
   document.body.classList.toggle(
     "dark",
     theme === "dark"
   );
 
   localStorage.setItem(
-    "library_theme",
+    "myLibrary_theme",
     theme
   );
 
@@ -75,8 +76,24 @@ function applyTheme(theme){
         ? "☀"
         : "☾";
   }
-
 }
+
+document.getElementById(
+  "themeToggle"
+).onclick = ()=>{
+  applyTheme(
+    document.body.classList.contains("dark")
+      ? "light"
+      : "dark"
+  );
+};
+
+applyTheme(
+  localStorage.getItem(
+    "myLibrary_theme"
+  ) || "light"
+);
+
 
 document.getElementById(
   "themeToggle"
@@ -278,49 +295,6 @@ function renderNav(){
 
 }
 
-function renderTags(){
-
-  tagsBar.innerHTML =
-    allTags()
-      .map(
-        tag => `
-          <button
-            class="tag-chip ${
-              data.activeTag === tag
-                ? "on"
-                : ""
-            }"
-            data-tag="${esc(tag)}"
-          >
-            #${esc(tag)}
-          </button>
-        `
-      )
-      .join("");
-
-  tagsBar
-    .querySelectorAll(
-      "[data-tag]"
-    )
-    .forEach(button => {
-
-      button.onclick = () => {
-
-        const tag =
-          button.dataset.tag;
-
-        data.activeTag =
-          data.activeTag === tag
-            ? null
-            : tag;
-
-        render();
-
-      };
-
-    });
-
-}
 
 
 function render(){
@@ -328,15 +302,8 @@ function render(){
   const page =
     getPage();
 
-  renderTags();
-
   const list =
     pageArticles();
-
-  sectionTitle.textContent =
-    page
-      ? page.name
-      : "全部文章";
 
   count.textContent =
     `${list.length} 篇`;
@@ -439,16 +406,12 @@ async function openArticle(id){
   rMeta.textContent=
     meta.join(" · ");
 
-  rMeta.insertAdjacentHTML(
-    "afterend",
+  rSummary.innerHTML =
     s.summary
-      ? `
-        <div class="read-summary">
-          ${esc(s.summary)}
-        </div>
-      `
-      : ""
-  );
+      ? esc(s.summary)
+          .replace(/\r\n/g,"<br>")
+          .replace(/\n/g,"<br>")
+      : "";
 
   rTags.innerHTML=
     (s.tags||[])
@@ -527,7 +490,6 @@ rEdit.onclick=()=>{if(readerArticle){reader.classList.remove("show");openArticle
 
 
 search.oninput=render;
-sortBtn.onclick=()=>{newest=!newest;sortBtn.textContent=newest?"最近加入":"最早加入";render()};
 
 
 async function openArticleEditor(id=null){
