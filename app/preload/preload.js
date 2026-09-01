@@ -32,6 +32,13 @@ contextBridge.exposeInMainWorld(
           absolutePath
         ),
 
+    readFileDataURL:
+      filePath =>
+        ipcRenderer.invoke(
+          "file:readDataURL",
+          filePath
+        ),
+
     readResourceFile:
       relativePath =>
         ipcRenderer.invoke(
