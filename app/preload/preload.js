@@ -1,6 +1,7 @@
 const {
   contextBridge,
-  ipcRenderer
+  ipcRenderer,
+  webUtils
 } = require("electron");
 
 
@@ -18,6 +19,24 @@ contextBridge.exposeInMainWorld(
       () =>
         ipcRenderer.invoke(
           "resource:getCurrent"
+        ),
+
+    getFilePath:
+      file =>
+        webUtils.getPathForFile(file),
+
+    getResourceRelativePath:
+      absolutePath =>
+        ipcRenderer.invoke(
+          "resource:relativePath",
+          absolutePath
+        ),
+
+    readResourceFile:
+      relativePath =>
+        ipcRenderer.invoke(
+          "resource:readBinary",
+          relativePath
         ),
 
     getXhsDataDirectory:
