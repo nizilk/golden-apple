@@ -1,6 +1,4 @@
 const LIBRARY_ARTICLES_DIRECTORY = "articles";
-let resourceRootPath = null;
-
 
 let data = {
   articles: [],
@@ -1459,45 +1457,6 @@ function getInitialTitle(paragraphs,fileName){
 }
 
 
-async function chooseFolder(){
-
-  try{
-
-    const selectedPath =
-      await window.electronAPI
-        .chooseResourceFolder();
-
-    if(!selectedPath){
-      return;
-    }
-
-    resourceRootPath =
-      selectedPath;
-
-    folderBox.innerHTML=
-      `已连接：
-      <strong>
-        ${esc(selectedPath)}
-      </strong>`;
-
-    await loadLibrary();
-
-    renderAll();
-
-    updateLibraryHero();
-
-  }catch(e){
-
-    console.error(e);
-
-    alert(
-      "连接资源文件夹失败：\n\n"+
-      e.message
-    );
-
-  }
-
-}
 
 
 async function loadPages(){
