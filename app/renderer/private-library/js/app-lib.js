@@ -459,51 +459,129 @@ rEdit.onclick=()=>{if(readerArticle){reader.classList.remove("show");openArticle
 search.oninput=render;
 sortBtn.onclick=()=>{newest=!newest;sortBtn.textContent=newest?"最近加入":"最早加入";render()};
 
-function openArticleEditor(id=null){
-  editingId=id;
 
-  articleDialogTitle.textContent=id ? "编辑文章" : "添加文章";
-  deleteArticleBtn.style.display=id ? "inline-flex" : "none";
+async function openArticleEditor(id=null){
+
+  editingId = id;
+
+  articleDialogTitle.textContent =
+    id
+      ? "编辑文章"
+      : "添加文章";
+
+  deleteArticleBtn.style.display =
+    id
+      ? "inline-flex"
+      : "none";
 
   if(id){
-    const s=data.articles.find(x=>x.id===id);
-    if(!s)return;
 
-    articleTitle.value=s.title||"";
-    articleAuthor.value=s.author||"";
-    articlePlatform.value=s.platform||"";
-    articleSourceUrl.value=s.sourceUrl||"";
-    articleTags.value=(s.tags||[]).join(" ");
-    articleSummary.value=s.summary||"";
+    const s =
+      data.articles.find(
+        x => x.id === id
+      );
+
+    if(!s){
+      return;
+    }
+
+    articleTitle.value =
+      s.title || "";
+
+    articleAuthor.value =
+      s.author || "";
+
+    articlePlatform.value =
+      s.platform || "";
+
+    articleSourceUrl.value =
+      s.sourceUrl || "";
+
+    articleTags.value =
+      (s.tags || []).join(" ");
+
+    articleSummary.value =
+      s.summary || "";
 
     selectedArticleFile = null;
 
-    selectedArticlePath = s.path || null;
+    selectedArticlePath =
+      s.path || null;
 
-    articleFileName.textContent=
+    articleFileName.textContent =
       s.fileName
         ? `当前文件：${s.fileName}`
         : "这篇文章没有连接本地 DOCX。";
+
+    importedParagraphs = [];
+
+    contentAdjustments =
+      [
+        ...(s.contentAdjustments?.removed || [])
+      ];
+
+    if(s.path){
+
+      try{
+
+        const file =
+          await getFileByPath(
+            s.path
+          );
+
+        importedParagraphs =
+          await readDocxParagraphs(
+            file
+          );
+
+      }catch(e){
+
+        console.error(e);
+
+        contentPreview.innerHTML =
+          `<div class="hint">
+            无法读取原始 DOCX。
+          </div>`;
+
+      }
+
+    }
+
+    renderContentPreview();
+
   }else{
-    selectedArticleFile=null;
+
+    selectedArticleFile = null;
+
     selectedArticlePath = null;
 
-    importedParagraphs=[];
-    contentAdjustments=[];
+    importedParagraphs = [];
 
-    articleTitle.value="";
-    articleAuthor.value="";
-    articlePlatform.value="";
-    articleSourceUrl.value="";
-    articleTags.value="";
-    articleSummary.value="";
+    contentAdjustments = [];
 
-    articleFileName.textContent=
+    articleTitle.value = "";
+
+    articleAuthor.value = "";
+
+    articlePlatform.value = "";
+
+    articleSourceUrl.value = "";
+
+    articleTags.value = "";
+
+    articleSummary.value = "";
+
+    articleFileName.textContent =
       "选择后，网页只保存文件引用，不复制文章正文。";
+
+    contentPreview.innerHTML = "";
+
   }
 
   articleOverlay.classList.add("show");
+
 }
+
 
 function closeArticleEditor(){articleOverlay.classList.remove("show");editingId=null}
 function htmlToPlain(html){
@@ -1213,17 +1291,17 @@ pageConfigClose.onclick=()=>pageConfigOverlay.classList.remove("show");
 pageConfigOverlay.onclick=e=>{if(e.target===pageConfigOverlay)pageConfigOverlay.classList.remove("show")};
 
 
-async function getFileByPath(relativePath){
+async function getFileByPath(filePath){
 
-  if(!resourceRootPath){
+  if(!filePath){
     throw new Error(
-      "尚未设置资源文件夹。"
+      "没有记录文章文件路径。"
     );
   }
 
   return await window.electronAPI
-    .readResourceFile(
-      relativePath
+    .readLibraryArticleFile(
+      filePath
     );
 
 }
