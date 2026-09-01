@@ -196,7 +196,56 @@ function getSafeResourcePath(
 }
 
 
+ipcMain.handle(
+  "file:readDataURL",
+  async (
+    _event,
+    filePath
+  ) => {
 
+    if(
+      typeof filePath !== "string" ||
+      !filePath
+    ){
+
+      throw new Error(
+        "无效的文件路径。"
+      );
+
+    }
+
+    const buffer =
+      await fs.readFile(
+        filePath
+      );
+
+    const ext =
+      path.extname(
+        filePath
+      ).toLowerCase();
+
+    const mimeMap = {
+      ".png": "image/png",
+      ".jpg": "image/jpeg",
+      ".jpeg": "image/jpeg",
+      ".gif": "image/gif",
+      ".webp": "image/webp",
+      ".bmp": "image/bmp",
+      ".avif": "image/avif",
+      ".mp4": "video/mp4",
+      ".webm": "video/webm",
+      ".mov": "video/quicktime",
+      ".m4v": "video/x-m4v"
+    };
+
+    const mime =
+      mimeMap[ext] ||
+      "application/octet-stream";
+
+    return `data:${mime};base64,${buffer.toString("base64")}`;
+
+  }
+);
 
 
 ipcMain.handle(
