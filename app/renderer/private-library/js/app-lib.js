@@ -1,58 +1,42 @@
-const LIBRARY_FILE = "private-library.json";
+const LIBRARY_ARTICLES_DIRECTORY = "articles";
 let resourceRootPath = null;
 
-const defaultData={
-  settings:{
-    title:"私人图书馆",
-    subtitle:"",
-    cover:""
-  },
 
-  pages:[
-    {
-      id:"all",
-      name:"全部",
-      postIds:[]
-    }
-  ],
-
-  currentPage:"all",
-  activeTag:"全部",
-  tags:["全部"],
-
-  stories:[]
+let data = {
+  articles: [],
+  pages: [],
+  tags: [],
+  settings: {}
 };
 
-let data=structuredClone(defaultData);
-
 let newest=true;
-let readerStory=null;
+let readerArticle=null;
 let editingId=null;
-let selectedStoryFile=null;
+let selectedArticleFile=null;
 
 let importedParagraphs=[];
 let contentAdjustments=[];
 
-const storyTitle =
-  document.getElementById("storyTitle");
+const articleTitle =
+  document.getElementById("articleTitle");
 
-const storyAuthor =
-  document.getElementById("storyAuthor");
+const articleAuthor =
+  document.getElementById("articleAuthor");
 
-const storyPlatform =
-  document.getElementById("storyPlatform");
+const articlePlatform =
+  document.getElementById("articlePlatform");
 
-const storySourceUrl =
-  document.getElementById("storySourceUrl");
+const articleSourceUrl =
+  document.getElementById("articleSourceUrl");
 
-const storyTags =
-  document.getElementById("storyTags");
+const articleTags =
+  document.getElementById("articleTags");
 
-const storySummary =
-  document.getElementById("storySummary");
+const articleSummary =
+  document.getElementById("articleSummary");
 
-const storyFileName =
-  document.getElementById("storyFileName");
+const articleFileName =
+  document.getElementById("articleFileName");
 
 const contentPreview =
   document.getElementById("contentPreview");
@@ -73,13 +57,13 @@ function normalizeTags(raw){
 }
 function allTags(){
   const set=new Set(["全部"]);
-  data.stories.forEach(s=>(s.tags||[]).forEach(t=>set.add(t)));
+  data.articles.forEach(s=>(s.tags||[]).forEach(t=>set.add(t)));
   return [...set];
 }
 function getPage(){return data.pages.find(p=>p.id===data.currentPage)||data.pages[0]}
-function pageStories(){
+function pageArticles(){
   const page=getPage();
-  let list=data.stories;
+  let list=data.articles;
   if(page && page.id!=="all") list=list.filter(s=page.postIds.includes(s.id));
   const q=search.value.trim().toLowerCase();
   if(data.activeTag && data.activeTag!=="全部") list=list.filter(s=>(s.tags||[]).includes(data.activeTag));
@@ -114,36 +98,36 @@ function render(){
   const page=getPage();
   sectionTitle.textContent=page.id==="all"?"故事":page.name;
   renderTags();
-  const list=pageStories();
+  const list=pageArticles();
   count.textContent=`${list.length} 篇`;
-  storyList.innerHTML=list.map(s=>{
+  articleList.innerHTML=list.map(s=>{
     const tags=(s.tags||[]).slice(0,4).map(t=>`<span class="tag">#${esc(t)}</span>`).join("");
-    return `<article class="story-row" data-id="${esc(s.id)}">
+    return `<article class="article-row" data-id="${esc(s.id)}">
       <div>
-        <h3 class="story-title">${esc(s.title||"无标题")}</h3>
+        <h3 class="article-title">${esc(s.title||"无标题")}</h3>
 
-        <div class="story-meta">
+        <div class="article-meta">
           <span>${esc(s.author||"未知作者")}</span>
           ${tags}
         </div>
 
       </div>
 
-      <div class="story-side">
+      <div class="article-side">
       </div>
     </article>`
   }).join("");
   empty.style.display=list.length?"none":"block";
-  storyList.querySelectorAll(".story-row").forEach(r=>r.onclick=()=>openStory(r.dataset.id));
+  articleList.querySelectorAll(".article-row").forEach(r=>r.onclick=()=>openArticle(r.dataset.id));
 }
 function renderAll(){renderNav();render();}
 
-async function openStory(id){
+async function openArticle(id){
 
-  const s=data.stories.find(x=>x.id===id);
+  const s=data.articles.find(x=>x.id===id);
   if(!s)return;
 
-  readerStory=s;
+  readerArticle=s;
 
   rTitle.textContent=s.title||"无标题";
 
@@ -233,54 +217,54 @@ async function openStory(id){
 
 readerClose.onclick=()=>reader.classList.remove("show");
 reader.onclick=e=>{if(e.target===reader)reader.classList.remove("show")};
-rEdit.onclick=()=>{if(readerStory){reader.classList.remove("show");openStoryEditor(readerStory.id)}};
+rEdit.onclick=()=>{if(readerArticle){reader.classList.remove("show");openArticleEditor(readerArticle.id)}};
 
 
 search.oninput=render;
 sortBtn.onclick=()=>{newest=!newest;sortBtn.textContent=newest?"最近加入":"最早加入";render()};
 
-function openStoryEditor(id=null){
+function openArticleEditor(id=null){
   editingId=id;
 
-  storyDialogTitle.textContent=id ? "编辑文章" : "添加文章";
-  deleteStoryBtn.style.display=id ? "inline-flex" : "none";
+  articleDialogTitle.textContent=id ? "编辑文章" : "添加文章";
+  deleteArticleBtn.style.display=id ? "inline-flex" : "none";
 
   if(id){
-    const s=data.stories.find(x=>x.id===id);
+    const s=data.articles.find(x=>x.id===id);
     if(!s)return;
 
-    storyTitle.value=s.title||"";
-    storyAuthor.value=s.author||"";
-    storyPlatform.value=s.platform||"";
-    storySourceUrl.value=s.sourceUrl||"";
-    storyTags.value=(s.tags||[]).join(" ");
-    storySummary.value=s.summary||"";
+    articleTitle.value=s.title||"";
+    articleAuthor.value=s.author||"";
+    articlePlatform.value=s.platform||"";
+    articleSourceUrl.value=s.sourceUrl||"";
+    articleTags.value=(s.tags||[]).join(" ");
+    articleSummary.value=s.summary||"";
 
-    storyFileName.textContent=
+    articleFileName.textContent=
       s.fileName
         ? `当前文件：${s.fileName}`
         : "这篇文章没有连接本地 DOCX。";
   }else{
-    selectedStoryFile=null;
+    selectedArticleFile=null;
 
     importedParagraphs=[];
     contentAdjustments=[];
 
-    storyTitle.value="";
-    storyAuthor.value="";
-    storyPlatform.value="";
-    storySourceUrl.value="";
-    storyTags.value="";
-    storySummary.value="";
+    articleTitle.value="";
+    articleAuthor.value="";
+    articlePlatform.value="";
+    articleSourceUrl.value="";
+    articleTags.value="";
+    articleSummary.value="";
 
-    storyFileName.textContent=
+    articleFileName.textContent=
       "选择后，网页只保存文件引用，不复制文章正文。";
   }
 
-  storyOverlay.classList.add("show");
+  articleOverlay.classList.add("show");
 }
 
-function closeStoryEditor(){storyOverlay.classList.remove("show");editingId=null}
+function closeArticleEditor(){articleOverlay.classList.remove("show");editingId=null}
 function htmlToPlain(html){
   const d=document.createElement("div");
   d.innerHTML=html||"";
@@ -300,11 +284,11 @@ function plainToHtml(text){
     })
     .join("") || "<p></p>";
 }
-addBtn.onclick=()=>openStoryEditor();
-storyClose.onclick=closeStoryEditor;storyCancel.onclick=closeStoryEditor;
-storyOverlay.onclick=e=>{if(e.target===storyOverlay)closeStoryEditor()};
+addBtn.onclick=()=>openArticleEditor();
+articleClose.onclick=closeArticleEditor;articleCancel.onclick=closeArticleEditor;
+articleOverlay.onclick=e=>{if(e.target===articleOverlay)closeArticleEditor()};
 
-chooseStoryFile.onclick=async()=>{
+chooseArticleFile.onclick=async()=>{
 
   if(!window.showOpenFilePicker){
 
@@ -339,9 +323,9 @@ chooseStoryFile.onclick=async()=>{
     const f=
       await handle.getFile();
 
-    selectedStoryFile=f;
+    selectedArticleFile=f;
 
-    storyFileName.textContent=
+    articleFileName.textContent=
       `已选择：${f.name}`;
 
     /*
@@ -370,7 +354,7 @@ chooseStoryFile.onclick=async()=>{
         f.name
       );
 
-    storyTitle.value=
+    articleTitle.value=
       guessed.title;
 
     /*
@@ -380,7 +364,7 @@ chooseStoryFile.onclick=async()=>{
      * 如果第二段很明显像作者，你可以手动填。
      */
 
-    storyAuthor.value="";
+    articleAuthor.value="";
 
     renderContentPreview();
 
@@ -478,10 +462,10 @@ function renderContentPreview(){
 
 }
 
-storySave.onclick=async()=>{
+articleSave.onclick=async()=>{
 
   const title=
-    storyTitle.value.trim();
+    articleTitle.value.trim();
 
   if(!title){
     alert("请填写标题。");
@@ -489,12 +473,12 @@ storySave.onclick=async()=>{
   }
 
   const tags=
-    normalizeTags(storyTags.value);
+    normalizeTags(articleTags.value);
 
   if(editingId){
 
     const s=
-      data.stories.find(
+      data.articles.find(
         x=>x.id===editingId
       );
 
@@ -503,26 +487,26 @@ storySave.onclick=async()=>{
     s.title=title;
 
     s.author=
-      storyAuthor.value.trim();
+      articleAuthor.value.trim();
 
     s.platform=
-      storyPlatform.value.trim();
+      articlePlatform.value.trim();
 
     s.sourceUrl=
-      storySourceUrl.value.trim();
+      articleSourceUrl.value.trim();
 
     s.tags=tags;
 
     s.summary=
-      storySummary.value.trim();
+      articleSummary.value.trim();
 
   }else{
 
     const f=
-      selectedStoryFile;
+      selectedArticleFile;
 
     const path=
-      selectedStoryPath;
+      selectedArticlePath;
 
     if(!f || !path){
 
@@ -539,7 +523,7 @@ storySave.onclick=async()=>{
     try{
 
       const id=
-        "story_"+
+        "article_"+
         Date.now()+
         "_"+
         Math.random()
@@ -550,18 +534,18 @@ storySave.onclick=async()=>{
         id,
         title,
         author:
-          storyAuthor.value.trim(),
+          articleAuthor.value.trim(),
 
         platform:
-          storyPlatform.value.trim(),
+          articlePlatform.value.trim(),
 
         sourceUrl:
-          storySourceUrl.value.trim(),
+          articleSourceUrl.value.trim(),
 
         tags,
 
         summary:
-          storySummary.value.trim(),
+          articleSummary.value.trim(),
 
         date:
           new Date()
@@ -581,7 +565,7 @@ storySave.onclick=async()=>{
 
       };
 
-      data.stories.unshift(s);
+      data.articles.unshift(s);
 
     }catch(e){
 
@@ -607,22 +591,25 @@ storySave.onclick=async()=>{
 
   saveData();
 
-  selectedStoryFile=null;
+  selectedArticleFile=null;
 
   importedParagraphs=[];
   contentAdjustments=[];
 
-  closeStoryEditor();
+  closeArticleEditor();
   renderAll();
 };
 
-deleteStoryBtn.onclick=async()=>{
+deleteArticleBtn.onclick=async()=>{
   if(!editingId)return;
-  const s=data.stories.find(x=>x.id===editingId);
+  const s=data.articles.find(x=>x.id===editingId);
   if(!s||!confirm(`删除《${s.title}》？`))return;
-  data.stories=data.stories.filter(x=>x.id!==editingId);
+  data.articles=data.articles.filter(x=>x.id!==editingId);
   data.pages.forEach(p=>p.postIds=p.postIds.filter(id=>id!==editingId));
-  await saveData();closeStoryEditor();renderAll();
+  
+  await window.electronAPI.deleteLibraryArticle(editingId);
+  closeArticleEditor();
+  renderAll();
 };
 
 function openPages(){renderPageList();pagesOverlay.classList.add("show")}
@@ -652,7 +639,7 @@ addPage.onclick=()=>{
 function openPageConfig(id){
   const p=data.pages.find(x=>x.id===id);if(!p||id==="all")return;
   pageConfigTitle.textContent=`${p.name} · 选择文章`;
-  pagePostList.innerHTML=data.stories.map(s=>`<label class="manage-page" style="cursor:pointer">
+  pagePostList.innerHTML=data.articles.map(s=>`<label class="manage-page" style="cursor:pointer">
     <input type="checkbox" data-post="${esc(s.id)}" ${p.postIds.includes(s.id)?"checked":""}>
     <span>${esc(s.title)}<small style="display:block;color:var(--muted);font-size:9px">${esc((s.tags||[]).join(" · "))}</small></span>
   </label>`).join("");
@@ -856,49 +843,40 @@ async function chooseFolder(){
 
 async function loadLibrary(){
 
-  const saved =
+  const result =
     await window.electronAPI
-      .loadLibraryData();
+      .listLibraryArticles();
 
-  if(saved){
+  data.articles = Array.isArray(result)
+    ? result
+    : [];
 
-    data={
-      ...structuredClone(defaultData),
-      ...saved
-    };
-
-  }else{
-
-    data=
-      structuredClone(defaultData);
-
-    await saveData();
-
-  }
-
-  if(!Array.isArray(data.stories)){
-    data.stories=[];
+  if(!Array.isArray(data.tags)){
+    data.tags = [];
   }
 
   if(!Array.isArray(data.pages)){
-    data.pages=
-      structuredClone(defaultData.pages);
-  }
-
-  if(!Array.isArray(data.tags)){
-    data.tags=["全部"];
+    data.pages = [];
   }
 
   if(!data.settings){
-    data.settings=
-      structuredClone(
-        defaultData.settings
-      );
+    data.settings = {};
   }
 
 }
 
 
+
+async function saveArticle(article){
+
+  if(!article || !article.id){
+    throw new Error("文章缺少 id。");
+  }
+
+  await window.electronAPI
+    .saveLibraryArticle(article);
+
+}
 
 
 
@@ -964,7 +942,7 @@ settingsSave.onclick=()=>{
 };
 
 document.addEventListener("keydown",e=>{
-  if(e.key==="Escape"){[reader,storyOverlay,pagesOverlay,pageConfigOverlay,libraryOverlay,settingsOverlay].forEach(x=>x.classList.remove("show"))}
+  if(e.key==="Escape"){[reader,articleOverlay,pagesOverlay,pageConfigOverlay,libraryOverlay,settingsOverlay].forEach(x=>x.classList.remove("show"))}
 });
 
 
