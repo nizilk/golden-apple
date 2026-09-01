@@ -476,12 +476,17 @@ function openArticleEditor(id=null){
     articleTags.value=(s.tags||[]).join(" ");
     articleSummary.value=s.summary||"";
 
+    selectedArticleFile = null;
+
+    selectedArticlePath = s.path || null;
+
     articleFileName.textContent=
       s.fileName
         ? `当前文件：${s.fileName}`
         : "这篇文章没有连接本地 DOCX。";
   }else{
     selectedArticleFile=null;
+    selectedArticlePath = null;
 
     importedParagraphs=[];
     contentAdjustments=[];
@@ -524,81 +529,106 @@ addBtn.onclick=()=>openArticleEditor();
 articleClose.onclick=closeArticleEditor;articleCancel.onclick=closeArticleEditor;
 articleOverlay.onclick=e=>{if(e.target===articleOverlay)closeArticleEditor()};
 
-chooseArticleFile.onclick=async()=>
-  async function chooseArticleFile(){
+
+
+chooseArticleFile.onclick = async () => {
+
+  if(!window.showOpenFilePicker){
+
+    alert(
+      "当前环境不支持本地文件选择。"
+    );
+
+    return;
+
+  }
 
   try{
 
-    const result =
-      await window.electronAPI
-        .chooseLibraryArticleFile();
+    const [handle] =
+      await window.showOpenFilePicker({
 
-    if(!result){
+        multiple:false,
+
+        types:[
+          {
+            description:"Word 文档",
+            accept:{
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document":[
+                ".docx"
+              ]
+            }
+          }
+        ]
+
+      });
+
+    const f =
+      await handle.getFile();
+
+    if(!/\.docx$/i.test(f.name)){
+
+      alert(
+        "目前只支持 .docx 文件。"
+      );
+
       return;
+
     }
 
-    selectedArticlePath =
-      result.path;
+    const absolutePath =
+      window.electronAPI
+        .getFilePath(f);
+
+    const relativePath =
+      await window.electronAPI
+        .getResourceRelativePath(
+          absolutePath
+        );
 
     selectedArticleFile =
-      new File(
-        [
-          Uint8Array.from(
-            atob(result.data),
-            char => char.charCodeAt(0)
-          )
-        ],
-        result.name,
-        {
-          type:
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        }
-      );
+      f;
+
+    selectedArticlePath =
+      relativePath;
 
     articleFileName.textContent =
-      `已选择：${result.name}`;
+      `已选择：${f.name}`;
 
     importedParagraphs =
-      await readDocxParagraphs(
-        selectedArticleFile
-      );
+      await readDocxParagraphs(f);
 
     contentAdjustments = [];
 
     const guessed =
       guessMetadata(
         importedParagraphs,
-        result.name
+        f.name
       );
 
     articleTitle.value =
       guessed.title;
 
-    articleAuthor.value =
-      "";
+    articleAuthor.value = "";
 
     renderContentPreview();
 
-  }catch(error){
+  }catch(e){
 
-    console.error(error);
+    if(e.name !== "AbortError"){
 
-    if(
-      error.name ===
-      "AbortError"
-    ){
-      return;
+      alert(
+        "无法读取 DOCX：\n\n"+
+        e.message
+      );
+
+      console.error(e);
+
     }
-
-    alert(
-      "无法读取 DOCX：\n\n" +
-      error.message
-    );
 
   }
 
-}
-
+};
   
 
 
@@ -678,143 +708,174 @@ function renderContentPreview(){
 
 }
 
-articleSave.onclick=async()=>{
 
-  const title=
+articleSave.onclick = async () => {
+
+  const title =
     articleTitle.value.trim();
 
   if(!title){
+
     alert("请填写标题。");
+
     return;
+
   }
 
-  const tags=
-    normalizeTags(articleTags.value);
+  const tags =
+    normalizeTags(
+      articleTags.value
+    );
+
+  let s;
 
   if(editingId){
 
-    const s=
+    s =
       data.articles.find(
-        x=>x.id===editingId
+        x => x.id === editingId
       );
 
-    if(!s)return;
+    if(!s){
+      return;
+    }
 
-    s.title=title;
+    s.title =
+      title;
 
-    s.author=
+    s.author =
       articleAuthor.value.trim();
 
-    s.platform=
+    s.platform =
       articlePlatform.value.trim();
 
-    s.sourceUrl=
+    s.sourceUrl =
       articleSourceUrl.value.trim();
 
-    s.tags=tags;
+    s.tags =
+      tags;
 
-    s.summary=
+    s.summary =
       articleSummary.value.trim();
+
+    if(selectedArticlePath){
+
+      s.path =
+        selectedArticlePath;
+
+      s.fileName =
+        selectedArticleFile
+          ? selectedArticleFile.name
+          : s.fileName;
+
+    }
+
+    s.contentAdjustments = {
+      removed:
+        [...contentAdjustments]
+    };
 
   }else{
 
-    const f=
+    const f =
       selectedArticleFile;
 
-    const path=
+    const articlePath =
       selectedArticlePath;
 
-    if(!f || !path){
+    if(!f || !articlePath){
 
-      alert("请先选择一个 .docx 文件。");
+      alert(
+        "请先选择一个 .docx 文件。"
+      );
 
       return;
+
     }
 
     if(!/\.docx$/i.test(f.name)){
-      alert("目前只支持 .docx 文件。");
-      return;
-    }
-
-    try{
-
-      const id=
-        "article_"+
-        Date.now()+
-        "_"+
-        Math.random()
-          .toString(36)
-          .slice(2,8);
-
-      const s={
-        id,
-        title,
-        author:
-          articleAuthor.value.trim(),
-
-        platform:
-          articlePlatform.value.trim(),
-
-        sourceUrl:
-          articleSourceUrl.value.trim(),
-
-        tags,
-
-        summary:
-          articleSummary.value.trim(),
-
-        date:
-          new Date()
-            .toISOString()
-            .slice(0,10),
-
-        path:path,
-
-        favorite:false,
-
-        sourceType:"word",
-
-        contentAdjustments:{
-          removed:
-            [...contentAdjustments]
-        }
-
-      };
-
-      data.articles.unshift(s);
-
-    }catch(e){
 
       alert(
-        "添加失败："+
-        e.message
+        "目前只支持 .docx 文件。"
       );
 
-      console.error(e);
-
       return;
+
     }
+
+    const id =
+      "article_" +
+      Date.now() +
+      "_" +
+      Math.random()
+        .toString(36)
+        .slice(2,8);
+
+    s = {
+
+      id,
+
+      title,
+
+      author:
+        articleAuthor.value.trim(),
+
+      platform:
+        articlePlatform.value.trim(),
+
+      sourceUrl:
+        articleSourceUrl.value.trim(),
+
+      tags,
+
+      summary:
+        articleSummary.value.trim(),
+
+      date:
+        new Date()
+          .toISOString()
+          .slice(0,10),
+
+      path:
+        articlePath,
+
+      fileName:
+        f.name,
+
+      favorite:
+        false,
+
+      sourceType:
+        "word",
+
+      contentAdjustments:{
+        removed:
+          [...contentAdjustments]
+      }
+
+    };
+
+    data.articles.unshift(s);
+
   }
 
-  /*
-   * 更新标签集合
-   */
-  tags.forEach(t=>{
-    if(!data.tags.includes(t)){
-      data.tags.push(t);
-    }
-  });
+  data.tags =
+    allTags();
 
   await saveArticle(s);
 
-  selectedArticleFile=null;
+  selectedArticleFile = null;
+  selectedArticlePath = null;
 
-  importedParagraphs=[];
-  contentAdjustments=[];
+  importedParagraphs = [];
+  contentAdjustments = [];
 
   closeArticleEditor();
+
   renderAll();
+
 };
+
 
 deleteArticleBtn.onclick=async()=>{
   if(!editingId)return;
@@ -1220,14 +1281,15 @@ async function readDocxParagraphs(file){
 
     await new Promise((resolve,reject)=>{
 
-      const s=document.createElement("script");
+      const s =
+        document.createElement("script");
 
-      s.src=
+      s.src =
         "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
 
-      s.onload=resolve;
+      s.onload = resolve;
 
-      s.onerror=()=>{
+      s.onerror = () => {
         reject(
           new Error(
             "无法加载 DOCX 解析模块；请检查网络。"
@@ -1241,19 +1303,41 @@ async function readDocxParagraphs(file){
 
   }
 
-  const zip=
-    await JSZip.loadAsync(
-      await file.arrayBuffer()
-    );
+  let buffer;
 
-  const xmlFile=
-    zip.file("word/document.xml");
+  if(
+    file &&
+    typeof file.arrayBuffer === "function"
+  ){
 
-  if(!xmlFile){
-    throw new Error("这个文件不是有效的 DOCX 文档。");
+    buffer =
+      await file.arrayBuffer();
+
+  }else{
+
+    buffer = file;
+
   }
 
-  const xml=
+  const zip =
+    await JSZip.loadAsync(
+      buffer
+    );
+
+  const xmlFile =
+    zip.file(
+      "word/document.xml"
+    );
+
+  if(!xmlFile){
+
+    throw new Error(
+      "这个文件不是有效的 DOCX 文档。"
+    );
+
+  }
+
+  const xml =
     await xmlFile.async("string");
 
   const doc=
@@ -1434,6 +1518,21 @@ async function savePages(){
 }
 
 
+async function loadSettings(){
+
+  const settings =
+    await window.electronAPI
+      .readSettings();
+
+  data.settings =
+    settings &&
+    typeof settings === "object"
+      ? settings
+      : {};
+
+}
+
+
 async function loadLibrary(){
 
   const settings =
@@ -1583,13 +1682,15 @@ async function init(){
 
   try{
 
+    await loadSettings();
+
     resourceRootPath =
       await window.electronAPI
         .getCurrentResourceFolder();
 
     if(resourceRootPath){
 
-      folderBox.innerHTML=
+      folderBox.innerHTML =
         `已连接：
         <strong>
           ${esc(resourceRootPath)}
@@ -1602,6 +1703,8 @@ async function init(){
     renderAll();
 
     updateLibraryHero();
+
+
 
   }catch(e){
 
