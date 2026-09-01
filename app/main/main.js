@@ -505,7 +505,7 @@ const LIB_ARTICLES_ROOT =
 const LIB_PAGES_ROOT =
   path.join(
     LIB_DATA_ROOT,
-    "pages"
+    "pages.json"
   );
 
 const SETTINGS_FILE = path.join(
@@ -612,13 +612,6 @@ async function ensureDataDirectories() {
 
   await fs.mkdir(
     LIB_ARTICLES_ROOT,
-    {
-      recursive: true
-    }
-  );
-
-  await fs.mkdir(
-    LIB_PAGES_ROOT,
     {
       recursive: true
     }
@@ -1047,7 +1040,7 @@ ipcMain.handle(
     );
 
     const filename =
-      `${story.id}.json`;
+      `${article.id}.json`;
 
     const filePath =
       path.join(
@@ -1058,7 +1051,7 @@ ipcMain.handle(
     await fs.writeFile(
       filePath,
       JSON.stringify(
-        story,
+        article,
         null,
         2
       ),
@@ -1117,3 +1110,79 @@ ipcMain.handle(
 
   }
 );
+
+
+// ============================================================
+// Pages
+// ============================================================
+
+ipcMain.handle(
+  "library:readPages",
+  async () => {
+
+    try{
+
+      const text =
+        await fs.readFile(
+          LIB_PAGES_FILE,
+          "utf8"
+        );
+
+      const pages =
+        JSON.parse(text);
+
+      return Array.isArray(pages)
+        ? pages
+        : [];
+
+    }catch(error){
+
+      if(
+        error.code === "ENOENT"
+      ){
+        return [];
+      }
+
+      throw error;
+
+    }
+
+  }
+);
+
+
+ipcMain.handle(
+  "library:savePages",
+  async (
+    _event,
+    pages
+  ) => {
+
+    if(!Array.isArray(pages)){
+      throw new Error(
+        "Library pages 数据无效。"
+      );
+    }
+
+    await fs.mkdir(
+      LIB_DATA_ROOT,
+      {
+        recursive:true
+      }
+    );
+
+    await fs.writeFile(
+      LIB_PAGES_FILE,
+      JSON.stringify(
+        pages,
+        null,
+        2
+      ),
+      "utf8"
+    );
+
+    return true;
+
+  }
+);
+
