@@ -533,81 +533,39 @@ articleOverlay.onclick=e=>{if(e.target===articleOverlay)closeArticleEditor()};
 
 chooseArticleFile.onclick = async () => {
 
-  if(!window.showOpenFilePicker){
-
-    alert(
-      "当前环境不支持本地文件选择。"
-    );
-
-    return;
-
-  }
-
   try{
 
-    const [handle] =
-      await window.showOpenFilePicker({
+    const result =
+      await window.electronAPI
+        .chooseLibraryArticleFile();
 
-        multiple:false,
-
-        types:[
-          {
-            description:"Word 文档",
-            accept:{
-              "application/vnd.openxmlformats-officedocument.wordprocessingml.document":[
-                ".docx"
-              ]
-            }
-          }
-        ]
-
-      });
-
-    const f =
-      await handle.getFile();
-
-    if(!/\.docx$/i.test(f.name)){
-
-      alert(
-        "目前只支持 .docx 文件。"
-      );
-
+    if(!result){
       return;
-
     }
 
-    const absolutePath =
-      window.electronAPI
-        .getFilePath(f);
-
-    const relativePath =
-      await window.electronAPI
-        .getResourceRelativePath(
-          absolutePath
-        );
-
-    selectedArticleFile =
-      f;
-
     selectedArticlePath =
-      relativePath;
+      result.path;
+
+    selectedArticleFile = {
+      name:
+        result.name
+    };
 
     articleFileName.textContent =
-      `已选择：${f.name}`;
+      `已选择：${result.name}`;
+
+    const binary =
+      Uint8Array.from(
+        atob(result.data),
+        c => c.charCodeAt(0)
+      );
 
     importedParagraphs =
-      await readDocxParagraphs(f);
+      await readDocxParagraphs(binary);
 
     contentAdjustments = [];
 
-    const guessed =
-      guessMetadata(
-        importedParagraphs,
-        f.name
-      );
-
-    articleTitle.value =
-      guessed.title;
+    articleTitle.value = result.name;
 
     articleAuthor.value = "";
 
@@ -615,16 +573,12 @@ chooseArticleFile.onclick = async () => {
 
   }catch(e){
 
-    if(e.name !== "AbortError"){
+    alert(
+      "无法读取 DOCX：\n\n"+
+      e.message
+    );
 
-      alert(
-        "无法读取 DOCX：\n\n"+
-        e.message
-      );
-
-      console.error(e);
-
-    }
+    console.error(e);
 
   }
 
