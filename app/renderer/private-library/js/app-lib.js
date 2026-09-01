@@ -314,32 +314,7 @@ function render(){
 
             <div class="article-main">
 
-              <h3 class="article-title" data-open-article="${article.id}">
-                ${esc(article.title||"无标题")}</h3>
-
-              ${
-                (article.author || article.platform)
-                  ? `
-                    <div class="article-meta">
-                      ${
-                        article.author
-                          ? `<span>${esc(article.author)}</span>`
-                          : ""
-                      }
-                      ${
-                        article.author && article.platform
-                          ? `<span class="meta-dot">·</span>`
-                          : ""
-                      }
-                      ${
-                        article.platform
-                          ? `<span>${esc(article.platform)}</span>`
-                          : ""
-                      }
-                    </div>
-                  `
-                  : ""
-              }
+              <span class="article-title" data-open-article="${article.id}">${esc(article.title||"无标题")}</span>
 
               ${
                 article.summary
