@@ -513,53 +513,7 @@ const SETTINGS_FILE = path.join(
   "settings.json"
 );
 
-async function loadSavedResourcePath(){
 
-  try{
-
-    const text =
-      await fs.readFile(
-        SETTINGS_FILE,
-        "utf8"
-      );
-
-    const settings =
-      JSON.parse(text);
-
-    const savedPath =
-      settings?.resources?.xhs;
-
-    if(!savedPath){
-      return false;
-    }
-
-    // 检查原来的文件夹是否还存在
-    await fs.access(
-      savedPath
-    );
-
-    resourceRootPath =
-      savedPath;
-
-    return true;
-
-  }catch(error){
-
-    if(error.code !== "ENOENT"){
-      console.warn(
-        "无法恢复已保存的资源文件夹：",
-        error
-      );
-    }
-
-    resourceRootPath =
-      null;
-
-    return false;
-
-  }
-
-}
 
 
 // ============================================================
@@ -1206,6 +1160,59 @@ ipcMain.handle(
     );
 
     return true;
+
+  }
+);
+
+
+ipcMain.handle(
+  "library:chooseArticleFile",
+  async () => {
+
+    const result =
+      await dialog.showOpenDialog(
+        mainWindow,
+        {
+          properties: [
+            "openFile"
+          ],
+
+          filters: [
+            {
+              name: "Word 文档",
+              extensions: [
+                "docx"
+              ]
+            }
+          ]
+
+        }
+      );
+
+    if(
+      result.canceled ||
+      result.filePaths.length === 0
+    ){
+
+      return null;
+
+    }
+
+    const filePath =
+      result.filePaths[0];
+
+    const buffer =
+      await fs.readFile(
+        filePath
+      );
+
+    return {
+      path: filePath,
+      name: path.basename(filePath),
+      data: buffer.toString(
+        "base64"
+      )
+    };
 
   }
 );
