@@ -113,5 +113,25 @@ contextBridge.exposeInMainWorld(
           settings
         ),
 
+    listLibraryArticles:
+      () =>
+        ipcRenderer.invoke(
+          "library:listArticles"
+        ),
+
+    saveLibraryArticle:
+      article =>
+        ipcRenderer.invoke(
+          "library:saveArticle",
+          article
+        ),
+
+    deleteLibraryArticle:
+      articleId =>
+        ipcRenderer.invoke(
+          "library:deleteArticle",
+          articleId
+        ),
+
   }
 );
