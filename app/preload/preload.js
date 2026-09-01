@@ -153,6 +153,12 @@ contextBridge.exposeInMainWorld(
           filePath
         ),
 
+    chooseLibraryCoverFile:
+      () =>
+        ipcRenderer.invoke(
+          "library:chooseCoverFile"
+        ),
+
     loadLibraryPages:
       () =>
         ipcRenderer.invoke(
