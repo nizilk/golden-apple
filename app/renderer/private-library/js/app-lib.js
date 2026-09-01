@@ -964,9 +964,22 @@ articleSave.onclick = async () => {
   importedParagraphs = [];
   contentAdjustments = [];
 
+  const shouldRefreshReader =
+    editingFromReader;
+
+  const articleId =
+    editingId;
+
   closeArticleEditor();
 
   renderAll();
+
+  if(
+    shouldRefreshReader &&
+    articleId
+  ){
+    await openArticle(articleId);
+  }
 
 };
 
