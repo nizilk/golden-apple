@@ -1245,6 +1245,47 @@ ipcMain.handle(
 
 
 ipcMain.handle(
+  "library:chooseCoverFile",
+  async () => {
+
+    const result =
+      await dialog.showOpenDialog(
+        mainWindow,
+        {
+          properties:[
+            "openFile"
+          ],
+          filters:[
+            {
+              name:"图片",
+              extensions:[
+                "png",
+                "jpg",
+                "jpeg",
+                "gif",
+                "webp",
+                "bmp",
+                "avif"
+              ]
+            }
+          ]
+        }
+      );
+
+    if(
+      result.canceled ||
+      result.filePaths.length === 0
+    ){
+      return null;
+    }
+
+    return result.filePaths[0];
+
+  }
+);
+
+
+ipcMain.handle(
   "library:chooseArticleFile",
   async () => {
 
