@@ -98,25 +98,6 @@ applyTheme(
 );
 
 
-document.getElementById(
-  "themeToggle"
-).onclick = () => {
-
-  applyTheme(
-    document.body.classList.contains("dark")
-      ? "light"
-      : "dark"
-  );
-
-};
-
-applyTheme(
-  localStorage.getItem(
-    "library_theme"
-  ) || "light"
-);
-
-
 function allTags(){
 
   const set =
@@ -333,15 +314,28 @@ function render(){
 
             <div class="article-main">
 
-              <h3 class="article-title">
-                ${esc(article.title||"无标题")}
-              </h3>
+              <h3 class="article-title" data-open-article="${article.id}">
+                ${esc(article.title||"无标题")}</h3>
 
               ${
-                article.author
+                (article.author || article.platform)
                   ? `
-                    <div class="article-author">
-                      ${esc(article.author)}
+                    <div class="article-meta">
+                      ${
+                        article.author
+                          ? `<span>${esc(article.author)}</span>`
+                          : ""
+                      }
+                      ${
+                        article.author && article.platform
+                          ? `<span class="meta-dot">·</span>`
+                          : ""
+                      }
+                      ${
+                        article.platform
+                          ? `<span>${esc(article.platform)}</span>`
+                          : ""
+                      }
                     </div>
                   `
                   : ""
@@ -350,9 +344,7 @@ function render(){
               ${
                 article.summary
                   ? `
-                    <div class="article-summary">
-                      ${esc(article.summary)}
-                    </div>
+                    <div class="article-summary">${esc(article.summary)}</div>
                   `
                   : ""
               }
@@ -383,11 +375,15 @@ function render(){
   articleList
     .querySelectorAll(".article-row")
     .forEach(
-      row =>
-        row.onclick = () =>
-          openArticle(
-            row.dataset.id
-          )
+      row => {
+        const title = row.querySelector(".article-title");
+        if(title){
+          title.onclick = (e)=>{
+            e.stopPropagation();
+            openArticle(title.dataset.openArticle);
+          };
+        }
+      }
     );
 
 }
