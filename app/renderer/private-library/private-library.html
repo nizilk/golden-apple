@@ -18,10 +18,16 @@
 </aside>
 
 <main class="main">
+
 <header class="top">
   <div class="top-right">
     <input class="search" id="search" placeholder="搜索标题 / 作者 / 标签">
     <button class="small-btn" id="sortBtn">最近加入</button>
+    <button
+      class="theme-toggle"
+      id="themeToggle"
+      title="切换深色/浅色"
+    >☾</button>
   </div>
 </header>
 
@@ -168,7 +174,7 @@
 
   <div class="cover-preview" id="coverPreview"></div>
 
-  <input type="file" id="coverFile" accept="image/*">
+  <button class="btn" id="coverFile" type="button">选择头图</button>
 
 </div>
 <div class="dialog-actions"><span></span><button class="btn primary" id="settingsSave">保存</button></div>
