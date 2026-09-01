@@ -128,6 +128,22 @@ async function loadFavicon(){
 
 async function init(){
 
+  await loadFavicon();
+
+  const pagesData =
+    await loadPagesData();
+
+  pages =
+    pagesData.list || [];
+
+  homePageId =
+    pagesData.home || null;
+
+  activePage =
+    homePageId || null;
+
+  await reload();
+
   const savedPath =
     await window.electronAPI
       .getCurrentResourceFolder();
@@ -137,24 +153,6 @@ async function init(){
     await connectFolder(
       savedPath
     );
-
-  }else{
-
-    await loadFavicon();
-
-    const pagesData =
-      await loadPagesData();
-
-    pages =
-      pagesData.list || [];
-
-    homePageId =
-      pagesData.home || null;
-
-    activePage =
-      homePageId || null;
-
-    await reload();
 
   }
 
@@ -293,7 +291,9 @@ async function getPickerChildrenFromDisk(
 
         name: entry.name,
 
-        path: fullPath
+        path: fullPath,
+
+        absolutePath: `${resourceRootPath}/${fullPath}`
 
       });
 
@@ -663,6 +663,18 @@ async function readMediaBlobURL(
 async function readLibraryBlobURL(
   resourcePath
 ){
+
+  if(
+    /^[A-Za-z]:[\\/]/.test(resourcePath) ||
+    resourcePath.startsWith("/")
+  ){
+
+    return await window.electronAPI
+      .readFileDataURL(
+        resourcePath
+      );
+
+  }
 
   return await window.electronAPI
     .readResourceDataURL(
@@ -2040,16 +2052,25 @@ document.getElementById("pickerOverlay").addEventListener("click",(e)=>{
   }
 });
 
+
 function pickLibraryFile(f){
+
   editingMedia.push({
+
     type:"asset",
-    kind:isVideoName(f.name) ? "video" : "image",
-    ref:f.path
+
+    kind:isVideoName(f.name)
+      ? "video"
+      : "image",
+
+    ref:f.absolutePath
+
   });
 
   document.getElementById("pickerOverlay").classList.remove("show");
 
   renderMediaGallery();
+
 }
 
 /* ================= editor ================= */
