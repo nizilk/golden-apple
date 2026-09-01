@@ -326,6 +326,15 @@ function render(){
                 </span>
                 ${tags}
               </div>
+
+              ${article.summary
+                ? `
+                  <div class="article-summary">
+                    ${esc(article.summary)}
+                  </div>
+                `
+                : ""
+              }
             </div>
 
             <div class="article-side"></div>
@@ -377,6 +386,17 @@ async function openArticle(id){
 
   rMeta.textContent=
     meta.join(" · ");
+
+  rMeta.insertAdjacentHTML(
+    "afterend",
+    s.summary
+      ? `
+        <div class="read-summary">
+          ${esc(s.summary)}
+        </div>
+      `
+      : ""
+  );
 
   rTags.innerHTML=
     (s.tags||[])
