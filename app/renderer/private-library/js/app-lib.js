@@ -583,17 +583,103 @@ function renderNav(){
     );
 
   /* 新建 */
+  
+  const addPageBtn =
+    nav.querySelector("#addPageBtn");
 
-  document
-    .getElementById("addPageBtn")
-    ?.addEventListener(
-      "click",
-      () => {
+  if(addPageBtn){
+    addPageBtn.onclick = () => {
 
-        openPageRename(null);
+      const overlay =
+        document.getElementById("renameOverlay");
 
+      const input =
+        document.getElementById("renameInput");
+
+      if(!overlay || !input){
+        return;
       }
-    );
+
+      input.value = "";
+
+      overlay.classList.add("show");
+
+      input.focus();
+
+      const saveBtn =
+        document.getElementById("renameSave");
+
+      const cancelBtn =
+        document.getElementById("renameCancel");
+
+      const closeBtn =
+        document.getElementById("renameClose");
+
+      const finish = async (save) => {
+
+        if(!save){
+          overlay.classList.remove("show");
+          return;
+        }
+
+        const name =
+          input.value.trim();
+
+        if(!name){
+          input.focus();
+          return;
+        }
+
+        const page = {
+          id:
+            "page_" +
+            Date.now(),
+
+          name,
+
+          articleIds:[]
+        };
+
+        data.pages.push(page);
+
+        data.activePage =
+          page.id;
+
+        data.activeTag =
+          null;
+
+        overlay.classList.remove("show");
+
+        await savePages();
+
+        renderAll();
+      };
+
+      saveBtn.onclick =
+        () => finish(true);
+
+      cancelBtn.onclick =
+        () => finish(false);
+
+      closeBtn.onclick =
+        () => finish(false);
+
+      input.onkeydown = e => {
+
+        if(e.key === "Enter"){
+          e.preventDefault();
+          finish(true);
+        }
+
+        if(e.key === "Escape"){
+          e.preventDefault();
+          finish(false);
+        }
+
+      };
+
+    };
+  }
 
 }
 
