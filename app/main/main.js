@@ -846,13 +846,11 @@ function createWindow() {
   mainWindow =
     new BrowserWindow({
 
-      width: 1440,
-
-      height: 900,
+      show: false,
 
       icon:
         path.join(
-          XHS_DATA_ROOT,
+          DATA_ROOT,
           "favicon.png"
         ),
 
@@ -890,6 +888,9 @@ function createWindow() {
       "index.html"
     )
   );
+
+  mainWindow.maximize();
+  mainWindow.show();
 
 }
 
