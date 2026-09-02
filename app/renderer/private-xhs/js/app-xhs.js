@@ -10,7 +10,6 @@ function joinPath(...parts) {
 }
 
 const path_xhs = 'private-xhs'
-const path_fav = joinPath(path_xhs, "favicon.png")
 const path_media = joinPath(path_xhs, "media")
 
 // ============================================================
@@ -78,7 +77,6 @@ const electronStorage = {
 
 /* ================= state ================= */
 let resourceRootPath = null;
-let faviconObjectUrl = null;
 
 let allPosts = [];
 
@@ -120,40 +118,11 @@ document.getElementById("themeToggle").onclick = ()=>{
 };
 applyTheme(localStorage.getItem("myXHS_theme") || "light");
 
-/* ================= Icon ================= */
 
-async function loadFavicon(){
-
-  const link =
-    document.getElementById("appFavicon");
-
-  if(!link) return;
-
-  try{
-
-    const dataUrl =
-      await window.electronAPI.readDataURL(
-        path_fav
-      );
-
-    link.href = dataUrl;
-
-  }catch(error){
-
-    console.warn(
-      "无法读取 data/private-xhs/favicon.png",
-      error
-    );
-
-  }
-
-}
 
 
 
 async function init(){
-
-  await loadFavicon();
 
   const pagesData =
     await loadPagesData();
@@ -209,11 +178,6 @@ async function connectFolder(
 
     resourceRootPath =
         selectedPath;
-
-
-    // 资源文件夹连接成功后，
-    // 数据文件夹完全由 Electron 自动管理。
-    await loadFavicon();
 
 
     const pagesData =
