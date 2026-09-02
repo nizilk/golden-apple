@@ -45,6 +45,9 @@ const contentPreview =
 
 const rSummary = document.getElementById("rSummary");
 
+const heroEdit =
+  document.getElementById("heroEdit");
+
 
 const libraryTop =
   document.getElementById(
@@ -1785,38 +1788,18 @@ async function updateLibraryHero(){
 // settingsOverlay.onclick=e=>{if(e.target===settingsOverlay)settingsOverlay.classList.remove("show")};
 
 
-libraryHeroImage.onclick =
-  async () => {
+heroEdit.onclick = async()=>{
+  const filePath =
+    await window.electronAPI.chooseLibraryCoverFile();
 
-    try{
+  if(!filePath) return;
 
-      const filePath =
-        await window.electronAPI
-          .chooseLibraryCoverFile();
+  await window.electronAPI.saveLibraryCoverFile(
+    filePath
+  );
 
-      if(!filePath){
-        return;
-      }
-
-      await window.electronAPI
-        .saveLibraryCoverFile(
-          filePath
-        );
-
-      await updateLibraryHero();
-
-    }catch(error){
-
-      console.error(error);
-
-      alert(
-        "保存头图失败：\n\n" +
-        error.message
-      );
-
-    }
-
-  };
+  await updateLibraryHero();
+};
 
 
 // settingsSave.onclick = async () => {
