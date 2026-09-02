@@ -224,7 +224,7 @@ function pageArticles(){
 
   // 没有选择自定义 page
   // = 全部文章
-  if(page){
+  if(page && !data.activeTag){
 
     list =
       list.filter(article => {
@@ -1278,7 +1278,6 @@ function render(){
     .forEach(tagEl => {
 
       tagEl.onclick = e => {
-
         e.stopPropagation();
 
         if(editingPage){
@@ -1287,14 +1286,12 @@ function render(){
 
         const tag =
           tagEl.textContent
+            .trim()
             .replace(/^#/,"")
             .trim();
 
-        data.activeTag =
-          tag;
-
-        search.value =
-          tag;
+        search.value = tag;
+        data.activeTag = tag;
 
         searchClear.classList.add("show");
 
@@ -1351,6 +1348,7 @@ async function openArticle(id){
 
         const tag =
           tagEl.textContent
+            .trim()
             .replace(/^#/,"")
             .trim();
 
