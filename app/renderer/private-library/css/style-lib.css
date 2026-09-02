@@ -306,9 +306,12 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
 
 .article-row{
   padding:20px;
-  border:1px none var(--line);
   margin: 10px 0;
   background-color: color-mix(in srgb, var(--bg), transparent 15%);
+}
+
+.article-row.page-selected{
+  border:2px solid var(--accent);
 }
 
 .article-title{
