@@ -432,10 +432,16 @@ function renderNav(){
 
         reader.classList.remove("show");
 
+        reader.classList.remove("show");
+
         data.activePage =
           item.dataset.page || null;
 
         data.activeTag = null;
+
+        search.value = "";
+
+        searchClear.classList.remove("show");
 
         renderAll();
 
@@ -1290,8 +1296,9 @@ function render(){
         search.value =
           tag;
 
-        render();
+        searchClear.classList.add("show");
 
+        render();
       };
 
     });
@@ -1443,7 +1450,30 @@ rEdit.onclick=()=>{
 };
 
 
-search.oninput=render;
+const searchClear =
+  document.getElementById("searchClear");
+
+search.oninput = () => {
+  if(!search.value.trim()){
+    data.activeTag = null;
+  }else{
+    data.activeTag = null;
+  }
+
+  searchClear.classList.toggle(
+    "show",
+    !!search.value.trim()
+  );
+
+  render();
+};
+
+searchClear.onclick = () => {
+  search.value = "";
+  data.activeTag = null;
+  searchClear.classList.remove("show");
+  render();
+};
 
 
 async function openArticleEditor(
