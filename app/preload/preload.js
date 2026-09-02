@@ -8,24 +8,9 @@ contextBridge.exposeInMainWorld(
   "electronAPI",
   {
 
-    chooseResourceFolder:
-      () =>
-        ipcRenderer.invoke(
-          "resource:choose"
-        ),
-
-    getCurrentResourceFolder:
-      () =>
-        ipcRenderer.invoke(
-          "resource:getCurrent"
-        ),
-
-    getXhsDataDirectory:
-      () =>
-        ipcRenderer.invoke(
-          "storage:getXhsDirectory"
-        ),
-
+// ========================================================================================================================
+// 公共
+// ========================================================================================================================
     readDataFile:
       (relativePath) =>
         ipcRenderer.invoke(
@@ -55,25 +40,11 @@ contextBridge.exposeInMainWorld(
           relativePath
         ),
 
-    listResourceDirectory:
+    listDataDirectory:
       (relativePath) =>
         ipcRenderer.invoke(
-          "resource:list",
+          "data:list",
           relativePath
-        ),
-
-    readResourceDataURL:
-      (relativePath) =>
-        ipcRenderer.invoke(
-          "resource:readDataURL",
-          relativePath
-        ),
-
-    readFileDataURL:
-      filePath =>
-        ipcRenderer.invoke(
-          "file:readDataURL",
-          filePath
         ),
 
     readDataURL:
@@ -83,42 +54,29 @@ contextBridge.exposeInMainWorld(
           relativePath
         ),
 
-    listDataDirectory:
-      (relativePath) =>
-        ipcRenderer.invoke(
-          "data:list",
-          relativePath
-        ),
-
     writeDataBinary:
       async (
         relativePath,
         blob
       ) => {
-
         const arrayBuffer =
           await blob.arrayBuffer();
-
         return await ipcRenderer.invoke(
           "data:writeBinary",
           relativePath,
           arrayBuffer
         );
-
       },
 
-    readSettings:
-      () =>
-        ipcRenderer.invoke(
-          "settings:read"
-        ),
 
-    writeSettings:
-      settings =>
-        ipcRenderer.invoke(
-          "settings:write",
-          settings
-        ),
+// ========================================================================================================================
+// XHS
+// ========================================================================================================================
+
+
+// ========================================================================================================================
+// library
+// ========================================================================================================================
 
     listLibraryArticles:
       () =>
@@ -158,6 +116,75 @@ contextBridge.exposeInMainWorld(
         ipcRenderer.invoke(
           "library:chooseCoverFile"
         ),
+
+    saveLibraryCoverFile:
+      filePath =>
+        ipcRenderer.invoke(
+          "library:saveCoverFile",
+          filePath
+        ),
+
+
+// ========================================================================================================================
+// 未整理
+// ========================================================================================================================
+
+    chooseResourceFolder:
+      () =>
+        ipcRenderer.invoke(
+          "resource:choose"
+        ),
+
+    getCurrentResourceFolder:
+      () =>
+        ipcRenderer.invoke(
+          "resource:getCurrent"
+        ),
+
+    getXhsDataDirectory:
+      () =>
+        ipcRenderer.invoke(
+          "storage:getXhsDirectory"
+        ),
+
+    
+    listResourceDirectory:
+      (relativePath) =>
+        ipcRenderer.invoke(
+          "resource:list",
+          relativePath
+        ),
+
+    readResourceDataURL:
+      (relativePath) =>
+        ipcRenderer.invoke(
+          "resource:readDataURL",
+          relativePath
+        ),
+
+    readFileDataURL:
+      filePath =>
+        ipcRenderer.invoke(
+          "file:readDataURL",
+          filePath
+        ),
+
+    
+
+    readSettings:
+      () =>
+        ipcRenderer.invoke(
+          "settings:read"
+        ),
+
+    writeSettings:
+      settings =>
+        ipcRenderer.invoke(
+          "settings:write",
+          settings
+        ),
+
+    
 
     loadLibraryPages:
       () =>
