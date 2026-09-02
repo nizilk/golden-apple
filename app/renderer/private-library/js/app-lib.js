@@ -529,7 +529,12 @@ async function openArticle(id){
 
     rContent.innerHTML=
       visible
-        .map(p=>`<p>${esc(p.text).replace(/\n/g,"<br>")}</p>`)
+        .map(p=>{
+          const text = p.text ?? "";
+          const isEmpty = !text.replace(/[\s\u00A0\u200B\uFEFF]/g,"");
+
+          return `<p>${isEmpty ? "&nbsp;" : esc(text).replace(/\n/g,"<br>")}</p>`;
+        })
         .join("")
         ||
         "<p>正文为空。</p>";
@@ -801,7 +806,7 @@ function renderContentPreview(){
           </div>
 
           <div class="content-preview-text">
-            ${esc(p.text)}
+            ${esc(p.text || "\u200B")}
           </div>
 
         </div>
@@ -1540,19 +1545,13 @@ async function readDocxParagraphs(file){
 
     }
 
-    text=
+    text =
+      text.replace(/\r/g,"");
+
+    out.push({
+      index:out.length,
       text
-        .replace(/\r/g,"")
-        .trim();
-
-    if(text){
-
-      out.push({
-        index:out.length,
-        text
-      });
-
-    }
+    });
 
   }
 
