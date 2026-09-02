@@ -53,11 +53,7 @@
 <button class="dialog-close" id="articleClose">×</button>
 <h2 id="articleDialogTitle">添加文章</h2>
 
-<div class="mode-row" id="modeRow">
-  <button class="mode-btn active" id="modeFile">
-    添加本地 .docx
-  </button>
-</div>
+<div id="editFields">
 
 <div id="fileMode">
   <div class="field">
@@ -67,40 +63,37 @@
       <button class="btn" id="chooseArticleFile" type="button">
         选择 .docx 文件
       </button>
-      <div class="story-file" id="articleFileName">
+      <div class="article-file" id="articleFileName">
         尚未选择文件
       </div>
     </div>
   </div>
 </div>
 
-<div id="editFields">
+
 
   <div class="form-row">
     <div class="field">
       <label>标题</label>
-      <input id="articleTitle" placeholder="文章标题">
+      <input id="articleTitle" placeholder="">
     </div>
 
     <div class="field">
       <label>作者</label>
-      <input id="articleAuthor" placeholder="作者名">
+      <input id="articleAuthor" placeholder="">
     </div>
   </div>
 
-  <div class="field">
-    <label>来源平台</label>
-    <input id="articlePlatform" placeholder="例如：AO3、LOFTER、微博">
-  </div>
+  <div class="form-row">
+    <div class="field">
+      <label>标签（可输入多个，用空格或逗号分隔）</label>
+      <input id="articleTags" placeholder="">
+    </div>
 
-  <div class="field">
-    <label>原文链接（可选）</label>
-    <input id="articleSourceUrl" placeholder="https://……">
-  </div>
-
-  <div class="field">
-    <label>标签（可输入多个，用空格或逗号分隔）</label>
-    <input id="articleTags" placeholder="例如：太中 同人 暂存">
+    <div class="field">
+      <label>来源平台</label>
+      <input id="articlePlatform" placeholder="">
+    </div>
   </div>
 
   <div class="field">
@@ -108,7 +101,7 @@
     <textarea
       id="articleSummary"
       style="min-height:110px"
-      placeholder="给这篇文章写一小段私人简介……"
+      placeholder=""
     ></textarea>
   </div>
 
@@ -122,20 +115,27 @@
 </div>
 
 <div class="dialog-actions">
-  <button class="btn danger" id="deleteArticleBtn" style="display:none">删除文章</button>
-  <div class="right"><button class="btn" id="articleCancel">取消</button><button class="btn primary" id="articleSave">保存</button></div>
+  <div class="left">
+    <button class="btn danger" id="deleteArticleBtn">删除文章</button>
+  </div>
+  
+  <div class="right">
+    <button class="btn primary" id="articleSave">保存</button>
+    <button class="btn" id="articleCancel">取消</button>
+  </div>
 </div>
 </div>
 </div>
 
 <!-- 阅读 -->
 <div class="reader" id="reader">
+  <div class="reader-tools">
+    <button class="read-back" id="readerClose">← 返回</button>
+    <button id="rEdit">编辑</button>
+  </div>
   <article class="read-sheet">
 
-    <div class="reader-tools">
-      <button id="rEdit">编辑</button>
-      <button class="read-close" id="readerClose">×</button>
-    </div>
+    
 
     <h2 id="rTitle"></h2>
 
