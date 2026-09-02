@@ -2015,19 +2015,32 @@ function renderPageSelectionBar(){
           page.tags =
             page.tags || [];
 
-          if(
-            page.tags.includes(tag)
-          ){
-
+          if(page.tags.includes(tag)){
             page.tags =
               page.tags.filter(
                 x => x !== tag
               );
-
           }else{
-
             page.tags.push(tag);
 
+            const tagArticleIds =
+              data.articles
+                .filter(article =>
+                  (article.tags || []).includes(tag)
+                )
+                .map(article => article.id);
+
+            page.includes =
+              (page.includes || [])
+                .filter(id =>
+                  !tagArticleIds.includes(id)
+                );
+
+            page.excludes =
+              (page.excludes || [])
+                .filter(id =>
+                  !tagArticleIds.includes(id)
+                );
           }
 
           await savePages();
