@@ -46,6 +46,48 @@ const contentPreview =
 const rSummary = document.getElementById("rSummary");
 
 
+const libraryTop =
+  document.getElementById(
+    "libraryTop"
+  );
+
+const heroToggle =
+  document.getElementById(
+    "heroToggle"
+  );
+
+const contentWrap =
+  document.querySelector(
+    ".content-wrap"
+  );
+
+
+let heroCollapsed = false;
+
+heroToggle.onclick =
+  () => {
+
+    heroCollapsed =
+      !heroCollapsed;
+
+    libraryTop.classList.toggle(
+      "collapsed",
+      heroCollapsed
+    );
+
+    contentWrap.classList.toggle(
+      "collapsed",
+      heroCollapsed
+    );
+
+    heroToggle.textContent =
+      heroCollapsed
+        ? "⌄"
+        : "⌃";
+
+  };
+
+
   
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function strip(html){const d=document.createElement("div");d.innerHTML=html||"";return d.textContent||""}
@@ -1619,24 +1661,36 @@ async function saveArticle(article){
 }
 
 
-
 async function updateLibraryHero(){
-
-  if(!data.settings.cover){
-
-    libraryHeroImage.style.backgroundImage =
-      "";
-
-    return;
-
-  }
 
   try{
 
+    const files =
+      await window.electronAPI
+        .listDataDirectory(
+          "private-library"
+        );
+
+    const cover =
+      files.find(
+        file =>
+          file.isFile &&
+          /^cover\.(png|jpg|jpeg|gif|webp|bmp|avif)$/i
+            .test(file.name)
+      );
+
+    if(!cover){
+
+      libraryHeroImage.style.backgroundImage =
+        "";
+
+      return;
+    }
+
     const dataUrl =
       await window.electronAPI
-        .readFileDataURL(
-          data.settings.cover
+        .readDataURL(
+          `private-library/${cover.name}`
         );
 
     libraryHeroImage.style.backgroundImage =
@@ -1655,6 +1709,8 @@ async function updateLibraryHero(){
   }
 
 }
+
+
 
 
 // async function openSettings(){
@@ -1697,38 +1753,38 @@ async function updateLibraryHero(){
 // settingsOverlay.onclick=e=>{if(e.target===settingsOverlay)settingsOverlay.classList.remove("show")};
 
 
-libraryHeroImage.onclick = async () => {
-  try{
-    const filePath =
-      await window.electronAPI.chooseLibraryCoverFile();
+libraryHeroImage.onclick =
+  async () => {
 
-    if(!filePath){
-      return;
-    }
+    try{
 
-    data.settings.cover = filePath;
+      const filePath =
+        await window.electronAPI
+          .chooseLibraryCoverFile();
 
-    await window.electronAPI.writeSettings(
-      data.settings
-    );
+      if(!filePath){
+        return;
+      }
 
-    const dataUrl =
-      await window.electronAPI.readFileDataURL(
-        filePath
+      await window.electronAPI
+        .saveLibraryCoverFile(
+          filePath
+        );
+
+      await updateLibraryHero();
+
+    }catch(error){
+
+      console.error(error);
+
+      alert(
+        "保存头图失败：\n\n" +
+        error.message
       );
 
-    libraryHeroImage.style.backgroundImage =
-      `url("${dataUrl}")`;
+    }
 
-  }catch(error){
-    console.error(error);
-
-    alert(
-      "读取头图失败：\n\n" +
-      error.message
-    );
-  }
-};
+  };
 
 
 // settingsSave.onclick = async () => {
@@ -1761,19 +1817,6 @@ libraryHeroImage.onclick = async () => {
 
 
 
-const libraryTop =
-  document.getElementById("libraryTop");
-
-const topReveal =
-  document.getElementById("topReveal");
-
-topReveal.onclick = () => {
-  const expanded =
-    libraryTop.classList.toggle("expanded");
-
-  topReveal.textContent =
-    expanded ? "⌃" : "⌄";
-};
 
 
 async function init(){
