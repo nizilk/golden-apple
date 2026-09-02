@@ -31,9 +31,6 @@ const articleAuthor =
 const articlePlatform =
   document.getElementById("articlePlatform");
 
-const articleSourceUrl =
-  document.getElementById("articleSourceUrl");
-
 const articleTags =
   document.getElementById("articleTags");
 
@@ -404,6 +401,7 @@ async function openArticle(id){
     `<p class="reader-loading">正在读取本地文章……</p>`;
 
   reader.classList.add("show");
+  reader.scrollTop = 0;
 
   try{
 
@@ -521,9 +519,6 @@ async function openArticleEditor(
     articlePlatform.value =
       s.platform || "";
 
-    articleSourceUrl.value =
-      s.sourceUrl || "";
-
     articleTags.value =
       (s.tags || []).join(" ");
 
@@ -591,8 +586,6 @@ async function openArticleEditor(
     articleAuthor.value = "";
 
     articlePlatform.value = "";
-
-    articleSourceUrl.value = "";
 
     articleTags.value = "";
 
@@ -814,9 +807,6 @@ articleSave.onclick = async () => {
     s.platform =
       articlePlatform.value.trim();
 
-    s.sourceUrl =
-      articleSourceUrl.value.trim();
-
     s.tags =
       tags;
 
@@ -888,9 +878,6 @@ articleSave.onclick = async () => {
       platform:
         articlePlatform.value.trim(),
 
-      sourceUrl:
-        articleSourceUrl.value.trim(),
-
       tags,
 
       summary:
@@ -920,7 +907,7 @@ articleSave.onclick = async () => {
 
     };
 
-    data.articles.unshift(s);
+    data.articles.push(s);
 
   }
 
