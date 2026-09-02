@@ -749,6 +749,13 @@ body.dark .library-hero-image{
    Page — XHS style
    ========================= */
 
+.nav .page-more{
+  width:28px;
+  height:28px;
+  padding:0;
+  margin:0 0 0 4px;
+}
+
 .nav-page{
   position:relative;
   display:flex;
@@ -759,7 +766,7 @@ body.dark .library-hero-image{
   margin:2px 0;
   border-radius:10px;
   box-sizing:border-box;
-  color:var(--text);
+  color:var(--ink);
   cursor:pointer;
   user-select:none;
   transition:
@@ -786,16 +793,25 @@ body.dark .library-hero-image{
 
 .page-more{
   flex:0 0 auto;
-  width:28px;
-  height:28px;
-  margin-left:4px;
+  width:24px;
+  height:24px;
+  margin-left:5px;
   padding:0;
   border:0;
-  border-radius:7px;
+  border-radius:6px;
   background:transparent;
   color:var(--muted);
+  font-size:18px;
+  line-height:20px;
   cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   opacity:0;
+  transition:
+    opacity .12s ease,
+    background .12s ease,
+    color .12s ease;
 }
 
 .nav-page:hover .page-more{
@@ -847,20 +863,37 @@ body.dark .library-hero-image{
 }
 
 .inline-page-edit-actions button{
-  width:26px;
-  height:26px;
-  padding:0;
   border:0;
-  border-radius:7px;
   background:transparent;
   color:var(--muted);
   cursor:pointer;
+  width:20px;
+  height:20px;
+  border-radius:5px;
+  padding:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
 .inline-page-edit-actions button:hover{
   background:var(--line);
   color:var(--text);
 }
+
+
+
+.inline-save-btn::before{
+  content:"";
+  display:block;
+  width:9px;
+  height:5px;
+  border-left:1.5px solid currentColor;
+  border-bottom:1.5px solid currentColor;
+  transform:rotate(-45deg);
+  margin-top:-3px;
+}
+
 
 .page-action-menu{
   position:fixed;
