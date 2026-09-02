@@ -48,6 +48,7 @@ const rSummary = document.getElementById("rSummary");
 const heroEdit =
   document.getElementById("heroEdit");
 
+const addBtn = document.getElementById('addBtn');
 
 const libraryTop =
   document.getElementById(
@@ -117,6 +118,8 @@ heroToggle.onclick = () => {
         ? "展开内容"
         : "收起内容"
     );
+
+    addBtn.classList.toggle("collapsed", heroCollapsed)
 
   });
 
@@ -705,6 +708,7 @@ function plainToHtml(text){
     })
     .join("") || "<p></p>";
 }
+
 addBtn.onclick=()=>openArticleEditor();
 articleClose.onclick=closeArticleEditor;articleCancel.onclick=closeArticleEditor;
 articleOverlay.onclick=e=>{if(e.target===articleOverlay)closeArticleEditor()};
@@ -1040,6 +1044,8 @@ deleteArticleBtn.onclick=async()=>{
   await window.electronAPI.deleteLibraryArticle(editingId);
   closeArticleEditor();
   renderAll();
+
+  reader.classList.remove("show");
 };
 
 function openPages(){renderPageList();pagesOverlay.classList.add("show")}
