@@ -551,7 +551,7 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
   line-height:1.8;
 }
 /* 弹窗 */
-.overlay{position:fixed;inset:0;background:rgba(38,29,25,.45);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
+.overlay{position:fixed;inset:0;background:rgba(38,29,25,.45);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:18px;z-index:500}
 .overlay.show{display:flex}
 
 .dialog{
