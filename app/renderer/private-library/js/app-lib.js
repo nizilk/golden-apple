@@ -430,6 +430,8 @@ function renderNav(){
           return;
         }
 
+        reader.classList.remove("show");
+
         data.activePage =
           item.dataset.page || null;
 
