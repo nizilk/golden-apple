@@ -79,10 +79,14 @@
 
 <div class="content-wrap">
 
-  <div class="page-selection-bar" id="pageSelectionBar">
-    <div class="page-selection-tags" id="pageSelectionTags"></div>
-    <span class="page-selection-count" id="pageSelectionCount"></span>
-    <button id="pageSelectionDone" type="button">完成</button>
+  <div id="selectionBar" style="display:none;">
+    <span id="selectionCount"></span>
+
+    <button
+      class="btn btn-primary"
+      id="selectionDoneBtn"
+      type="button"
+    >完成</button>
   </div>
   
   <section class="article-list" id="articleList"></section>
