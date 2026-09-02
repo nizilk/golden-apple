@@ -11,22 +11,22 @@
 <aside class="sidebar">
   <div class="brand">私人图书馆<small>PRIVATE LIBRARY</small></div>
   <nav class="nav" id="nav"></nav>
-  <div class="sidebar-tools">
+  <!-- <div class="sidebar-tools">
     <button id="managePagesBtn">页面管理</button>
     <button id="settingsBtn">书房设置</button>
-  </div>
+  </div> -->
 </aside>
 
 <main class="main">
 
-  <div class="library-hero-space">
+
     <div class="library-hero" id="libraryHero">
       <div class="library-hero-image" id="libraryHeroImage"></div>
     </div>
-  </div>
 
 
-<header class="top">
+
+<header class="top" id="libraryTop">
   <div class="top-right">
     <input class="search" id="search" placeholder="搜索标题 / 作者 / 标签">
     <button
@@ -35,6 +35,11 @@
       title="切换深色/浅色"
     >☾</button>
   </div>
+
+  <button
+    class="top-reveal"
+    id="topReveal"
+  >⌄</button>
 </header>
 
 <div class="content-wrap">
@@ -155,28 +160,28 @@
 </div>
 
 <!-- 页面管理 -->
-<div class="overlay" id="pagesOverlay">
+<!-- <div class="overlay" id="pagesOverlay">
 <div class="dialog">
 <button class="dialog-close" id="pagesClose">×</button>
 <h2>页面</h2>
 <div class="field"><label>新建页面</label><div class="form-row"><input id="newPageName" placeholder=""><button class="btn primary" id="addPage">新建</button></div></div>
 <div class="manage-pages" id="pageList"></div>
 </div>
-</div>
+</div> -->
 
 <!-- 页面配置 -->
-<div class="overlay" id="pageConfigOverlay">
+<!-- <div class="overlay" id="pageConfigOverlay">
 <div class="dialog">
 <button class="dialog-close" id="pageConfigClose">×</button>
 <h2 id="pageConfigTitle">页面内容</h2>
 <div class="field"><label>包含哪些文章</label>
 <div id="pagePostList" class="manage-pages"></div></div>
 </div>
-</div>
+</div> -->
 
 
 <!-- 书房设置 -->
-<div class="overlay" id="settingsOverlay">
+<!-- <div class="overlay" id="settingsOverlay">
 <div class="dialog">
 <button class="dialog-close" id="settingsClose">×</button>
 <h2>书房设置</h2>
@@ -190,7 +195,7 @@
 </div>
 <div class="dialog-actions"><span></span><button class="btn primary" id="settingsSave">保存</button></div>
 </div>
-</div>
+</div> -->
 
 <script src="js/app-lib.js"></script>
 
