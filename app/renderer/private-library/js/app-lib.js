@@ -134,6 +134,11 @@ function normalizeTags(raw){
 }
 
 
+let sidebarEditMode = false;
+let inlineRenamePageId = null;
+let editingPageId = null;
+
+
 function applyTheme(theme){
   document.body.classList.toggle(
     "dark",
@@ -284,67 +289,133 @@ function renderNav(){
 
   const homePage =
     data.pages.find(
-      page =>
-        page.id === data.homePageId
+      page => page.id === data.homePageId
     );
 
   const otherPages =
     data.pages.filter(
-      page =>
-        page.id !== data.homePageId
+      page => page.id !== data.homePageId
     );
+
+  function itemHtml(page){
+
+    if(
+      sidebarEditMode &&
+      inlineRenamePageId === page.id
+    ){
+      return `
+        <div
+          class="nav-page inline-page-edit"
+          data-page="${esc(page.id)}"
+        >
+          <input
+            class="inline-page-name-input"
+            data-inline-name="${esc(page.id)}"
+            value="${esc(page.name)}"
+          >
+
+          <span class="inline-page-edit-actions">
+            <button
+              type="button"
+              class="inline-save-btn"
+              data-inline-save="${esc(page.id)}"
+              title="保存"
+            ></button>
+
+            <button
+              type="button"
+              data-inline-cancel="${esc(page.id)}"
+              title="取消"
+            >✕</button>
+          </span>
+        </div>
+      `;
+    }
+
+    return `
+      <div
+        class="nav-page ${data.activePage===page.id ? "active" : ""}"
+        data-page="${esc(page.id)}"
+      >
+        <span class="nav-page-label">
+          ${esc(page.name)}
+        </span>
+
+        ${
+          sidebarEditMode
+            ? `
+              <button
+                type="button"
+                class="page-more"
+                data-more="${esc(page.id)}"
+                title="页面操作"
+              >⋯</button>
+            `
+            : ""
+        }
+      </div>
+    `;
+  }
 
   let html = "";
 
-  // 自定义首页
   if(homePage){
-
-    html += `
-      <button
-        class="${data.activePage===homePage.id ? "active" : ""}"
-        data-page="${esc(homePage.id)}"
-      >
-        ${esc(homePage.name)}
-      </button>
-    `;
-
+    html += itemHtml(homePage);
   }
 
-  // “全部”是缺省项，不属于 pages
   html += `
-    <button
-      class="${data.activePage===null ? "active" : ""}"
+    <div
+      class="nav-page ${data.activePage===null ? "active" : ""}"
       data-page=""
     >
-      全部
-    </button>
+      <span class="nav-page-label">全部</span>
+    </div>
   `;
 
-  // 其他自定义页面
-  html +=
-    otherPages
-      .map(
-        page => `
-          <button
-            class="${data.activePage===page.id ? "active" : ""}"
-            data-page="${esc(page.id)}"
-          >
-            ${esc(page.name)}
-          </button>
-        `
-      )
-      .join("");
+  html += otherPages
+    .map(page => itemHtml(page))
+    .join("");
+
+  if(sidebarEditMode){
+    html += `
+      <div
+        class="nav-page page-add"
+        id="addPageBtn"
+      >
+        ＋ 新建页面
+      </div>
+    `;
+  }
+
+  html += `
+    <div
+      class="nav-page page-manage"
+      id="pageManageBtn"
+    >
+      ${sidebarEditMode ? "完成" : "管理"}
+    </div>
+  `;
 
   nav.innerHTML = html;
 
-  nav
-    .querySelectorAll("[data-page]")
-    .forEach(button => {
+  /* 页面点击 */
 
-      button.onclick = () => {
+  nav
+    .querySelectorAll(".nav-page[data-page]")
+    .forEach(item => {
+
+      item.onclick = e => {
+
+        if(e.target.closest(".page-more")){
+          return;
+        }
+
+        if(e.target.closest(".inline-page-edit")){
+          return;
+        }
 
         data.activePage =
-          button.dataset.page || null;
+          item.dataset.page || null;
 
         data.activeTag = null;
 
@@ -354,7 +425,667 @@ function renderNav(){
 
     });
 
+  /* ⋯ */
+
+  nav
+    .querySelectorAll("[data-more]")
+    .forEach(button => {
+
+      button.onclick = e => {
+
+        e.stopPropagation();
+
+        showPageActionMenu(
+          button,
+          button.dataset.more
+        );
+
+      };
+
+    });
+
+  /* 保存重命名 */
+
+  nav
+    .querySelectorAll("[data-inline-save]")
+    .forEach(button => {
+
+      button.onclick = async e => {
+
+        e.stopPropagation();
+
+        const id =
+          button.dataset.inlineSave;
+
+        const page =
+          data.pages.find(
+            x => x.id === id
+          );
+
+        const input =
+          nav.querySelector(
+            `[data-inline-name="${id}"]`
+          );
+
+        if(!page || !input){
+          return;
+        }
+
+        const name =
+          input.value.trim();
+
+        if(!name){
+          input.focus();
+          return;
+        }
+
+        page.name = name;
+
+        inlineRenamePageId = null;
+
+        await savePages();
+
+        renderNav();
+
+      };
+
+    });
+
+  /* 取消重命名 */
+
+  nav
+    .querySelectorAll("[data-inline-cancel]")
+    .forEach(button => {
+
+      button.onclick = e => {
+
+        e.stopPropagation();
+
+        inlineRenamePageId = null;
+
+        renderNav();
+
+      };
+
+    });
+
+  /* Enter / Esc */
+
+  nav
+    .querySelectorAll("[data-inline-name]")
+    .forEach(input => {
+
+      input.onkeydown = async e => {
+
+        e.stopPropagation();
+
+        if(e.key === "Enter"){
+
+          e.preventDefault();
+
+          const page =
+            data.pages.find(
+              x =>
+                x.id ===
+                input.dataset.inlineName
+            );
+
+          const name =
+            input.value.trim();
+
+          if(page && name){
+
+            page.name = name;
+
+            inlineRenamePageId = null;
+
+            await savePages();
+
+            renderNav();
+
+          }
+
+        }
+
+        if(e.key === "Escape"){
+
+          inlineRenamePageId = null;
+
+          renderNav();
+
+        }
+
+      };
+
+      input.onclick =
+        e => e.stopPropagation();
+
+    });
+
+  /* 管理 / 完成 */
+
+  document
+    .getElementById("pageManageBtn")
+    ?.addEventListener(
+      "click",
+      () => {
+
+        sidebarEditMode =
+          !sidebarEditMode;
+
+        if(!sidebarEditMode){
+          inlineRenamePageId = null;
+        }
+
+        renderNav();
+
+      }
+    );
+
+  /* 新建 */
+
+  document
+    .getElementById("addPageBtn")
+    ?.addEventListener(
+      "click",
+      () => {
+
+        openPageRename(null);
+
+      }
+    );
+
 }
+
+
+function showPageActionMenu(anchor,pageId){
+
+  document
+    .querySelectorAll(".page-action-menu")
+    .forEach(el => el.remove());
+
+  const page =
+    data.pages.find(
+      x => x.id === pageId
+    );
+
+  if(!page){
+    return;
+  }
+
+  const menu =
+    document.createElement("div");
+
+  menu.className =
+    "page-action-menu";
+
+  menu.innerHTML = `
+    <button
+      type="button"
+      data-action="home"
+    >
+      ${
+        data.homePageId === pageId
+          ? "取消首页"
+          : "设为首页"
+      }
+    </button>
+
+    <button
+      type="button"
+      data-action="rename"
+    >
+      重命名
+    </button>
+
+    <button
+      type="button"
+      data-action="content"
+    >
+      编辑内容
+    </button>
+
+    <button
+      type="button"
+      data-action="delete"
+      class="danger"
+    >
+      删除
+    </button>
+  `;
+
+  document.body.appendChild(menu);
+
+  const rect =
+    anchor.getBoundingClientRect();
+
+  const menuWidth = 160;
+
+  let left = rect.left;
+
+  if(
+    left + menuWidth >
+    window.innerWidth - 8
+  ){
+    left =
+      window.innerWidth -
+      menuWidth -
+      8;
+  }
+
+  menu.style.position = "fixed";
+  menu.style.left = `${left}px`;
+  menu.style.top =
+    `${rect.bottom + 6}px`;
+
+  /* 首页 */
+
+  menu
+    .querySelector(
+      '[data-action="home"]'
+    )
+    .onclick = async () => {
+
+      data.homePageId =
+        data.homePageId === pageId
+          ? null
+          : pageId;
+
+      await savePages();
+
+      menu.remove();
+
+      renderNav();
+
+    };
+
+  /* 重命名 */
+
+  menu
+    .querySelector(
+      '[data-action="rename"]'
+    )
+    .onclick = () => {
+
+      inlineRenamePageId =
+        pageId;
+
+      menu.remove();
+
+      renderNav();
+
+      const input =
+        document.querySelector(
+          `[data-inline-name="${pageId}"]`
+        );
+
+      if(input){
+        input.focus();
+        input.select();
+      }
+
+    };
+
+  /* 编辑内容 */
+
+  menu
+    .querySelector(
+      '[data-action="content"]'
+    )
+    .onclick = () => {
+
+      menu.remove();
+
+      enterPageSelectionMode(
+        pageId
+      );
+
+    };
+
+  /* 删除 */
+
+  menu
+    .querySelector(
+      '[data-action="delete"]'
+    )
+    .onclick = async () => {
+
+      menu.remove();
+
+      if(
+        !confirm(
+          `删除页面「${page.name}」？\n\n文章不会被删除。`
+        )
+      ){
+        return;
+      }
+
+      data.pages =
+        data.pages.filter(
+          x => x.id !== pageId
+        );
+
+      if(
+        data.activePage === pageId
+      ){
+        data.activePage = null;
+      }
+
+      if(
+        data.homePageId === pageId
+      ){
+        data.homePageId = null;
+      }
+
+      if(
+        editingPageId === pageId
+      ){
+        exitPageSelectionMode();
+      }
+
+      await savePages();
+
+      renderAll();
+
+    };
+
+  /* 点击外面关闭 */
+
+  setTimeout(() => {
+
+    const closeMenu = e => {
+
+      if(
+        !menu.contains(e.target) &&
+        e.target !== anchor
+      ){
+
+        menu.remove();
+
+        document.removeEventListener(
+          "click",
+          closeMenu
+        );
+
+      }
+
+    };
+
+    document.addEventListener(
+      "click",
+      closeMenu
+    );
+
+  },0);
+
+}
+
+
+function showPageActionMenu(anchor,pageId){
+
+  document
+    .querySelectorAll(".page-action-menu")
+    .forEach(el=>el.remove());
+
+  const page =
+    data.pages.find(
+      x=>x.id===pageId
+    );
+
+  if(!page) return;
+
+  const menu =
+    document.createElement("div");
+
+  menu.className =
+    "page-action-menu";
+
+  menu.innerHTML = `
+    <button
+      type="button"
+      data-action="home"
+    >
+      ${
+        data.homePageId===pageId
+          ? "取消首页"
+          : "设为首页"
+      }
+    </button>
+
+    <button
+      type="button"
+      data-action="rename"
+    >重命名</button>
+
+    <button
+      type="button"
+      data-action="content"
+    >编辑内容</button>
+
+    <button
+      type="button"
+      data-action="delete"
+      class="danger"
+    >删除</button>
+  `;
+
+  document.body.appendChild(menu);
+
+  const rect =
+    anchor.getBoundingClientRect();
+
+  menu.style.position="fixed";
+  menu.style.left=`${rect.left}px`;
+  menu.style.top=`${rect.bottom+6}px`;
+
+  menu.querySelector(
+    '[data-action="home"]'
+  ).onclick=async()=>{
+
+    data.homePageId =
+      data.homePageId===pageId
+        ? null
+        : pageId;
+
+    await savePages();
+
+    menu.remove();
+    renderNav();
+
+  };
+
+  menu.querySelector(
+    '[data-action="rename"]'
+  ).onclick=()=>{
+
+    menu.remove();
+
+    inlineRenamePageId =
+      pageId;
+
+    renderNav();
+
+    const input =
+      document.querySelector(
+        `[data-inline-name="${pageId}"]`
+      );
+
+    input?.focus();
+    input?.select();
+
+  };
+
+  menu.querySelector(
+    '[data-action="content"]'
+  ).onclick=()=>{
+
+    menu.remove();
+
+    openPageConfig(pageId);
+
+  };
+
+  menu.querySelector(
+    '[data-action="delete"]'
+  ).onclick=async()=>{
+
+    menu.remove();
+
+    if(
+      !confirm(
+        `删除页面「${page.name}」？\n\n文章不会被删除。`
+      )
+    ){
+      return;
+    }
+
+    data.pages =
+      data.pages.filter(
+        x=>x.id!==pageId
+      );
+
+    if(data.activePage===pageId){
+      data.activePage=null;
+    }
+
+    if(data.homePageId===pageId){
+      data.homePageId=null;
+    }
+
+    await savePages();
+
+    renderAll();
+
+  };
+
+}
+
+
+let renamePageId = null;
+
+function openPageRename(pageId){
+
+  const page =
+    pageId
+      ? data.pages.find(
+          x => x.id === pageId
+        )
+      : null;
+
+  const name =
+    prompt(
+      "页面名称",
+      page ? page.name : ""
+    );
+
+  if(!name || !name.trim()){
+    return;
+  }
+
+  if(page){
+
+    page.name =
+      name.trim();
+
+    savePages().then(
+      renderAll
+    );
+
+    return;
+
+  }
+
+  const newPage = {
+
+    id:
+      "page_" +
+      Date.now(),
+
+    name:
+      name.trim(),
+
+    articleIds:[],
+
+    tags:[]
+
+  };
+
+  data.pages.push(
+    newPage
+  );
+
+  data.activePage =
+    newPage.id;
+
+  data.activeTag =
+    null;
+
+  savePages().then(
+    () => {
+
+      renderAll();
+
+    }
+  );
+
+}
+
+
+nav.addEventListener("click",async e=>{
+
+  const save =
+    e.target.closest(
+      "[data-inline-save]"
+    );
+
+  const cancel =
+    e.target.closest(
+      "[data-inline-cancel]"
+    );
+
+  if(save){
+
+    const id =
+      save.dataset.inlineSave;
+
+    const input =
+      nav.querySelector(
+        `[data-inline-name="${id}"]`
+      );
+
+    const page =
+      data.pages.find(
+        x=>x.id===id
+      );
+
+    if(
+      page &&
+      input &&
+      input.value.trim()
+    ){
+
+      page.name =
+        input.value.trim();
+
+      inlineRenamePageId=null;
+
+      await savePages();
+
+      renderNav();
+
+    }
+
+  }
+
+  if(cancel){
+
+    inlineRenamePageId=null;
+
+    renderNav();
+
+  }
+
+});
 
 
 function render(){
@@ -362,8 +1093,26 @@ function render(){
   const page =
     getPage();
 
-  const list =
-    pageArticles();
+  const editingPage =
+    editingPageId
+      ? data.pages.find(
+          x => x.id === editingPageId
+        )
+      : null;
+
+  let list;
+
+  if(editingPage){
+
+    list =
+      data.articles;
+
+  }else{
+
+    list =
+      pageArticles();
+
+  }
 
   count.textContent =
     `${list.length} 篇`;
@@ -383,11 +1132,22 @@ function render(){
             )
             .join("");
 
+        const checked =
+          editingPage &&
+          (editingPage.articleIds || [])
+            .includes(article.id);
+
         return `
           <div
-            class="article-row"
+            class="article-row ${checked ? "page-selected" : ""}"
             data-id="${article.id}"
           >
+            
+            ${editingPage ? `
+              <div class="page-select-check">
+                ${checked ? "✓" : ""}
+              </div>
+            ` : ""}
 
             <div class="article-main">
 
@@ -426,17 +1186,96 @@ function render(){
 
   articleList
     .querySelectorAll(".article-row")
-    .forEach(
-      row => {
-        const title = row.querySelector(".article-title");
-        if(title){
-          title.onclick = (e)=>{
-            e.stopPropagation();
-            openArticle(title.dataset.openArticle);
-          };
-        }
+    .forEach(row => {
+
+      if(editingPage){
+
+        row.onclick = async () => {
+
+          const id =
+            row.dataset.id;
+
+          editingPage.articleIds =
+            editingPage.articleIds || [];
+
+          if(
+            editingPage.articleIds
+              .includes(id)
+          ){
+
+            editingPage.articleIds =
+              editingPage.articleIds
+                .filter(
+                  x => x !== id
+                );
+
+          }else{
+
+            editingPage.articleIds.push(id);
+
+          }
+
+          await savePages();
+
+          render();
+
+          renderPageSelectionBar();
+
+        };
+
+        return;
+
       }
-    );
+
+      const title =
+        row.querySelector(
+          ".article-title"
+        );
+
+      if(title){
+
+        title.onclick = e => {
+
+          e.stopPropagation();
+
+          openArticle(
+            title.dataset.openArticle
+          );
+
+        };
+
+      }
+
+    });
+
+  articleList
+    .querySelectorAll(".tag")
+    .forEach(tagEl => {
+
+      tagEl.onclick = e => {
+
+        e.stopPropagation();
+
+        if(editingPage){
+          return;
+        }
+
+        const tag =
+          tagEl.textContent
+            .replace(/^#/,"")
+            .trim();
+
+        data.activeTag =
+          tag;
+
+        search.value =
+          tag;
+
+        render();
+
+      };
+
+    });
 
 }
 
@@ -476,6 +1315,29 @@ async function openArticle(id){
     (s.tags||[])
       .map(t=>`<span>#${esc(t)}</span>`)
       .join("");
+
+  rTags
+    .querySelectorAll("span")
+    .forEach(tagEl=>{
+
+      tagEl.onclick=()=>{
+
+        const tag =
+          tagEl.textContent
+            .replace(/^#/,"")
+            .trim();
+
+        reader.classList.remove("show");
+
+        search.value = tag;
+
+        data.activeTag = tag;
+
+        render();
+
+      };
+
+    });
 
   rContent.innerHTML=
     `<p class="reader-loading">正在读取本地文章……</p>`;
@@ -1053,363 +1915,153 @@ deleteArticleBtn.onclick=async()=>{
   reader.classList.remove("show");
 };
 
-function openPages(){renderPageList();pagesOverlay.classList.add("show")}
 
-function renderPageList(){
+function enterPageSelectionMode(pageId){
 
-  pageList.innerHTML =
-    data.pages
-      .map(page => {
+  editingPageId =
+    pageId;
 
-        return `
-          <div class="manage-page">
+  document
+    .getElementById(
+      "pageSelectionBar"
+    )
+    .style.display = "flex";
 
-            <span>
-              ${esc(page.name)}
+  renderPageSelectionBar();
 
-              ${
-                page.id === data.homePageId
-                  ? "（首页）"
-                  : ""
-              }
-            </span>
-
-            <button
-              data-config="${esc(page.id)}"
-            >
-              选择文章
-            </button>
-
-            <button
-              data-home="${esc(page.id)}"
-            >
-              ${
-                page.id === data.homePageId
-                  ? "取消首页"
-                  : "设为首页"
-              }
-            </button>
-
-            <button
-              data-rename="${esc(page.id)}"
-            >
-              改名
-            </button>
-
-            <button
-              data-delete="${esc(page.id)}"
-            >
-              删除
-            </button>
-
-          </div>
-        `;
-
-      })
-      .join("");
-
-  pageList
-    .querySelectorAll("[data-config]")
-    .forEach(button => {
-
-      button.onclick = () => {
-
-        openPageConfig(
-          button.dataset.config
-        );
-
-      };
-
-    });
-
-  pageList
-    .querySelectorAll("[data-home]")
-    .forEach(button => {
-
-      button.onclick = async () => {
-
-        const id =
-          button.dataset.home;
-
-        if(data.homePageId === id){
-
-          data.homePageId = null;
-
-        }else{
-
-          data.homePageId = id;
-
-        }
-
-        await savePages();
-
-        renderPageList();
-        renderNav();
-
-      };
-
-    });
-
-  pageList
-    .querySelectorAll("[data-rename]")
-    .forEach(button => {
-
-      button.onclick = async () => {
-
-        const page =
-          data.pages.find(
-            item =>
-              item.id ===
-              button.dataset.rename
-          );
-
-        if(!page){
-          return;
-        }
-
-        const name =
-          prompt(
-            "页面名称",
-            page.name
-          );
-
-        if(
-          !name ||
-          !name.trim()
-        ){
-          return;
-        }
-
-        page.name =
-          name.trim();
-
-        await savePages();
-
-        renderPageList();
-        renderNav();
-
-      };
-
-    });
-
-  pageList
-    .querySelectorAll("[data-delete]")
-    .forEach(button => {
-
-      button.onclick = async () => {
-
-        const id =
-          button.dataset.delete;
-
-        const page =
-          data.pages.find(
-            item =>
-              item.id === id
-          );
-
-        if(!page){
-          return;
-        }
-
-        if(
-          !confirm(
-            `删除页面「${page.name}」？\n\n文章不会被删除。`
-          )
-        ){
-          return;
-        }
-
-        data.pages =
-          data.pages.filter(
-            item =>
-              item.id !== id
-          );
-
-        if(
-          data.activePage === id
-        ){
-          data.activePage =
-            null;
-        }
-
-        if(
-          data.homePageId === id
-        ){
-          data.homePageId =
-            null;
-        }
-
-        await savePages();
-
-        renderPageList();
-        renderNav();
-        render();
-
-      };
-
-    });
+  render();
 
 }
 
-// managePagesBtn.onclick=openPages;
-// pagesClose.onclick=()=>pagesOverlay.classList.remove("show");
-// pagesOverlay.onclick=e=>{if(e.target===pagesOverlay)pagesOverlay.classList.remove("show")};
-
-// addPage.onclick=async()=>{
-
-//   const name =
-//     newPageName.value.trim();
-
-//   if(!name)return;
-
-//   const page={
-//     id:
-//       "page_"+
-//       Date.now(),
-
-//     name,
-
-//     articleIds:[]
-//   };
-
-//   data.pages.push(page);
-
-//   data.activePage =
-//     page.id;
-
-//   data.activeTag =
-//     null;
-
-//   newPageName.value="";
-
-//   await savePages();
-
-//   renderAll();
-//   renderPageList();
-
-// };
-
-
-function openPageConfig(id){
+function renderPageSelectionBar(){
 
   const page =
     data.pages.find(
-      p => p.id === id
+      x => x.id === editingPageId
     );
 
   if(!page){
     return;
   }
 
-  pageConfigTitle.textContent =
-    `${page.name} · 选择文章`;
+  const tags =
+    allTags().sort();
 
-  const articleIds =
-    Array.isArray(page.articleIds)
-      ? page.articleIds
-      : [];
-
-  pagePostList.innerHTML =
-    data.articles
-      .map(
-        article => {
-
-          const checked =
-            articleIds.includes(
-              article.id
-            );
-
-          return `
-            <label
-              class="manage-page"
-              style="cursor:pointer"
-            >
-
-              <input
-                type="checkbox"
-                data-article="${esc(article.id)}"
-                ${checked ? "checked" : ""}
-              >
-
-              <span>
-                ${esc(article.title)}
-
-                <small
-                  style="
-                    display:block;
-                    color:var(--muted);
-                    font-size:9px
-                  "
-                >
-                  ${esc(
-                    (article.tags || [])
-                      .join(" · ")
-                  )}
-                </small>
-
-              </span>
-
-            </label>
-          `;
-
-        }
-      )
-      .join("");
-
-  pagePostList
-    .querySelectorAll(
-      "[data-article]"
-    )
-    .forEach(
-      checkbox => {
-
-        checkbox.onchange =
-          async () => {
-
-            const articleId =
-              checkbox.dataset.article;
-
-            if(checkbox.checked){
-
-              if(
-                !page.articleIds
-                  .includes(articleId)
-              ){
-
-                page.articleIds.push(
-                  articleId
-                );
-
-              }
-
-            }else{
-
-              page.articleIds =
-                page.articleIds.filter(
-                  id =>
-                    id !== articleId
-                );
-
-            }
-
-            await savePages();
-
-            render();
-
-          };
-
-      }
+  const tagsEl =
+    document.getElementById(
+      "pageSelectionTags"
     );
 
-  pageConfigOverlay.classList.add(
-    "show"
-  );
+  tagsEl.innerHTML =
+    tags
+      .map(tag => {
+
+        const on =
+          (page.tags || [])
+            .includes(tag);
+
+        return `
+          <button
+            type="button"
+            class="tag-chip ${on ? "on" : ""}"
+            data-page-tag="${esc(tag)}"
+          >
+            #${esc(tag)}
+          </button>
+        `;
+
+      })
+      .join("")
+      ||
+      `<span class="hint">还没有标签</span>`;
+
+  tagsEl
+    .querySelectorAll(
+      "[data-page-tag]"
+    )
+    .forEach(button => {
+
+      button.onclick =
+        async () => {
+
+          const tag =
+            button.dataset.pageTag;
+
+          page.tags =
+            page.tags || [];
+
+          if(
+            page.tags.includes(tag)
+          ){
+
+            page.tags =
+              page.tags.filter(
+                x => x !== tag
+              );
+
+          }else{
+
+            page.tags.push(tag);
+
+          }
+
+          /*
+           * Library 页面使用 articleIds，
+           * 所以选择标签时直接生成对应文章集合。
+           */
+
+          page.articleIds =
+            data.articles
+              .filter(
+                article =>
+                  (article.tags || [])
+                    .includes(tag)
+              )
+              .map(
+                article => article.id
+              );
+
+          await savePages();
+
+          renderPageSelectionBar();
+          render();
+
+        };
+
+    });
+
+  const count =
+    (page.articleIds || []).length;
+
+  document
+    .getElementById(
+      "pageSelectionCount"
+    )
+    .textContent =
+      `已选 ${count} 篇`;
 
 }
 
+function exitPageSelectionMode(){
 
-// pageConfigClose.onclick=()=>pageConfigOverlay.classList.remove("show");
-// pageConfigOverlay.onclick=e=>{if(e.target===pageConfigOverlay)pageConfigOverlay.classList.remove("show")};
+  editingPageId = null;
+
+  document
+    .getElementById(
+      "pageSelectionBar"
+    )
+    .style.display = "none";
+
+  render();
+
+}
+
+document
+  .getElementById(
+    "pageSelectionDone"
+  )
+  .onclick =
+    exitPageSelectionMode;
 
 
 async function getFileByPath(filePath){
