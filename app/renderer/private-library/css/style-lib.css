@@ -782,8 +782,8 @@ body.dark .library-hero-image{
 }
 
 .nav-page.active{
-  background:var(--tag-bg);
-  color:var(--accent);
+  background:var(--accent);
+  color: #fff;;
 }
 
 .nav-page-label{
@@ -816,6 +816,17 @@ body.dark .library-hero-image{
     background .12s ease,
     color .12s ease;
 }
+
+.nav-page.active .page-more{
+  color:rgba(255,255,255,0.75);
+}
+
+.nav-page.active .page-more:hover{
+  color:#fff;
+  background:rgba(255,255,255,0.15);
+}
+
+
 
 .nav-page:hover .page-more{
   opacity:1;
