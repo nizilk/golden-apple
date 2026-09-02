@@ -79,14 +79,14 @@ function resetLibraryScroll(){
 heroToggle.onclick = () => {
 
   /*
-   * 不管当前页面滚到了哪里，
-   * 点击箭头时先回到最顶部。
+   * 无论当前滚到了哪里，
+   * 点击箭头后先回到页面顶部。
    */
   resetLibraryScroll();
 
   /*
-   * 下一帧再执行收起 / 展开，
-   * 避免浏览器还停留在原滚动位置。
+   * 等滚动位置真正归零后，
+   * 再执行收起 / 展开。
    */
   requestAnimationFrame(() => {
 
@@ -106,6 +106,13 @@ heroToggle.onclick = () => {
     heroToggle.classList.toggle(
       "is-collapsed",
       heroCollapsed
+    );
+
+    heroToggle.setAttribute(
+      "aria-label",
+      heroCollapsed
+        ? "展开内容"
+        : "收起内容"
     );
 
   });
