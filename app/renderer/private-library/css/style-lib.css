@@ -414,9 +414,30 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
 /* 弹窗 */
 .overlay{position:fixed;inset:0;background:rgba(38,29,25,.45);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
 .overlay.show{display:flex}
-.dialog{width:min(650px,95vw);max-height:92vh;overflow:auto;background:var(--paper);padding:30px 32px 28px;box-shadow:var(--shadow);position:relative}
+
+.dialog{
+  width:min(760px,95vw);
+  height:min(88vh,820px);
+  max-height:88vh;
+  overflow:hidden;
+  background:var(--paper);
+  padding:30px 32px 20px;
+  box-shadow:var(--shadow);
+  position:relative;
+  display:flex;
+  flex-direction:column;
+}
+
+#editFields{
+  flex:1;
+  min-height:0;
+  overflow-y:auto;
+  padding-right:8px;
+  padding-bottom:12px;
+}
+
 .dialog h2{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:22px;font-weight:500;margin:0 0 22px}
-.dialog-close{position:absolute;right:17px;top:17px;width:29px;height:29px;border:0;border-radius:50%;background:var(--accent-soft);color:var(--muted)}
+.dialog-close{position:absolute;right:17px;top:17px;width:29px;height:29px;border:0;border-radius:50%;color:var(--muted)}
 .field{margin-bottom:15px}.field label{display:block;color:var(--muted);font-size:10.5px;margin-bottom:6px}
 .field input,.field textarea,.field select{
   width:100%;border:1px solid var(--line);background:transparent;border-radius:7px;padding:9px 10px;outline:none;font-size:12.5px
@@ -424,8 +445,18 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
 .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent)}
 .field textarea{min-height:130px;resize:vertical;line-height:1.8}
 .form-row{display:flex;gap:10px}.form-row>.field{flex:1}
-.dialog-actions{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:22px}
-.dialog-actions .right{display:flex;gap:7px}
+.dialog-actions{
+  display:flex;
+  align-items:center;
+  margin:20px 12px 0;
+}
+.dialog-actions .left{
+  margin-right:auto;
+}
+.dialog-actions .right{
+  display:flex;
+  gap:12px;
+}
 .btn{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:8px 13px;font-size:10.5px}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
 .btn.danger{color:#a05c5c}
@@ -470,12 +501,12 @@ body.dark .library-hero-image{
   background-color:#171717;
 }
 
-/* .story-file{
+.article-file{
   margin-top:9px;
   color:var(--muted);
   font-size:9.5px;
   letter-spacing:.02em;
-} */
+}
 
 .content-preview-item{
   display:grid;
