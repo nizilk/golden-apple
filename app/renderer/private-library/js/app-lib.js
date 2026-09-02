@@ -1163,43 +1163,43 @@ function renderPageList(){
 
 }
 
-managePagesBtn.onclick=openPages;
-pagesClose.onclick=()=>pagesOverlay.classList.remove("show");
-pagesOverlay.onclick=e=>{if(e.target===pagesOverlay)pagesOverlay.classList.remove("show")};
+// managePagesBtn.onclick=openPages;
+// pagesClose.onclick=()=>pagesOverlay.classList.remove("show");
+// pagesOverlay.onclick=e=>{if(e.target===pagesOverlay)pagesOverlay.classList.remove("show")};
 
-addPage.onclick=async()=>{
+// addPage.onclick=async()=>{
 
-  const name =
-    newPageName.value.trim();
+//   const name =
+//     newPageName.value.trim();
 
-  if(!name)return;
+//   if(!name)return;
 
-  const page={
-    id:
-      "page_"+
-      Date.now(),
+//   const page={
+//     id:
+//       "page_"+
+//       Date.now(),
 
-    name,
+//     name,
 
-    articleIds:[]
-  };
+//     articleIds:[]
+//   };
 
-  data.pages.push(page);
+//   data.pages.push(page);
 
-  data.activePage =
-    page.id;
+//   data.activePage =
+//     page.id;
 
-  data.activeTag =
-    null;
+//   data.activeTag =
+//     null;
 
-  newPageName.value="";
+//   newPageName.value="";
 
-  await savePages();
+//   await savePages();
 
-  renderAll();
-  renderPageList();
+//   renderAll();
+//   renderPageList();
 
-};
+// };
 
 
 function openPageConfig(id){
@@ -1320,8 +1320,8 @@ function openPageConfig(id){
 }
 
 
-pageConfigClose.onclick=()=>pageConfigOverlay.classList.remove("show");
-pageConfigOverlay.onclick=e=>{if(e.target===pageConfigOverlay)pageConfigOverlay.classList.remove("show")};
+// pageConfigClose.onclick=()=>pageConfigOverlay.classList.remove("show");
+// pageConfigOverlay.onclick=e=>{if(e.target===pageConfigOverlay)pageConfigOverlay.classList.remove("show")};
 
 
 async function getFileByPath(filePath){
@@ -1657,119 +1657,123 @@ async function updateLibraryHero(){
 }
 
 
-async function openSettings(){
+// async function openSettings(){
 
-  coverPreview.style.backgroundImage =
-    "";
+//   coverPreview.style.backgroundImage =
+//     "";
 
-  if(data.settings.cover){
+//   if(data.settings.cover){
 
-    try{
+//     try{
 
-      const dataUrl =
-        await window.electronAPI
-          .readFileDataURL(
-            data.settings.cover
-          );
+//       const dataUrl =
+//         await window.electronAPI
+//           .readFileDataURL(
+//             data.settings.cover
+//           );
 
-      coverPreview.style.backgroundImage =
-        `url("${dataUrl}")`;
+//       coverPreview.style.backgroundImage =
+//         `url("${dataUrl}")`;
 
-    }catch(error){
+//     }catch(error){
 
-      console.error(
-        "无法读取书房头图：",
-        error
-      );
+//       console.error(
+//         "无法读取书房头图：",
+//         error
+//       );
 
+//     }
+
+//   }
+
+//   settingsOverlay.classList.add(
+//     "show"
+//   );
+
+// }
+
+
+// settingsBtn.onclick=openSettings;settingsClose.onclick=()=>settingsOverlay.classList.remove("show");
+// settingsOverlay.onclick=e=>{if(e.target===settingsOverlay)settingsOverlay.classList.remove("show")};
+
+
+libraryHeroImage.onclick = async () => {
+  try{
+    const filePath =
+      await window.electronAPI.chooseLibraryCoverFile();
+
+    if(!filePath){
+      return;
     }
 
-  }
-
-  settingsOverlay.classList.add(
-    "show"
-  );
-
-}
-
-
-settingsBtn.onclick=openSettings;settingsClose.onclick=()=>settingsOverlay.classList.remove("show");
-settingsOverlay.onclick=e=>{if(e.target===settingsOverlay)settingsOverlay.classList.remove("show")};
-
-
-coverFile.onclick =
-  async () => {
-
-    try{
-
-      const filePath =
-        await window.electronAPI
-          .chooseLibraryCoverFile();
-
-      if(!filePath){
-        return;
-      }
-
-      data.settings.cover =
-        filePath;
-
-      const dataUrl =
-        await window.electronAPI
-          .readFileDataURL(
-            filePath
-          );
-
-      coverPreview.style.backgroundImage =
-        `url("${dataUrl}")`;
-
-      libraryHeroImage.style.backgroundImage =
-        `url("${dataUrl}")`;
-
-    }catch(error){
-
-      console.error(error);
-
-      alert(
-        "读取头图失败：\n\n" +
-        error.message
-      );
-
-    }
-
-  };
-
-
-settingsSave.onclick = async () => {
-
-  try {
+    data.settings.cover = filePath;
 
     await window.electronAPI.writeSettings(
       data.settings
     );
 
-    settingsOverlay.classList.remove(
-      "show"
-    );
+    const dataUrl =
+      await window.electronAPI.readFileDataURL(
+        filePath
+      );
 
-    render();
-    updateLibraryHero();
+    libraryHeroImage.style.backgroundImage =
+      `url("${dataUrl}")`;
 
-  } catch(error) {
-
+  }catch(error){
     console.error(error);
 
     alert(
-      "保存设置失败：\n\n" +
+      "读取头图失败：\n\n" +
       error.message
     );
-
   }
-
 };
 
-document.addEventListener("keydown",e=>{
-  if(e.key==="Escape"){[reader,articleOverlay,pagesOverlay,pageConfigOverlay,libraryOverlay,settingsOverlay].forEach(x=>x.classList.remove("show"))}
-});
+
+// settingsSave.onclick = async () => {
+
+//   try {
+
+//     await window.electronAPI.writeSettings(
+//       data.settings
+//     );
+
+//     settingsOverlay.classList.remove(
+//       "show"
+//     );
+
+//     render();
+//     updateLibraryHero();
+
+//   } catch(error) {
+
+//     console.error(error);
+
+//     alert(
+//       "保存设置失败：\n\n" +
+//       error.message
+//     );
+
+//   }
+
+// };
+
+
+
+const libraryTop =
+  document.getElementById("libraryTop");
+
+const topReveal =
+  document.getElementById("topReveal");
+
+topReveal.onclick = () => {
+  const expanded =
+    libraryTop.classList.toggle("expanded");
+
+  topReveal.textContent =
+    expanded ? "⌃" : "⌄";
+};
 
 
 async function init(){
