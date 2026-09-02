@@ -1080,3 +1080,39 @@ body.dark .library-hero-image{
 .page-name-actions .btn{
   min-width:64px;
 }
+
+
+
+
+.search-wrap{
+  position:relative;
+}
+
+.search-wrap .search{
+  padding-right:32px;
+}
+
+.search-clear{
+  position:absolute;
+  right:8px;
+  top:50%;
+  transform:translateY(-50%);
+  width:24px;
+  height:24px;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  font-size:18px;
+  line-height:24px;
+  cursor:pointer;
+  display:none;
+}
+
+.search-clear.show{
+  display:block;
+}
+
+.search-clear:hover{
+  color:var(--ink);
+}
