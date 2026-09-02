@@ -141,7 +141,7 @@ button{cursor:pointer}
   transform: translateY(100vh);
 }
 
-/* 顶部箭头感应区 */
+
 .hero-toggle-zone{
   position:fixed;
 
@@ -149,30 +149,28 @@ button{cursor:pointer}
   right:0;
   top:0;
 
-  height:18px;
+  height:70px;
 
   z-index:99;
+
+  pointer-events:auto;
 }
 
-
-/* 收起 / 展开按钮 */
 .hero-toggle{
   position:fixed;
 
   left:calc(200px + (100vw - 200px) / 2);
-  top:10px;
+  top:18px;
 
-  transform:translateX(-50%);
-
-  width:34px;
-  height:34px;
+  width:28px;
+  height:28px;
 
   padding:0;
+  margin:0;
 
   border:0;
-  border-radius:50%;
+  background:transparent;
 
-  background:color-mix(in srgb, var(--paper), transparent 12%);
   color:var(--ink);
 
   display:flex;
@@ -184,59 +182,58 @@ button{cursor:pointer}
   opacity:0;
   pointer-events:none;
 
-  box-shadow:0 4px 18px rgba(43,38,34,.08);
-
   transition:
     opacity .2s ease,
-    transform .2s ease,
-    background-color .2s ease;
+    transform .2s ease;
 }
 
 
-/* 鼠标进入最顶部区域时才显示 */
+/* 鼠标进入顶部感应区域 */
 .hero-toggle-zone:hover ~ .hero-toggle{
   opacity:1;
   pointer-events:auto;
 }
 
 
-/* 鼠标碰到按钮时保持显示 */
+/* 鼠标碰到箭头本身 */
 .hero-toggle:hover{
   opacity:1;
-
-  transform:
-    translateX(-50%)
-    translateY(1px);
-
-  background:var(--paper);
+  pointer-events:auto;
 }
 
 
-/* CSS 自己画箭头，不再使用文字 */
+/* 纯 CSS 向下箭头 */
 .hero-toggle::before{
   content:"";
 
-  width:8px;
-  height:8px;
+  width:9px;
+  height:9px;
 
   border-right:1.5px solid currentColor;
   border-bottom:1.5px solid currentColor;
 
-  transform:rotate(45deg) translate(-1px,-1px);
+  transform:rotate(45deg);
 
-  transition:transform .25s ease;
+  transition:
+    transform .25s ease,
+    opacity .2s ease;
 }
 
 
-/* 收起状态：箭头变成向上 */
+/* 收起以后，箭头始终存在 */
 .hero-toggle.is-collapsed{
   opacity:1;
   pointer-events:auto;
 }
 
+
+/* 收起状态 = 向上箭头 */
 .hero-toggle.is-collapsed::before{
-  transform:rotate(225deg) translate(-1px,-1px);
+  transform:rotate(225deg);
 }
+
+
+
 
 
 .eyebrow{font-size:9px;letter-spacing:.28em;color:var(--accent);margin-bottom:8px}
