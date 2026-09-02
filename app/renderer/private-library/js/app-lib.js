@@ -684,6 +684,116 @@ function renderNav(){
 }
 
 
+function enterPageSelectionMode(pageId){
+
+  data.activePage = pageId;
+  data.activeTag = null;
+
+  const page =
+    data.pages.find(
+      p => p.id === pageId
+    );
+
+  if(!page){
+    return;
+  }
+
+  page.articleIds =
+    Array.isArray(page.articleIds)
+      ? page.articleIds
+      : [];
+
+  document
+    .getElementById("selectionBar")
+    ?.style.setProperty("display","flex");
+
+  renderPageConfigBar();
+  render();
+
+}
+
+
+
+function renderPageConfigBar(){
+
+  const page =
+    data.pages.find(
+      p => p.id === data.activePage
+    );
+
+  const list =
+    document.getElementById("articleList");
+
+  if(!page || !list){
+    return;
+  }
+
+  const articles =
+    data.articles || [];
+
+  list.innerHTML =
+    articles.map(article => {
+
+      const selected =
+        page.articleIds.includes(article.id);
+
+      return `
+        <div
+          class="article-row page-select-row ${selected ? "selected" : ""}"
+          data-select-article="${esc(article.id)}"
+        >
+
+          <div class="select-check">
+            ${selected ? "✓" : ""}
+          </div>
+
+          <div class="article-main">
+            <span class="article-title">
+              ${esc(article.title || "无标题")}
+            </span>
+
+            ${
+              article.summary
+                ? `<div class="article-summary">
+                    ${esc(article.summary)}
+                  </div>`
+                : ""
+            }
+          </div>
+
+        </div>
+      `;
+
+    }).join("");
+
+  list
+    .querySelectorAll("[data-select-article]")
+    .forEach(row => {
+
+      row.onclick = async () => {
+
+        const id =
+          row.dataset.selectArticle;
+
+        const index =
+          page.articleIds.indexOf(id);
+
+        if(index >= 0){
+          page.articleIds.splice(index,1);
+        }else{
+          page.articleIds.push(id);
+        }
+
+        await savePages();
+
+        renderPageConfigBar();
+
+      };
+
+    });
+}
+
+
 function showPageActionMenu(anchor,pageId){
 
   document
@@ -1007,7 +1117,7 @@ function showPageActionMenu(anchor,pageId){
 
     menu.remove();
 
-    openPageConfig(pageId);
+    enterPageSelectionMode(id);
 
   };
 
@@ -2545,33 +2655,17 @@ heroEdit.onclick = async()=>{
 };
 
 
-// settingsSave.onclick = async () => {
+document
+  .getElementById("selectionDoneBtn")
+  ?.addEventListener("click", () => {
 
-//   try {
+    document
+      .getElementById("selectionBar")
+      ?.style.setProperty("display","none");
 
-//     await window.electronAPI.writeSettings(
-//       data.settings
-//     );
+    renderAll();
 
-//     settingsOverlay.classList.remove(
-//       "show"
-//     );
-
-//     render();
-//     updateLibraryHero();
-
-//   } catch(error) {
-
-//     console.error(error);
-
-//     alert(
-//       "保存设置失败：\n\n" +
-//       error.message
-//     );
-
-//   }
-
-// };
+  });
 
 
 
