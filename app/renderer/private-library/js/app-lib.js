@@ -1299,6 +1299,7 @@ function render(){
         searchClear.classList.add("show");
 
         render();
+
       };
 
     });
@@ -1358,6 +1359,8 @@ async function openArticle(id){
         search.value = tag;
 
         data.activeTag = tag;
+
+        searchClear.classList.add("show");
 
         render();
 
@@ -1453,18 +1456,14 @@ rEdit.onclick=()=>{
 const searchClear =
   document.getElementById("searchClear");
 
-search.oninput = () => {
-  if(!search.value.trim()){
-    data.activeTag = null;
-  }else{
-    data.activeTag = null;
-  }
 
+
+search.oninput = () => {
+  data.activeTag = null;
   searchClear.classList.toggle(
     "show",
     !!search.value.trim()
   );
-
   render();
 };
 
