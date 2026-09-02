@@ -64,8 +64,31 @@ const contentWrap =
 
 let heroCollapsed = false;
 
-heroToggle.onclick =
-  () => {
+
+function resetLibraryScroll(){
+
+  window.scrollTo({
+    top:0,
+    left:0,
+    behavior:"auto"
+  });
+
+}
+
+
+heroToggle.onclick = () => {
+
+  /*
+   * 不管当前页面滚到了哪里，
+   * 点击箭头时先回到最顶部。
+   */
+  resetLibraryScroll();
+
+  /*
+   * 下一帧再执行收起 / 展开，
+   * 避免浏览器还停留在原滚动位置。
+   */
+  requestAnimationFrame(() => {
 
     heroCollapsed =
       !heroCollapsed;
@@ -80,12 +103,14 @@ heroToggle.onclick =
       heroCollapsed
     );
 
-    heroToggle.textContent =
+    heroToggle.classList.toggle(
+      "is-collapsed",
       heroCollapsed
-        ? "⌄"
-        : "⌃";
+    );
 
-  };
+  });
+
+};
 
 
   
