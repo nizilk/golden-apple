@@ -227,13 +227,29 @@ function pageArticles(){
   if(page){
 
     list =
-      list.filter(
-        article =>
-          Array.isArray(page.articleIds) &&
-          page.articleIds.includes(
-            article.id
-          )
-      );
+      list.filter(article => {
+
+        if(
+          (page.excludes || [])
+            .includes(article.id)
+        ){
+          return false;
+        }
+
+        if(
+          (page.includes || [])
+            .includes(article.id)
+        ){
+          return true;
+        }
+
+        return (page.tags || [])
+          .some(tag =>
+            (article.tags || [])
+              .includes(tag)
+          );
+
+      });
 
   }
 
@@ -637,6 +653,12 @@ function renderNav(){
 
           name,
 
+          tags:[],
+
+          includes:[],
+
+          excludes:[],
+
           articleIds:[]
         };
 
@@ -652,7 +674,8 @@ function renderNav(){
 
         await savePages();
 
-        renderAll();
+        renderNav();
+        enterPageSelectionMode(page.id);
       };
 
       saveBtn.onclick =
@@ -1086,20 +1109,26 @@ function render(){
 
         const checked =
           editingPage &&
-          (editingPage.articleIds || [])
-            .includes(article.id);
+          !(
+            (editingPage.excludes || [])
+              .includes(article.id)
+          ) &&
+          (
+            (editingPage.includes || [])
+              .includes(article.id) ||
+            (editingPage.tags || [])
+              .some(tag =>
+                (article.tags || [])
+                  .includes(tag)
+              )
+          );
 
         return `
           <div
             class="article-row ${checked ? "page-selected" : ""}"
             data-id="${article.id}"
           >
-            
-            ${editingPage ? `
-              <div class="page-select-check">
-                ${checked ? "✓" : ""}
-              </div>
-            ` : ""}
+
 
             <div class="article-main">
 
@@ -1150,20 +1179,56 @@ function render(){
           editingPage.articleIds =
             editingPage.articleIds || [];
 
-          if(
-            editingPage.articleIds
-              .includes(id)
-          ){
+          const inIncludes =
+            (editingPage.includes || [])
+              .includes(id);
 
-            editingPage.articleIds =
-              editingPage.articleIds
-                .filter(
-                  x => x !== id
-                );
+          const inExcludes =
+            (editingPage.excludes || [])
+              .includes(id);
+
+          const inTag =
+            (editingPage.tags || [])
+              .some(tag =>
+                (data.articles.find(
+                  article => article.id === id
+                )?.tags || [])
+                  .includes(tag)
+              );
+
+          if(inTag){
+
+            if(inExcludes){
+
+              editingPage.excludes =
+                editingPage.excludes
+                  .filter(x => x !== id);
+
+            }else{
+
+              editingPage.excludes =
+                editingPage.excludes || [];
+
+              editingPage.excludes.push(id);
+
+            }
 
           }else{
 
-            editingPage.articleIds.push(id);
+            if(inIncludes){
+
+              editingPage.includes =
+                editingPage.includes
+                  .filter(x => x !== id);
+
+            }else{
+
+              editingPage.includes =
+                editingPage.includes || [];
+
+              editingPage.includes.push(id);
+
+            }
 
           }
 
@@ -1851,10 +1916,16 @@ deleteArticleBtn.onclick=async()=>{
   for(const page of data.pages){
 
     page.articleIds =
-      (page.articleIds||[])
-        .filter(
-          id=>id!==editingId
-        );
+      (page.articleIds || [])
+        .filter(id => id !== editingId);
+
+    page.includes =
+      (page.includes || [])
+        .filter(id => id !== editingId);
+
+    page.excludes =
+      (page.excludes || [])
+        .filter(id => id !== editingId);
 
   }
 
@@ -1957,22 +2028,6 @@ function renderPageSelectionBar(){
 
           }
 
-          /*
-           * Library 页面使用 articleIds，
-           * 所以选择标签时直接生成对应文章集合。
-           */
-
-          page.articleIds =
-            data.articles
-              .filter(
-                article =>
-                  (article.tags || [])
-                    .includes(tag)
-              )
-              .map(
-                article => article.id
-              );
-
           await savePages();
 
           renderPageSelectionBar();
@@ -1983,7 +2038,26 @@ function renderPageSelectionBar(){
     });
 
   const count =
-    (page.articleIds || []).length;
+    data.articles.filter(article => {
+
+      if(
+        (page.excludes || [])
+          .includes(article.id)
+      ){
+        return false;
+      }
+
+      return (
+        (page.includes || [])
+          .includes(article.id) ||
+        (page.tags || [])
+          .some(tag =>
+            (article.tags || [])
+              .includes(tag)
+          )
+      );
+
+    }).length;
 
   document
     .getElementById(
@@ -2190,6 +2264,25 @@ async function loadPages(){
     Array.isArray(result?.list)
       ? result.list
       : [];
+
+  data.pages.forEach(page => {
+
+    if(!Array.isArray(page.tags)){
+      page.tags = [];
+    }
+
+    if(!Array.isArray(page.includes)){
+      page.includes =
+        Array.isArray(page.articleIds)
+          ? [...page.articleIds]
+          : [];
+    }
+
+    if(!Array.isArray(page.excludes)){
+      page.excludes = [];
+    }
+
+  });
 
   data.homePageId =
     result?.home || null;
