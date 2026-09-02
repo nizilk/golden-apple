@@ -12,6 +12,123 @@ let mainWindow = null;
 let resourceRootPath = null;
 
 
+
+// ============================================================
+// 路径
+// ============================================================
+
+// main.js:DATA_ROOT
+// D:\GoldenApple\app\main\main.js
+
+const APP_ROOT = path.resolve(
+  __dirname,
+  ".."
+);
+
+// D:\GoldenApple
+const PROJECT_ROOT = path.resolve(
+  APP_ROOT,
+  ".."
+);
+
+// D:\GoldenApple\data
+const DATA_ROOT = path.join(
+  PROJECT_ROOT,
+  "data"
+);
+
+// D:\GoldenApple\data\private-xhs
+const XHS_DATA_ROOT = path.join(
+  DATA_ROOT,
+  "private-xhs"
+);
+
+const LIB_DATA_ROOT =
+  path.join(
+    DATA_ROOT,
+    "private-library"
+  );
+
+const LIB_ARTICLES_ROOT =
+  path.join(
+    LIB_DATA_ROOT,
+    "articles"
+  );
+
+const LIB_COVER_PATH =
+  path.join(
+    LIB_DATA_ROOT,
+    "cover"
+  );
+
+const LIB_PAGES_FILE =
+  path.join(
+    LIB_DATA_ROOT,
+    "pages.json"
+  );
+
+const SETTINGS_FILE = path.join(
+  DATA_ROOT,
+  "settings.json"
+);
+
+
+
+
+// ========================================================================================================================
+// 公共
+// ========================================================================================================================
+
+
+// 安全的数据路径
+
+function getSafeDataPath(relativePath, data_root=DATA_ROOT) {
+
+  const root =
+    path.resolve(
+      data_root
+    );
+
+  const target =
+    path.resolve(
+      data_root,
+      relativePath
+    );
+
+  if(
+    target !== root &&
+    !target.startsWith(
+      root + path.sep
+    )
+  ){
+    throw new Error(
+      "Invalid data path"
+    );
+  }
+
+  return target;
+}
+
+
+
+// ========================================================================================================================
+// XHS
+// ========================================================================================================================
+
+
+
+
+// ========================================================================================================================
+// library
+// ========================================================================================================================
+
+
+
+// ========================================================================================================================
+// 未整理
+// ========================================================================================================================
+
+
 // ============================================================
 // 选择资源文件夹
 // ============================================================
@@ -539,88 +656,11 @@ ipcMain.handle(
 
 
 
-// ============================================================
-// 路径
-// ============================================================
-
-// main.js:DATA_ROOT
-// D:\GoldenApple\app\main\main.js
-
-const APP_ROOT = path.resolve(
-  __dirname,
-  ".."
-);
-
-// D:\GoldenApple
-const PROJECT_ROOT = path.resolve(
-  APP_ROOT,
-  ".."
-);
-
-// D:\GoldenApple\data
-const DATA_ROOT = path.join(
-  PROJECT_ROOT,
-  "data"
-);
-
-// D:\GoldenApple\data\private-xhs
-const XHS_DATA_ROOT = path.join(
-  DATA_ROOT,
-  "private-xhs"
-);
-
-const LIB_DATA_ROOT =
-  path.join(
-    DATA_ROOT,
-    "private-library"
-  );
-
-const LIB_ARTICLES_ROOT =
-  path.join(
-    LIB_DATA_ROOT,
-    "articles"
-  );
-
-const LIB_PAGES_FILE =
-  path.join(
-    LIB_DATA_ROOT,
-    "pages.json"
-  );
-
-const SETTINGS_FILE = path.join(
-  DATA_ROOT,
-  "settings.json"
-);
 
 
 
 
-// ============================================================
-// 安全的数据路径
-// ============================================================
 
-function getSafeDataPath(relativePath) {
-
-  const root = path.resolve(
-    XHS_DATA_ROOT
-  );
-
-  const target = path.resolve(
-    XHS_DATA_ROOT,
-    relativePath
-  );
-
-  if (
-    target !== root &&
-    !target.startsWith(root + path.sep)
-  ) {
-    throw new Error(
-      "Invalid data path"
-    );
-  }
-
-  return target;
-}
 
 
 // ============================================================
@@ -638,6 +678,13 @@ async function ensureDataDirectories() {
 
   await fs.mkdir(
     XHS_DATA_ROOT,
+    {
+      recursive: true
+    }
+  );
+
+  await fs.mkdir(
+    LIB_DATA_ROOT,
     {
       recursive: true
     }
@@ -1281,6 +1328,92 @@ ipcMain.handle(
 
     return result.filePaths[0];
 
+  }
+);
+
+
+ipcMain.handle(
+  "library:saveCoverFile",
+  async (
+    _event,
+    filePath
+  ) => {
+
+    if(
+      typeof filePath !== "string" ||
+      !filePath
+    ){
+      throw new Error(
+        "无效的头图文件路径。"
+      );
+    }
+
+    const ext =
+      path.extname(filePath)
+        .toLowerCase();
+
+    const allowed =
+      [
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".gif",
+        ".webp",
+        ".bmp",
+        ".avif"
+      ];
+
+    if(!allowed.includes(ext)){
+      throw new Error(
+        "不支持的头图格式。"
+      );
+    }
+
+    await fs.mkdir(
+      LIB_DATA_ROOT,
+      {
+        recursive:true
+      }
+    );
+
+    const files =
+      await fs.readdir(
+        LIB_DATA_ROOT
+      );
+
+    for(const file of files){
+
+      if(
+        /^cover\.(png|jpg|jpeg|gif|webp|bmp|avif)$/i
+          .test(file)
+      ){
+
+        await fs.rm(
+          path.join(
+            LIB_DATA_ROOT,
+            file
+          ),
+          {
+            force:true
+          }
+        );
+
+      }
+
+    }
+
+    const targetPath =
+      path.join(
+        LIB_DATA_ROOT,
+        `cover${ext}`
+      );
+
+    await fs.copyFile(
+      filePath,
+      targetPath
+    );
+
+    return `cover${ext}`;
   }
 );
 
