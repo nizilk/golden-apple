@@ -112,7 +112,7 @@ button{cursor:pointer}
   top:0;
   left:200px;
   right:0;
-  z-index:20;
+  z-index:25;
   background-color: color-mix(in srgb, var(--main-bg), transparent 50%);
   backdrop-filter:blur(8px);
   border-bottom:1px solid var(--line);
@@ -130,7 +130,7 @@ button{cursor:pointer}
 
 .content-wrap{
   position: relative;
-  z-index: 2;
+  z-index: 20;
   width:100%;
   padding:24px 60px 90px;
   background-color: color-mix(in srgb, var(--main-bg), transparent 50%);
@@ -144,16 +144,25 @@ button{cursor:pointer}
 
 .hero-toggle-zone{
   position:fixed;
-
-  left:200px;
-  right:0;
+  left: calc(200px + (100vw - 200px) / 2);
   top:0;
-
-  height:70px;
-
+  width:80px;
+  height:50px;
+  transform:translateX(-50%);
   z-index:99;
-
   pointer-events:auto;
+
+  transition:top .25s ease;
+}
+
+/* 鼠标进入顶部感应区域 */
+.hero-toggle-zone:hover ~ .hero-toggle{
+  opacity:1;
+  pointer-events:auto;
+}
+
+.hero-toggle-zone:has(~ .hero-toggle.is-collapsed){
+  top:calc(100vh - 50px);
 }
 
 .hero-toggle{
@@ -188,11 +197,7 @@ button{cursor:pointer}
 }
 
 
-/* 鼠标进入顶部感应区域 */
-.hero-toggle-zone:hover ~ .hero-toggle{
-  opacity:1;
-  pointer-events:auto;
-}
+
 
 
 /* 鼠标碰到箭头本身 */
@@ -220,11 +225,15 @@ button{cursor:pointer}
 }
 
 
-/* 收起以后，箭头始终存在 */
 .hero-toggle.is-collapsed{
+  top:calc(100vh - 46px);
+}
+
+.hero-toggle-zone:has(~ .hero-toggle.is-collapsed):hover ~ .hero-toggle{
   opacity:1;
   pointer-events:auto;
 }
+
 
 
 /* 收起状态 = 向上箭头 */
@@ -333,7 +342,7 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
 .empty{text-align:center;color:var(--muted);font-family:"Songti SC","Noto Serif SC",serif;font-size:13px;line-height:2;padding:80px 20px;display:none}
 .fab{
   position:fixed;right:30px;bottom:28px;width:55px;height:55px;border:0;border-radius:50%;
-  background:var(--accent);color:#fff;font-size:27px;line-height:1;box-shadow:0 9px 25px rgba(120,80,65,.28);z-index:20
+  background:var(--accent);color:#fff;font-size:27px;line-height:1;box-shadow:0 9px 25px rgba(120,80,65,.28);z-index:25
 }
 .fab:hover{transform:translateY(-1px)}
 
@@ -616,7 +625,6 @@ h1{font-family:"Songti SC","Noto Serif SC","STSong",serif;font-size:30px;font-we
   background-position:center;
   background-size:cover;
   background-repeat:no-repeat;
-  cursor: pointer;
 }
 
 body.dark .library-hero{
@@ -626,6 +634,42 @@ body.dark .library-hero{
 body.dark .library-hero-image{
   background-color:#171717;
 }
+
+
+.hero-edit{
+  position:absolute;
+  top:20px;
+  right:20px;
+
+  padding:8px 14px;
+
+  z-index:10;
+
+  border:1px solid rgba(255,255,255,.5);
+  background:rgba(0,0,0,.35);
+  color:#fff;
+
+  font-size:13px;
+  cursor:pointer;
+
+  opacity:0;
+  pointer-events:none;
+
+  transition:opacity .2s ease;
+}
+
+.library-hero:hover .hero-edit, .hero-edit:hover{
+  opacity:1;
+  pointer-events:auto;
+}
+
+.hero-edit:hover{
+  background:rgba(0,0,0,.5);
+}
+
+
+
+
 
 .article-file{
   margin-top:9px;
