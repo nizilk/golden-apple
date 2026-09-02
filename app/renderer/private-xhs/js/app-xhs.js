@@ -1,3 +1,18 @@
+function joinPath(...parts) {
+    return parts
+        .filter(p => p !== undefined && p !== null && p !== '')
+        .map((p, i) => {
+            p = String(p);
+            if (i === 0) return p.replace(/[\\/]+$/, '');
+            return p.replace(/^[\\/]+|[\\/]+$/g, '');
+        })
+        .join('/');
+}
+
+const path_xhs = 'private-xhs'
+const path_fav = joinPath(path_xhs, "favicon.png")
+const path_media = joinPath(path_xhs, "media")
+
 // ============================================================
 // Electron 本地数据存储
 // ============================================================
@@ -6,6 +21,8 @@ const electronStorage = {
 
   async readText(path) {
 
+    path = joinPath(path_xhs, path)
+
     return await window.electronAPI
       .readDataFile(path);
 
@@ -13,6 +30,8 @@ const electronStorage = {
 
 
   async writeText(path, text) {
+
+    path = joinPath(path_xhs, path)
 
     return await window.electronAPI
       .writeDataFile(
@@ -25,6 +44,8 @@ const electronStorage = {
 
   async delete(path) {
 
+    path = joinPath(path_xhs, path)
+
     return await window.electronAPI
       .deleteDataFile(path);
 
@@ -33,6 +54,8 @@ const electronStorage = {
 
   async mkdir(path) {
 
+    path = joinPath(path_xhs, path)
+
     return await window.electronAPI
       .createDataDirectory(path);
 
@@ -40,6 +63,8 @@ const electronStorage = {
 
 
   async list(path) {
+
+    path = joinPath(path_xhs, path)
 
     return await window.electronAPI
       .listDataDirectory(path);
@@ -108,7 +133,7 @@ async function loadFavicon(){
 
     const dataUrl =
       await window.electronAPI.readDataURL(
-        "favicon.png"
+        path_fav
       );
 
     link.href = dataUrl;
@@ -643,7 +668,7 @@ async function writeMediaFile(
 ){
 
   await window.electronAPI.writeDataBinary(
-    `media/${filename}`,
+    joinPath(path_media, filename),
     blob
   );
 
@@ -655,7 +680,7 @@ async function readMediaBlobURL(
 ){
 
   return await window.electronAPI.readDataURL(
-    `media/${filename}`
+    joinPath(path_media, filename)
   );
 
 }
@@ -688,9 +713,7 @@ async function getMediaFile(m){
   if(m.type === "file"){
 
     return await window.electronAPI
-      .readDataURL(
-        `media/${m.ref}`
-      );
+      .readDataURL( joinPath(path_media, m.ref) );
 
   }
 
