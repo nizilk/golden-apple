@@ -17,21 +17,19 @@ let resourceRootPath = null;
 // 路径
 // ============================================================
 
-// main.js:DATA_ROOT
-// D:\GoldenApple\app\main\main.js
 
 const APP_ROOT = path.resolve(
   __dirname,
   ".."
 );
 
-// D:\GoldenApple
-const PROJECT_ROOT = path.resolve(
-  APP_ROOT,
-  ".."
-);
+// 开发时：D:\GoldenApple
+// 打包后：exe 所在目录
+const PROJECT_ROOT = app.isPackaged
+  ? path.dirname(process.execPath)
+  : path.resolve(APP_ROOT, "..");
 
-// D:\GoldenApple\data
+// 数据永远放在程序目录旁边的 data
 const DATA_ROOT = path.join(
   PROJECT_ROOT,
   "data"
@@ -850,8 +848,9 @@ function createWindow() {
 
       icon:
         path.join(
-          DATA_ROOT,
-          "favicon.png"
+          APP_ROOT,
+          "build",
+          "icon.png"
         ),
 
       minWidth: 1000,
