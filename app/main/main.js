@@ -850,7 +850,7 @@ function createWindow() {
         path.join(
           APP_ROOT,
           "build",
-          "icon.png"
+          "icon.ico"
         ),
 
       minWidth: 1000,
