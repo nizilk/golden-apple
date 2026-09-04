@@ -1,3 +1,8 @@
+
+// ============================================================
+// path
+// ============================================================
+
 function joinPath(...parts) {
     return parts
         .filter(p => p !== undefined && p !== null && p !== '')
@@ -649,6 +654,9 @@ async function readMediaBlobURL(
 
 }
 
+
+
+
 async function readLibraryBlobURL(
   resourcePath
 ){
@@ -817,6 +825,8 @@ async function hydrateMedia(containerEl){
   }
   if(missing > 0) showToast(`有 ${missing} 个素材未能显示，原文件可能被移动或删除了`);
 }
+
+
 
 /* ================= grid ================= */
 function plainSnippet(html){
@@ -1505,14 +1515,17 @@ function fitMediaWidth(sheet, mediaEls){
     }
   });
 }
+
 function openReader(id){
   const p = allPosts.find(x => x.id === id);
   if(!p) return;
   let quickReplyTarget = null;
   const sheet = document.getElementById("readerSheet");
   sheet.dataset.postId = p.id;
+
+  const isLongPost = p.mode === "long";
   const media = p.media || [];
-  const hasMedia = media.length > 0;
+  const hasMedia = !isLongPost && media.length > 0;
   sheet.classList.toggle("no-media", !hasMedia);
 
   // Reuse the previously measured width immediately, so reopening the same post
@@ -2078,7 +2091,9 @@ function openEditor(id){
     const p = allPosts.find(x=>x.id===id);
     heading.textContent = "编辑收藏";
     document.getElementById("fTitle").value = p.title || "";
+    document.getElementById("fBody").dataset.longPost = p.mode === "long" ? "1" : "0";
     fBody.innerHTML = p.body || "";
+    document.getElementById("fLongPost").checked = p.mode === "long";
     document.getElementById("fAuthor").value = p.author || "";
     document.getElementById("fTags").value = (p.tags||[]).join(" ");
     document.getElementById("fSource").value = p.source || "";
@@ -2088,7 +2103,9 @@ function openEditor(id){
   } else {
     heading.textContent = "新建收藏";
     document.getElementById("fTitle").value = "";
+    document.getElementById("fBody").dataset.longPost = "0";
     fBody.innerHTML = "";
+    document.getElementById("fLongPost").checked = false;
     document.getElementById("fAuthor").value = "";
     document.getElementById("fTags").value = "";
     document.getElementById("fSource").value = "";
@@ -2238,6 +2255,8 @@ document.getElementById("cAdd").onclick = ()=>{
   renderCommentEditList();
 };
 
+
+
 /* text toolbar — bold/italic/quote/hr only, no media (media has its own section now) */
 document.querySelectorAll(".toolbar button").forEach(btn=>{
   btn.onclick = ()=>{
@@ -2269,6 +2288,9 @@ async function finalizeMedia(postId){
   }
   return finalList;
 }
+
+
+
 document.getElementById("saveBtn").onclick = async ()=>{
   const title = document.getElementById("fTitle").value.trim();
   const author = document.getElementById("fAuthor").value.trim();
@@ -2282,7 +2304,18 @@ document.getElementById("saveBtn").onclick = async ()=>{
   if(!title && !plainSnippet(body) && editingMedia.length===0){ showToast("标题、正文、图片至少填一个"); return; }
 
   const media = await finalizeMedia(id);
-  const post = {id, title, author, body, tags, source, comments: editingComments, media, createdAt};
+  const post = {
+    id,
+    title,
+    author,
+    body,
+    tags,
+    source,
+    comments: editingComments,
+    media,
+    mode: document.getElementById("fLongPost").checked ? "long" : "normal",
+    createdAt
+  };
   await writePostToDisk(post);
   closeEditor();
   await reload();
