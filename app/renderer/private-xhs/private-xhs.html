@@ -20,7 +20,7 @@
     <div class="app-topbar">
       <div class="search">
         <span>🔍</span>
-        <input id="searchInput" type="text" placeholder="搜索标题 / 正文 / 标签 / 来源">
+        <input id="searchInput" type="text" placeholder="搜索">
         <span id="searchClear" style="display:none;">✕</span>
       </div>
       <button class="btn btn-ghost" id="currentFolderName">📁 选择收藏文件夹</button>
@@ -56,7 +56,7 @@
 
     <div class="field">
       <label>标题</label>
-      <input type="text" id="fTitle" placeholder="给这条收藏起个标题">
+      <input type="text" id="fTitle" placeholder="">
     </div>
 
     <div class="field">
@@ -67,11 +67,20 @@
         <button class="btn btn-ghost" type="button" id="addUploadBtn">上传新文件</button>
       </div>
       <input type="file" id="galleryFileInput" accept="image/*,video/*" style="display:none" multiple>
-      <div class="hint">优先从你连接的收藏文件夹里直接选择已有的图片/视频，不会复制；上传新文件才会另外保存一份</div>
     </div>
 
     <div class="field">
-      <label>正文</label>
+      
+      <div class="field-label-row">
+        <label>正文</label>
+
+        <label class="long-post-toggle">
+          <input type="checkbox" id="fLongPost">
+          <span class="long-post-switch"></span>
+          <span class="long-post-toggle-text">长文帖子</span>
+        </label>
+      </div>
+
       <div class="toolbar">
         <button type="button" data-cmd="bold"><b>B</b></button>
         <button type="button" data-cmd="italic"><i>I</i></button>
@@ -88,13 +97,13 @@
       </div>
       <div class="field">
         <label>来源平台</label>
-        <input type="text" id="fSource" placeholder="小红书 / 知乎 / ...">
+        <input type="text" id="fSource" placeholder="">
       </div>
     </div>
 
     <div class="field">
       <label>标签（用空格或逗号分隔）</label>
-      <input type="text" id="fTags" placeholder="独处 成长 生活">
+      <input type="text" id="fTags" placeholder="">
     </div>
 
     <div class="field">
