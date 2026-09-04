@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>私人图书馆</title>
+<link rel="stylesheet" href="css/style-lib.css">
+</head>
+<body>
+
+
+
+<div class="app">
+<aside class="sidebar">
+  <div class="brand">私人图书馆<small>PRIVATE LIBRARY</small></div>
+  <nav class="nav" id="nav"></nav>
+</aside>
+
+<!-- 阅读 -->
+<div class="reader" id="reader">
+  <div class="reader-tools">
+    <button class="read-back" id="readerClose">← 返回</button>
+    <button id="rEdit">编辑</button>
+  </div>
+  <article class="read-sheet">
+
+    
+
+    <h2 id="rTitle"></h2>
+
+    <div class="read-meta-row">
+      <div class="read-meta" id="rMeta"></div>
+      <div class="read-tags" id="rTags"></div>
+    </div>
+
+    <div class="read-summary" id="rSummary"></div>
+
+    <div class="article-body" id="rContent"></div>
+    
+    
+
+
+  </article>
+</div>
+
+<main class="main">
+
+
+  <div class="library-hero" id="libraryHero">
+    <div class="library-hero-image" id="libraryHeroImage"></div>
+
+    <div class="hero-edit-area">
+      <button class="hero-edit" id="heroEdit" type="button">更换封面</button>
+    </div>
+    
+  </div>
+
+  
+
+<header class="top" id="libraryTop">
+  <div class="top-right">
+    <div class="search-wrap">
+      <input class="search" id="search" placeholder="搜索标题 / 作者 / 标签">
+      <button class="search-clear" id="searchClear" type="button">×</button>
+    </div>
+    <button
+      class="theme-toggle"
+      id="themeToggle"
+      title="切换深色/浅色"
+    >☾</button>
+
+    <a
+      class="back-home"
+      href="../index.html"
+      title="返回首页"
+    >⌂</a>
+  </div>
+</header>
+
+<div
+  class="hero-toggle-zone"
+  id="heroToggleZone"
+></div>
+
+<button
+  class="hero-toggle"
+  id="heroToggle"
+  type="button"
+></button>
+
+<div class="content-wrap">
+
+  <div id="pageSelectionBar" style="display:none;">
+    <div id="pageSelectionTags" class="page-config-tags"></div>
+
+    <span id="pageSelectionCount"></span>
+
+    <button
+      class="btn btn-primary"
+      id="pageSelectionDone"
+      type="button"
+    >完成</button>
+  </div>
+  
+  <section class="article-list" id="articleList"></section>
+  <div class="empty" id="empty">这里还没有故事。<br>点击右下角的 ＋，导入一篇 Word 或手动创建文章。</div>
+  <div class="page-intro">
+    <small id="count"></small>
+  </div>
+</div>
+</main>
+</div>
+
+<button class="fab" id="addBtn" title="添加文章">＋</button>
+
+<!-- 添加 / 编辑 -->
+<div class="overlay" id="articleOverlay">
+<div class="dialog">
+<button class="dialog-close" id="articleClose">×</button>
+<h2 id="articleDialogTitle">添加文章</h2>
+
+<div id="editFields">
+
+<div id="fileMode">
+  <div class="field">
+    <label>本地 Word 文件</label>
+
+    <div class="filebox">
+      <button class="btn" id="chooseArticleFile" type="button">
+        选择 .docx 文件
+      </button>
+      <div class="article-file" id="articleFileName">
+        尚未选择文件
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+  <div class="form-row">
+    <div class="field">
+      <label>标题</label>
+      <input id="articleTitle" placeholder="">
+    </div>
+
+    <div class="field">
+      <label>作者</label>
+      <input id="articleAuthor" placeholder="">
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="field">
+      <label>标签（可输入多个，用空格或逗号分隔）</label>
+      <input id="articleTags" placeholder="">
+    </div>
+
+    <div class="field">
+      <label>来源平台</label>
+      <input id="articlePlatform" placeholder="">
+    </div>
+  </div>
+
+  <div class="field">
+    <label>简介</label>
+    <textarea
+      id="articleSummary"
+      style="min-height:110px"
+      placeholder=""
+    ></textarea>
+  </div>
+
+  <div class="field" id="contentAdjustField">
+    <label>正文整理</label>
+
+    <div id="contentPreview" class="content-preview">
+    </div>
+  </div>
+
+</div>
+
+<div class="dialog-actions">
+  <div class="left">
+    <button class="btn danger" id="deleteArticleBtn">删除文章</button>
+  </div>
+  
+  <div class="right">
+    <button class="btn primary" id="articleSave">保存</button>
+    <button class="btn" id="articleCancel">取消</button>
+  </div>
+</div>
+</div>
+</div>
+
+<div class="overlay" id="renameOverlay">
+  <div class="page-name-sheet">
+    <button
+      class="page-name-close"
+      id="renameClose"
+      type="button"
+    >✕</button>
+
+    <input
+      type="text"
+      id="renameInput"
+      class="page-name-input"
+      placeholder="页面名称"
+    >
+
+    <div class="page-name-actions">
+      <button
+        class="btn btn-primary"
+        id="renameSave"
+        type="button"
+      >保存</button>
+
+      <button
+        class="btn btn-ghost"
+        id="renameCancel"
+        type="button"
+      >取消</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app-lib.js"></script>
+
+</body>
+</html>

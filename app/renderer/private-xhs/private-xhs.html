@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的收藏</title>
+<link id="appFavicon" rel="icon" type="image/png">
+
+<link rel="stylesheet" href="css/style-xhs.css">
+
+</head>
+<body>
+
+
+<div id="app" class="app-shell">
+  <aside id="categorySidebar">
+    <div class="sidebar-brand">✿ 我的收藏</div>
+  </aside>
+  <div class="app-main">
+    <div class="app-topbar">
+      <div class="search">
+        <span>🔍</span>
+        <input id="searchInput" type="text" placeholder="搜索">
+        <span id="searchClear" style="display:none;">✕</span>
+      </div>
+      <button class="btn btn-ghost" id="currentFolderName">📁 选择收藏文件夹</button>
+      <button class="btn btn-icon btn-ghost" id="themeToggle" title="切换深色/浅色">☾</button>
+      <a
+        class="back-home"
+        href="../index.html"
+        title="返回首页"
+      >⌂</a>
+    </div>
+    <main>
+      <div id="selectionBar" style="display:none;">
+        <div id="pageConfigTags" class="page-config-tags"></div>
+        <span id="selectionCount"></span>
+        <button class="btn btn-primary" id="selectionDoneBtn">完成</button>
+      </div>
+      <div class="grid" id="grid"></div>
+      <div class="empty" id="emptyState" style="display:none;">
+        <div class="big">🌱</div>
+        <div>还没有收藏，点右下角 ＋ 添加第一条</div>
+      </div>
+    </main>
+  </div>
+  <button class="fab" id="addBtn">＋</button>
+</div>
+
+<div class="overlay" id="readerOverlay"><div class="reader-sheet" id="readerSheet"></div></div>
+
+<div class="overlay" id="editorOverlay">
+  <div class="sheet">
+    <button class="sheet-close" id="editorClose">✕</button>
+    <h2 class="serif" id="editorHeading" style="margin-top:0;">新建收藏</h2>
+
+    <div class="editor-fields">
+
+      <div class="field">
+        <label>标题</label>
+        <input type="text" id="fTitle" placeholder="">
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>发帖者</label>
+          <input type="text" id="fAuthor" placeholder="我">
+        </div>
+        <div class="field">
+          <label>来源平台</label>
+          <input type="text" id="fSource" placeholder="">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>图片 / 视频</label>
+        <div class="media-gallery" id="mediaGallery"></div>
+        <div class="media-buttons">
+          <button class="btn btn-ghost" type="button" id="addFromLibraryBtn">从收藏文件夹选择</button>
+          <button class="btn btn-ghost" type="button" id="addUploadBtn">上传新文件</button>
+        </div>
+        <input type="file" id="galleryFileInput" accept="image/*,video/*" style="display:none" multiple>
+      </div>
+
+      <div class="field">
+        
+        <div class="field-label-row">
+          <label>正文</label>
+
+          <label class="long-post-toggle">
+            <input type="checkbox" id="fLongPost">
+            <span class="long-post-switch"></span>
+            <span class="long-post-toggle-text">长文帖子</span>
+          </label>
+        </div>
+
+        <div class="toolbar">
+          <button type="button" data-cmd="bold"><b>B</b></button>
+          <button type="button" data-cmd="italic"><i>I</i></button>
+          <button type="button" data-cmd="quote">❝ 引用</button>
+          <button type="button" data-cmd="hr">— 分隔线</button>
+        </div>
+        <div class="editor-body" id="fBody" contenteditable="true"></div>
+      </div>
+
+      
+
+      <div class="field">
+        <label>标签（用空格或逗号分隔）</label>
+        <input type="text" id="fTags" placeholder="">
+      </div>
+
+      <div class="field">
+        <label>讨论 / 评论</label>
+        <div class="comment-list-edit" id="commentListEdit"></div>
+        <div class="reply-hint" id="replyHint"></div>
+        <div class="comment-row">
+          <input type="text" id="cAuthor" placeholder="昵称">
+          <textarea id="cText" placeholder="评论内容" rows="1"></textarea>
+          <button class="btn btn-ghost" id="cAdd" type="button">添加</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-actions">
+      <button class="btn btn-ghost" id="deleteBtn" style="display:none; color:#c0394a; border-color:#f0c9d0;">删除</button>
+      <button class="btn btn-primary" id="saveBtn">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="renameOverlay">
+  <div class="page-name-sheet">
+    <button class="page-name-close" id="renameClose" type="button">✕</button>
+
+    <input
+      type="text"
+      id="renameInput"
+      class="page-name-input"
+      placeholder="页面名称"
+      autocomplete="off"
+    >
+
+    <div class="page-name-actions">
+      <button class="btn btn-primary" id="renameSave" type="button">保存</button>
+      <button class="btn btn-ghost" id="renameCancel" type="button">取消</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="pickerOverlay">
+  <div class="sheet" style="max-width:560px;">
+    <button class="sheet-close" id="pickerClose">✕</button>
+    <h3 class="serif" style="margin-top:0;">从收藏文件夹选择</h3>
+    <div id="pickerBrowse">
+      <input type="text" id="pickerSearch" placeholder="搜索文件名 / 路径...">
+      <button class="btn btn-ghost" id="pickerBack" style="display:none;margin-bottom:10px;">⬅ 上一级</button>
+      <div id="pickerGrid"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/app-xhs.js"></script>
+
+</body>
+</html>

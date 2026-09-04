@@ -1,0 +1,203 @@
+const {
+  contextBridge,
+  ipcRenderer,
+} = require("electron");
+
+
+contextBridge.exposeInMainWorld(
+  "electronAPI",
+  {
+
+// ========================================================================================================================
+// 公共
+// ========================================================================================================================
+    readDataFile:
+      (relativePath) =>
+        ipcRenderer.invoke(
+          "data:read",
+          relativePath
+        ),
+
+    writeDataFile:
+      (relativePath, data) =>
+        ipcRenderer.invoke(
+          "data:write",
+          relativePath,
+          data
+        ),
+
+    deleteDataFile:
+      (relativePath) =>
+        ipcRenderer.invoke(
+          "data:delete",
+          relativePath
+        ),
+
+    createDataDirectory:
+      (relativePath) =>
+        ipcRenderer.invoke(
+          "data:mkdir",
+          relativePath
+        ),
+
+    listDataDirectory:
+      (relativePath) =>
+        ipcRenderer.invoke(
+          "data:list",
+          relativePath
+        ),
+
+    readDataURL:
+      (relativePath) =>
+        ipcRenderer.invoke(
+          "data:readDataURL",
+          relativePath
+        ),
+
+    writeDataBinary:
+      async (
+        relativePath,
+        blob
+      ) => {
+        const arrayBuffer =
+          await blob.arrayBuffer();
+        return await ipcRenderer.invoke(
+          "data:writeBinary",
+          relativePath,
+          arrayBuffer
+        );
+      },
+
+
+// ========================================================================================================================
+// XHS
+// ========================================================================================================================
+
+
+// ========================================================================================================================
+// library
+// ========================================================================================================================
+
+    listLibraryArticles:
+      () =>
+        ipcRenderer.invoke(
+          "library:listArticles"
+        ),
+
+    saveLibraryArticle:
+      article =>
+        ipcRenderer.invoke(
+          "library:saveArticle",
+          article
+        ),
+
+    deleteLibraryArticle:
+      articleId =>
+        ipcRenderer.invoke(
+          "library:deleteArticle",
+          articleId
+        ),
+
+    chooseLibraryArticleFile:
+      () =>
+        ipcRenderer.invoke(
+          "library:chooseArticleFile"
+        ),
+
+    readLibraryArticleFile:
+      filePath =>
+        ipcRenderer.invoke(
+          "library:readArticleFile",
+          filePath
+        ),
+
+    chooseLibraryCoverFile:
+      () =>
+        ipcRenderer.invoke(
+          "library:chooseCoverFile"
+        ),
+
+    saveLibraryCoverFile:
+      filePath =>
+        ipcRenderer.invoke(
+          "library:saveCoverFile",
+          filePath
+        ),
+
+
+// ========================================================================================================================
+// 未整理
+// ========================================================================================================================
+
+    chooseResourceFolder:
+      () =>
+        ipcRenderer.invoke(
+          "resource:choose"
+        ),
+
+    getCurrentResourceFolder:
+      () =>
+        ipcRenderer.invoke(
+          "resource:getCurrent"
+        ),
+
+    getXhsDataDirectory:
+      () =>
+        ipcRenderer.invoke(
+          "storage:getXhsDirectory"
+        ),
+
+    
+    listResourceDirectory:
+      (relativePath) =>
+        ipcRenderer.invoke(
+          "resource:list",
+          relativePath
+        ),
+
+    readResourceDataURL:
+      (relativePath) =>
+        ipcRenderer.invoke(
+          "resource:readDataURL",
+          relativePath
+        ),
+
+    readFileDataURL:
+      filePath =>
+        ipcRenderer.invoke(
+          "file:readDataURL",
+          filePath
+        ),
+
+    
+
+    readSettings:
+      () =>
+        ipcRenderer.invoke(
+          "settings:read"
+        ),
+
+    writeSettings:
+      settings =>
+        ipcRenderer.invoke(
+          "settings:write",
+          settings
+        ),
+
+    
+
+    loadLibraryPages:
+      () =>
+        ipcRenderer.invoke(
+          "library:readPages"
+        ),
+
+    saveLibraryPages:
+      pagesData =>
+        ipcRenderer.invoke(
+          "library:savePages",
+          pagesData
+        ),
+
+  }
+);
