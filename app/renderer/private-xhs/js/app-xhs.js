@@ -1481,7 +1481,7 @@ function mediaTagHtml(m){
     : `<img ${attr}="${escapeHtml(m.ref)}">`;
 }
 function fitMediaWidth(sheet, mediaEls){
-  const MIN_LEFT = 360, MAX_LEFT = 680, RIGHT = 460;
+  const MIN_LEFT = 460, MAX_LEFT = 680, RIGHT = 460;
   if(!mediaEls || mediaEls.length === 0) return;
   const ready = mediaEls.map(el => new Promise(resolve=>{
     if(el.tagName === "IMG"){
@@ -1530,13 +1530,7 @@ function openReader(id){
 
   // Reuse the previously measured width immediately, so reopening the same post
   // does not resize after the media loads.
-  if(hasMedia){
-    const savedWidth = Number(p.readerWidth) || 940;
-    const right = 460;
-    const left = Math.max(360, Math.min(560, savedWidth - right));
-    sheet.style.width = `${Math.min(window.innerWidth*0.94, savedWidth)}px`;
-    sheet.style.gridTemplateColumns = `${left}px ${right}px`;
-  }else{
+  if(!hasMedia){
     sheet.style.gridTemplateColumns = "";
     sheet.style.width = "";
   }
