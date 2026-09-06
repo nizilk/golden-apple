@@ -58,10 +58,10 @@
     ================================ */
 
   #categorySidebar{
-    width:200px;
+    width:180px;
     flex-shrink:0;
     background:var(--sidebar-bg);
-    padding:28px 18px;
+    padding:28px 8px;
     position:sticky;
     top:0;
     height:100vh;
@@ -410,7 +410,7 @@
 
 .card-title{
   display:block;
-  width:100%;
+  /* width:100%; */
   font-size:15px;
   font-weight:500;
   line-height:1.45;
