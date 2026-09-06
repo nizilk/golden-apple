@@ -1909,7 +1909,8 @@ button {
 .parchment {
   position: relative;
   width: clamp(560px, var(--parchment-width, 720px), 1000px);
-  max-width: calc(100vw - 80px);
+  max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 40px);
   min-height: 520px;
 
   padding: 54px 64px 58px;
@@ -1955,7 +1956,9 @@ button {
 
   color: #4a321e;
 
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
 
   /*
    * 轻微的不规则纸边。
@@ -2128,12 +2131,16 @@ button {
   line-height: 1.9;
 
   word-break: break-word;
+
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .view-content img {
   display: block;
 
   max-width: 100%;
+  max-height: 65vh;
   height: auto;
 
   margin:
@@ -2281,19 +2288,29 @@ button {
   word-break: break-word;
 }
 
-.editor-content img {
+
+.editor-content img,
+.view-content img {
   display: block;
 
+  width: auto;
   max-width: 100%;
+  max-height: 65vh;
   height: auto;
 
   margin: 16px auto;
 
   border-radius: 2px;
 
-  box-shadow:
-    0 5px 12px rgba(58,39,24,.14);
+  border: none;
+  box-shadow: none;
+
+  object-fit: contain;
+
+  resize: both;
+  overflow: auto;
 }
+
 
 .editor-source-row {
   position: relative;

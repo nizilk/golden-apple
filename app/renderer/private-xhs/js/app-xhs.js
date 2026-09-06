@@ -84,6 +84,7 @@ const electronStorage = {
 let resourceRootPath = null;
 
 let allPosts = [];
+let sessionOrder = [];
 
 let activeTag = null;
 let activePage = null;
@@ -142,6 +143,8 @@ async function init(){
     homePageId || null;
 
   await reload();
+
+  sessionOrder = [...allPosts].sort(() => Math.random() - 0.5);
 
   const savedPath =
     await window.electronAPI
@@ -1242,7 +1245,8 @@ function renderGrid(){
   const grid = document.getElementById("grid");
   const empty = document.getElementById("emptyState");
   const editPg = editingPageId ? pages.find(x=>x.id===editingPageId) : null;
-  let list = allPosts;
+  
+  let list = sessionOrder;
 
   if(!editPg){
     if(activePage){
