@@ -144,7 +144,7 @@ async function init(){
 
   await reload();
 
-  sessionOrder = [...allPosts].sort(() => Math.random() - 0.5);
+  sessionOrder = [...allPosts].sort(() => Math.random() - 0.5).map(p => p.id);
 
   const savedPath =
     await window.electronAPI
@@ -1246,7 +1246,9 @@ function renderGrid(){
   const empty = document.getElementById("emptyState");
   const editPg = editingPageId ? pages.find(x=>x.id===editingPageId) : null;
   
-  let list = sessionOrder;
+  let list = sessionOrder
+    .map(id => allPosts.find(p => p.id === id))
+    .filter(Boolean);
 
   if(!editPg){
     if(activePage){
@@ -2317,6 +2319,14 @@ document.getElementById("saveBtn").onclick = async ()=>{
   await writePostToDisk(post);
   closeEditor();
   await reload();
+  
+  if(!editingId){
+    sessionOrder = [
+      post.id,
+      ...sessionOrder.filter(id => id !== post.id)
+    ];
+  }
+  renderGrid();
   showToast(editingId ? "已更新" : "已收藏");
 };
 document.getElementById("deleteBtn").onclick = async ()=>{

@@ -1956,9 +1956,7 @@ button {
 
   color: #4a321e;
 
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-width: none;
+  overflow: hidden;
 
   /*
    * 轻微的不规则纸边。
@@ -2136,11 +2134,11 @@ button {
   overflow-wrap: anywhere;
 }
 
-.view-content img {
+/* .view-content img {
   display: block;
 
   max-width: 100%;
-  max-height: 65vh;
+  max-height: 60vh;
   height: auto;
 
   margin:
@@ -2148,7 +2146,7 @@ button {
 
   border-radius: 2px;
 
-}
+} */
 
 .view-source {
   min-height: 25px;
@@ -2295,7 +2293,7 @@ button {
 
   width: auto;
   max-width: 100%;
-  max-height: 65vh;
+  max-height: 60vh;
   height: auto;
 
   margin: 16px auto;
@@ -2671,8 +2669,45 @@ button {
 #editorContent,
 #viewContent {
   color: #4a321e;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  max-height: calc(100vh - 220px);
+
+  padding-right: 8px;
+
+  scrollbar-width: none;
 }
 
+#editorContent::-webkit-scrollbar,
+#viewContent::-webkit-scrollbar {
+  display: none;
+}
+
+
+
+/******************** 返回 **********************/
+
+.back-home{
+  position:fixed;
+  top:20px;
+  right:20px;
+  z-index:100;
+  width:32px;
+  height:32px;
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:8px;
+  color:#9A8F86;
+  text-decoration:none;
+  font-size:18px;
+  line-height:1;
+}
 
 
 </style>
@@ -2685,6 +2720,8 @@ button {
   <main class="shop-stage">
 
     <section class="wall-scene" id="wallScene">
+
+      <a class="back-home" href="../index.html" title="返回首页">⌂</a>
 
       <div class="wall-seam one"></div>
       <div class="wall-seam two"></div>
@@ -5013,107 +5050,13 @@ button {
      PARCHMENT WIDTH
      ========================================================= */
 
-  async function updateParchmentWidth(
-    root
-  ) {
-
-    const images =
-      [
-        ...root.querySelectorAll(
-          "img"
-        )
-      ];
-
-    if (
-      !images.length
-    ) {
-
-      els.potionModal
-        .querySelector(
-          ".parchment"
-        )
-        .style.setProperty(
-          "--parchment-width",
-          "720px"
-        );
-
-      return;
-    }
-
-    await Promise.all(
-      images.map(
-        img => {
-
-          if (
-            img.complete
-          ) {
-
-            return Promise.resolve();
-
-          }
-
-          return new Promise(
-            resolve => {
-
-              img.addEventListener(
-                "load",
-                resolve,
-                {
-                  once: true
-                }
-              );
-
-              img.addEventListener(
-                "error",
-                resolve,
-                {
-                  once: true
-                }
-              );
-
-            }
-          );
-
-        }
-      )
-    );
-
-    let largest = 0;
-
-    images.forEach(
-      img => {
-
-        largest =
-          Math.max(
-            largest,
-            img.naturalWidth ||
-              0,
-            img.getBoundingClientRect()
-              .width ||
-              0
-          );
-
-      }
-    );
-
-    const width =
-      Math.max(
-        680,
-        Math.min(
-          980,
-          largest + 120
-        )
-      );
-
+  async function updateParchmentWidth(root) {
     els.potionModal
-      .querySelector(
-        ".parchment"
-      )
+      .querySelector(".parchment")
       .style.setProperty(
         "--parchment-width",
-        `${width}px`
+        "720px"
       );
-
   }
 
   /* =========================================================
