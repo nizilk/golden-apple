@@ -1882,20 +1882,15 @@ button {
 
 .cocktail-modal {
   position: fixed;
-
   inset: 0;
-
   z-index: 200;
-
   display: flex;
   justify-content: center;
   align-items: center;
-
   padding: 40px;
-
+  min-height: 0;
   background:
     rgba(20,14,11,.52);
-
   backdrop-filter: blur(3px);
 }
 
@@ -1911,15 +1906,14 @@ button {
   width: 520px;
   max-width: 760px;
 
-  height: auto;
-
-  /* 只有防止内容超出整个应用窗口时才作为安全上限 */
-  max-height: calc(100vh - 48px);
+  height: min(100%, 100vh - 80px);
+  min-height: 0;
+  max-height: none;
 
   display: flex;
   flex-direction: column;
 
-  padding: 46px 58px 42px;
+  padding: 40px 40px 40px;
 
   /* 羊皮纸底色 + 纸张自然晕染 */
   background:
@@ -2709,10 +2703,10 @@ button {
 
 .martini-glyph {
   -webkit-mask-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 4h18L13 12v6h4M7 20h10' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 4h18M3 4l9 8 9-8M12 12v7M7 20h10' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 
   mask-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 4h18L13 12v6h4M7 20h10' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 4h18M3 4l9 8 9-8M12 12v7M7 20h10' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
 
 
@@ -4789,20 +4783,14 @@ function fitParchmentToContent(root, panel) {
   }
 
   /*
-   * 先取消上一次计算出的尺寸。
-   * 不根据屏幕计算宽度。
+   * --------------------------------------------------
+   * 1. 根据图片决定纸张宽度
+   * --------------------------------------------------
    */
+
   parchment.style.width = "auto";
   parchment.style.height = "auto";
 
-  /*
-   * 图片决定纸张宽度：
-   * 取正文中最宽的实际图片。
-   *
-   * 如果图片本身设置了 width，
-   * 就使用它；
-   * 否则使用图片当前实际宽度。
-   */
   const images = [
     ...root.querySelectorAll("img")
   ];
@@ -4815,13 +4803,16 @@ function fitParchmentToContent(root, panel) {
         img.style.width
       );
 
+    const naturalWidth =
+      img.naturalWidth || 0;
+
     const actualWidth =
-      Number.isFinite(
-        inlineWidth
-      )
+      Number.isFinite(inlineWidth)
         ? inlineWidth
-        : img.getBoundingClientRect()
-            .width;
+        : (
+            naturalWidth ||
+            img.getBoundingClientRect().width
+          );
 
     imageWidth =
       Math.max(
@@ -4830,29 +4821,16 @@ function fitParchmentToContent(root, panel) {
       );
   });
 
-  /*
-   * 纸张左右 padding：
-   * 58 + 58 = 116
-   */
   const horizontalPadding = 116;
 
-  /*
-   * 没有图片时给文字一个正常的阅读宽度。
-   * 有图片时，图片决定宽度。
-   */
   const desiredWidth =
     imageWidth > 0
-      ? imageWidth +
-        horizontalPadding
+      ? imageWidth + horizontalPadding
       : 560;
 
-  /*
-   * 防止极小图片让纸张过窄，
-   * 也防止超大图片把纸张撑爆。
-   */
   const finalWidth =
     Math.max(
-      460,
+      520,
       Math.min(
         760,
         desiredWidth
@@ -4860,59 +4838,118 @@ function fitParchmentToContent(root, panel) {
     );
 
   parchment.style.width =
-    `${Math.round(
-      finalWidth
-    )}px`;
+    `${Math.round(finalWidth)}px`;
+
 
   /*
-   * 重新计算布局。
-   * 宽度确定以后，文字自然换行。
+   * --------------------------------------------------
+   * 2. 先恢复 flex 布局
+   * --------------------------------------------------
    */
-  root.style.flex = "none";
 
-  const contentHeight =
-    root.scrollHeight;
+  root.style.flex = "";
+  root.style.overflowY = "";
+
 
   /*
-   * panel.scrollHeight 包含：
-   * 标题
-   * 正文
-   * 来源
-   * 底部控制栏
+   * --------------------------------------------------
+   * 3. 计算“自然高度”
+   *
+   * 这里故意不使用 panel.scrollHeight，
+   * 因为它会把正文的全部滚动内容算进去。
+   *
+   * 我们只让 parchment 根据当前内容自然长高。
+   * 超过最大高度以后，再让 root 自己滚动。
+   * --------------------------------------------------
    */
+
+  const panelChildren = [
+    ...panel.children
+  ].filter(
+    element =>
+      !element.hidden
+  );
+
+  let naturalPanelHeight = 0;
+
+  panelChildren.forEach(element => {
+    naturalPanelHeight +=
+      element.getBoundingClientRect().height;
+
+    const style =
+      getComputedStyle(element);
+
+    naturalPanelHeight +=
+      parseFloat(style.marginTop) || 0;
+
+    naturalPanelHeight +=
+      parseFloat(style.marginBottom) || 0;
+  });
+
+
+  /*
+   * parchment 的上下 padding：
+   * 46 + 42 = 88
+   */
+  const parchmentVerticalPadding = 88;
+
   const naturalHeight =
-    panel.scrollHeight +
-    88;
+    naturalPanelHeight +
+    parchmentVerticalPadding;
+
+
+  /*
+   * --------------------------------------------------
+   * 4. 纸张最大高度
+   *
+   * 只有到了这里才使用屏幕高度。
+   * 屏幕只是“安全上限”，不是正常尺寸来源。
+   * --------------------------------------------------
+   */
 
   const maxHeight =
-    window.innerHeight -
-    48;
+    window.innerHeight - 80;
 
+
+  /*
+   * 至少保持一个舒服的小矩形。
+   */
   const finalHeight =
-    Math.min(
-      naturalHeight,
-      maxHeight
+    Math.max(
+      280,
+      Math.min(
+        naturalHeight,
+        maxHeight
+      )
     );
 
   parchment.style.height =
-    `${Math.max(
-      280,
-      Math.round(
-        finalHeight
-      )
-    )}px`;
+    `${Math.round(finalHeight)}px`;
+
 
   /*
-   * 如果正文真的超过窗口，
-   * 只让正文区域滚动。
+   * --------------------------------------------------
+   * 5. 只有正文超过可用空间时才滚动
+   *
+   * 恢复 flex 后：
+   *
+   * root = 1 1 auto
+   * root = min-height: 0
+   * root = overflow-y: auto
+   *
+   * 所以 source / footer 会留在下面。
+   * --------------------------------------------------
    */
+
+  const contentIsTooTall =
+    root.scrollHeight >
+    root.clientHeight;
+
   root.style.overflowY =
-    contentHeight >
-    finalHeight
+    contentIsTooTall
       ? "auto"
       : "visible";
 }
-
 
   function closeModal() {
     
@@ -5101,7 +5138,7 @@ function fitParchmentToContent(root, panel) {
      EDITOR
      ========================================================= */
 
-  function openEditor(
+  async function openEditor(
     id = null
   ) {
 
@@ -5152,7 +5189,7 @@ function fitParchmentToContent(root, panel) {
         "ruby"
       );
 
-      hydrateImages(
+      await hydrateImages(
         els.editorContent
       );
 
