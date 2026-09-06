@@ -298,18 +298,19 @@ button {
   transform: rotate(2deg);
 }
 
+
 /* =========================================================
    SHELF SCROLL
    ========================================================= */
 
 .shelf-scroll-area {
   position: absolute;
-  z-index: 8;
+  z-index: 20;
 
-  top: clamp(160px, 20vh, 210px);
-  left: clamp(30px, 7vw, 95px);
-  right: clamp(30px, 7vw, 95px);
-  bottom: clamp(205px, 25vh, 255px);
+  top: 160px;
+  left: 0px;
+  right: 0px;
+  bottom: 160px;
 
   overflow-y: auto;
   overflow-x: hidden;
@@ -326,6 +327,11 @@ button {
   display: none;
 }
 
+
+/* =========================================================
+   DYNAMIC SHELF ROWS
+   ========================================================= */
+
 .shelf-rows {
   width: 100%;
   min-height: 100%;
@@ -338,21 +344,23 @@ button {
   padding-bottom: 36px;
 }
 
+
+
 /* =========================================================
    COCKTAIL RACK
    ========================================================= */
 
 .shelf-row {
-  position: relative;
+  position:relative;
 
-  width: 100%;
-  min-height: 182px;
+  width:100%;
+  min-height:182px;
 
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
 
-  gap: 6px;
+  gap:6px;
 
   padding:
     10px
@@ -360,93 +368,34 @@ button {
     18px;
 }
 
-.shelf-row::before {
-  content: "";
-  position: absolute;
 
-  left: 0;
-  right: 0;
-  bottom: 7px;
+/* =========================================================
+   PNG SHELF ROW
+   ========================================================= */
 
-  height: 16px;
+.shelf-row-image {
+  position:absolute;
 
-  background: #69452f;
+  left:0;
+  right:0;
+  bottom:0;
 
-  border:
-    2px solid #2c1d16;
+  width:100%;
+  height:auto;
 
-  border-radius: 2px;
+  display:block;
 
-  box-shadow:
-    0 3px 0 rgba(36,24,17,.45);
+  object-fit:contain;
+  object-position:center bottom;
 
-  z-index: 0;
+  user-select:none;
+  -webkit-user-drag:none;
+  pointer-events:none;
+
+  z-index:0;
 }
 
-.shelf-row::after {
-  content: "";
 
-  position: absolute;
-
-  left: 2%;
-  right: 2%;
-  bottom: 0;
-
-  height: 3px;
-
-  background: #2b1c15;
-
-  opacity: .65;
-
-  z-index: -1;
-}
-
-.rack-bracket {
-  position: absolute;
-
-  bottom: 21px;
-
-  width: 17px;
-  height: 34px;
-
-  border-radius: 1px;
-
-  background: #493021;
-
-  border: 1px solid #261a14;
-
-  box-shadow: none;
-
-  z-index: 1;
-}
-
-.rack-bracket::after {
-  content: "";
-
-  position: absolute;
-
-  left: 50%;
-  top: -3px;
-
-  width: 7px;
-  height: 7px;
-
-  transform: translateX(-50%);
-
-  border-radius: 50%;
-
-  background: #241812;
-
-  box-shadow: none;
-}
-
-.rack-bracket.left {
-  left: 7%;
-}
-
-.rack-bracket.right {
-  right: 7%;
-}
 
 /* =========================================================
    COCKTAIL SLOT
@@ -1274,90 +1223,10 @@ button {
   opacity: .5;
 }
 
-/* =========================================================
-   TABLE
-   ========================================================= */
 
-.work-table {
-  position: absolute;
-
-  z-index: 24;
-
-  left: -4%;
-  right: -4%;
-
-  bottom: -4px;
-
-  height:
-    clamp(180px, 23vh, 235px);
-
-  background: #593a27;
-
-  border-top:
-    3px solid #2c1d16;
-
-  box-shadow:
-    0 -4px 0 rgba(35,23,16,.55);
-}
-
-.work-table::before {
-  content: "";
-
-  position: absolute;
-
-  left: 0;
-  right: 0;
-  top: 0;
-
-  height: 11px;
-
-  background: #795034;
-
-  border-bottom:
-    2px solid #39251b;
-
-  box-shadow: none;
-}
-
-.work-table::after {
-  content: "";
-
-  position: absolute;
-
-  inset: 20px 0 0;
-
-  opacity: .16;
-
-  background:
-    repeating-linear-gradient(
-      4deg,
-      transparent 0 28px,
-      rgba(36,20,13,.45) 29px,
-      transparent 31px 58px
-    );
-
-  pointer-events: none;
-}
-
-.table-front {
-  position: absolute;
-
-  left: 0;
-  right: 0;
-  bottom: 0;
-
-  height: 32px;
-
-  background:
-    linear-gradient(
-      180deg,
-      #573626,
-      #38231a
-    );
-}
 
 /* =========================================================
-   BOTTOM COCKTAIL SHAKER / NEW MEMORY
+   BOTTOM ACTION BUTTONS
    ========================================================= */
 
 .cauldron-stage {
@@ -1366,422 +1235,90 @@ button {
   z-index: 50;
 
   left: 50%;
-  bottom: clamp(18px, 3vh, 38px);
+  bottom: 20px;
 
   transform: translateX(-50%);
 
-  width: min(380px, 44vw);
-  height: 250px;
+  /* width: 430px;
+  height: 260px; */
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  gap: 150px;
 
   pointer-events: none;
 }
 
+
+/* =========================================================
+   BUTTON
+   ========================================================= */
+
 .cauldron-button {
-  position: absolute;
+  position: relative;
 
-  left: 50%;
-  bottom: 0;
+  flex: 0 0 150px;
 
-  width: 100%;
-  height: 100%;
+  width: 150px;
+  height: auto;
 
+  margin: 0;
   padding: 0;
 
-  transform: translateX(-50%);
+  border: 0;
 
   background: transparent;
 
   cursor: pointer;
 
   pointer-events: auto;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  transform: translateY(0);
+
+  transition:
+    transform .22s ease,
+    filter .22s ease;
 }
 
-/* shaker shadow */
-
-.cauldron-shadow {
-  position: absolute;
-
-  z-index: 0;
-
-  left: 50%;
-  bottom: 7px;
-
-  width: 245px;
-  height: 42px;
-
-  transform: translateX(-50%);
-
-  border-radius: 50%;
-
-  background:
-    rgba(0,0,0,.42);
-
-  filter: blur(13px);
-}
 
 /* =========================================================
-   COCKTAIL SHAKER
+   SHAKER IMAGE
    ========================================================= */
 
-.cauldron-body {
-  position: absolute;
+.cauldron-image {
+  display: block;
 
-  z-index: 5;
+  width: 150px;
+  height: auto;
 
-  left: 50%;
-  bottom: 17px;
+  max-height: 260px;
 
-  transform:
-    translateX(-50%)
-    rotate(-1deg);
+  object-fit: contain;
+  object-position: center bottom;
 
-  width: 145px;
-  height: 151px;
+  user-select: none;
 
-  border-radius:
-    20px
-    20px
-    28px
-    28px;
+  -webkit-user-drag: none;
 
-  background: #74736b;
+  pointer-events: none;
 
-  border:
-    2px solid #292824;
-
-  box-shadow:
-    0 5px 0 rgba(38,31,26,.48);
 }
 
-.cauldron-rim {
-  position: absolute;
 
-  z-index: 8;
+/* =========================================================
+   HOVER
+   ========================================================= */
 
-  left: 50%;
-  top: 20px;
-
-  transform:
-    translateX(-50%)
-    rotate(-1deg);
-
-  width: 152px;
-  height: 27px;
-
-  border-radius: 50%;
-
-  background:
-    linear-gradient(
-      180deg,
-      #d6d5cb,
-      #6c706d
-    );
-
-  border:
-    1px solid rgba(20,20,19,.58);
-
-  box-shadow:
-    inset 0 3px 4px rgba(255,255,255,.26),
-    0 3px 5px rgba(0,0,0,.28);
+.cauldron-button:hover {
+  transform: translateY(-9px);
 }
 
-.cauldron-liquid {
-  position: absolute;
-
-  z-index: 9;
-
-  left: 50%;
-  top: 24px;
-
-  transform: translateX(-50%);
-
-  width: 132px;
-  height: 17px;
-
-  border-radius: 50%;
-
-  background: #9c3040;
-
-  box-shadow: none;
-}
-
-/* shaker cap */
-
-.shaker-cap {
-  position: absolute;
-
-  z-index: 12;
-
-  left: 50%;
-  top: -4px;
-
-  width: 67px;
-  height: 35px;
-
-  transform:
-    translateX(-50%)
-    rotate(-1deg);
-
-  border-radius:
-    7px
-    7px
-    4px
-    4px;
-
-  background: #5c5b55;
-
-  border:
-    2px solid #292824;
-
-  box-shadow: none;
-}
-
-.shaker-cap::after {
-  content: "";
-
-  position: absolute;
-
-  left: 50%;
-  top: -10px;
-
-  width: 38px;
-  height: 15px;
-
-  transform: translateX(-50%);
-
-  border-radius:
-    5px
-    5px
-    3px
-    3px;
-
-  background: #68675f;
-
-  border:
-    2px solid #292824;
-}
-
-/* shaker arms */
-
-.cauldron-handle {
-  position: absolute;
-
-  z-index: 3;
-
-  top: 56px;
-
-  width: 52px;
-  height: 76px;
-
-  border:
-    7px solid #45443f;
-
-  border-radius: 50%;
-
-  opacity: 1;
-}
-
-.cauldron-handle.left {
-  left: 30px;
-
-  transform: rotate(18deg);
-}
-
-.cauldron-handle.right {
-  right: 30px;
-
-  transform: rotate(-18deg);
-}
-
-/* cocktail spoon */
-
-.stir-stick {
-  position: absolute;
-
-  z-index: 20;
-
-  left: 50%;
-  top: -73px;
-
-  width: 5px;
-  height: 140px;
-
-  transform:
-    translateX(-50%)
-    rotate(20deg);
-
-  border-radius: 5px;
-
-  background:
-    linear-gradient(
-      90deg,
-      #827050,
-      #e2c58c,
-      #756044
-    );
-
-  box-shadow:
-    2px 4px 5px rgba(0,0,0,.25);
-}
-
-.stir-stick::after {
-  content: "";
-
-  position: absolute;
-
-  left: -6px;
-  top: -15px;
-
-  width: 17px;
-  height: 27px;
-
-  border-radius:
-    50%
-    50%
-    45%
-    45%;
-
-  background:
-    radial-gradient(
-      circle at 35% 25%,
-      #ffe0a6,
-      #9f7040 45%,
-      #56371f 100%
-    );
-}
-
-/* garnish on shaker */
-
-.shaker-garnish {
-  position: absolute;
-
-  z-index: 30;
-
-  left: 50%;
-  top: 4px;
-
-  width: 36px;
-  height: 13px;
-
-  transform:
-    translateX(-50%)
-    rotate(-12deg);
-
-  border-radius:
-    100%
-    0
-    100%
-    0;
-
-  background:
-    linear-gradient(
-      135deg,
-      #9eac5e,
-      #405437
-    );
-}
-
-/* shaker steam / aroma */
-
-.steam {
-  position: absolute;
-
-  z-index: 22;
-
-  bottom: 185px;
-
-  width: 18px;
-  height: 55px;
-
-  opacity: .38;
-
-  border-left:
-    3px solid rgba(220,210,183,.54);
-
-  filter: blur(1px);
-
-  animation:
-    steamFloat 3.7s ease-in-out infinite;
-}
-
-.steam.one {
-  left: 42%;
-}
-
-.steam.two {
-  left: 55%;
-
-  bottom: 190px;
-
-  height: 67px;
-
-  animation-delay: -1.4s;
-}
-
-.steam.three {
-  left: 49%;
-
-  bottom: 196px;
-
-  height: 49px;
-
-  animation-delay: -2.4s;
-}
-
-@keyframes steamFloat {
-  0%,
-  100% {
-    opacity: .12;
-
-    transform:
-      translateY(4px)
-      scale(.94)
-      rotate(5deg);
-  }
-
-  50% {
-    opacity: .42;
-
-    transform:
-      translateY(-11px)
-      scale(1.06)
-      rotate(-4deg);
-  }
-}
-
-.cauldron-label {
-  position: absolute;
-
-  z-index: 35;
-
-  left: 50%;
-  bottom: -4px;
-
-  transform: translateX(-50%);
-
-  color:
-    rgba(226,199,151,.72);
-
-  font-family:
-    "STKaiti",
-    "KaiTi",
-    serif;
-
-  font-size: 12px;
-  letter-spacing: 2px;
-
-  white-space: nowrap;
-}
-
-.cauldron-button:hover .cauldron-body {
-  filter: brightness(1.08);
-}
-
-.cauldron-button:hover .cauldron-liquid {
-  box-shadow:
-    inset 0 3px 4px rgba(255,255,255,.18),
-    0 0 23px rgba(205,59,70,.25);
-}
 
 /* =========================================================
    MODAL
@@ -2830,28 +2367,17 @@ button {
            ===================================================== -->
 
       <div
-        class="shelf-scroll-area"
         id="shelfScroll"
+        class="shelf-scroll-area"
         aria-label="恶魔酒馆酒架"
       >
-
         <div
           id="shelfRows"
           class="shelf-rows"
         ></div>
-
       </div>
 
-      <!-- =====================================================
-           TABLE
-           ===================================================== -->
-
-      <div
-        class="work-table"
-        aria-hidden="true"
-      >
-        <div class="table-front"></div>
-      </div>
+      
 
       <!-- =====================================================
            COCKTAIL SHAKER
@@ -2867,27 +2393,29 @@ button {
           title="调制新的记忆"
         >
 
-          <div class="cauldron-shadow"></div>
+          <img
+            class="cauldron-image"
+            src="assets/shaker-1.png"
+            alt=""
+            draggable="false"
+          >
 
-          <div class="steam one"></div>
-          <div class="steam two"></div>
-          <div class="steam three"></div>
+        </button>
 
-          <div class="stir-stick"></div>
+        <button
+          id="newCocktailButton-2"
+          class="cauldron-button"
+          type="button"
+          aria-label="调制新的记忆"
+          title="调制新的记忆"
+        >
 
-          <div class="cauldron-handle left"></div>
-          <div class="cauldron-handle right"></div>
-
-          <div class="cauldron-body"></div>
-          <div class="cauldron-rim"></div>
-          <div class="cauldron-liquid"></div>
-
-          <div class="shaker-cap"></div>
-          <div class="shaker-garnish"></div>
-
-          <div class="cauldron-label">
-            调制新的记忆
-          </div>
+          <img
+            class="cauldron-image"
+            src="assets/shaker-2.png"
+            alt=""
+            draggable="false"
+          >
 
         </button>
 
@@ -4413,87 +3941,68 @@ button {
 
   }
 
-  /* =========================================================
-     SHELF
-     ========================================================= */
 
-  function renderShelf() {
 
-    els.shelfRows.innerHTML =
-      "";
+/* =========================================================
+   SHELF
+   ========================================================= */
 
-    const perRow =
-      getBottleSlotCount();
+function renderShelf() {
 
-    if (
-      !cocktails.length
-    ) {
-      return;
-    }
+  els.shelfRows.innerHTML = "";
 
-    for (
-      let i = 0;
-      i < cocktails.length;
-      i += perRow
-    ) {
+  const perRow = getBottleSlotCount();
 
-      const row =
-        document.createElement(
-          "div"
+  if (!cocktails.length) {
+    return;
+  }
+
+  for (
+    let i = 0;
+    i < cocktails.length;
+    i += perRow
+  ) {
+
+    const row = document.createElement("div");
+
+    row.className = "shelf-row";
+
+    const shelfImage = document.createElement("img");
+
+    shelfImage.className = "shelf-row-image";
+
+    shelfImage.src = "assets/shelf-row.png";
+
+    shelfImage.alt = "";
+
+    shelfImage.draggable = false;
+
+    row.appendChild(shelfImage);
+
+    const group = cocktails.slice(
+      i,
+      i + perRow
+    );
+
+    group.forEach(
+      cocktail => {
+
+        row.appendChild(
+          createBottleCard(
+            cocktail
+          )
         );
 
-      row.className =
-        "shelf-row";
+      }
+    );
 
-      const leftBracket =
-        document.createElement(
-          "span"
-        );
-
-      leftBracket.className =
-        "rack-bracket left";
-
-      row.appendChild(
-        leftBracket
-      );
-
-      const rightBracket =
-        document.createElement(
-          "span"
-        );
-
-      rightBracket.className =
-        "rack-bracket right";
-
-      row.appendChild(
-        rightBracket
-      );
-
-      const group =
-        cocktails.slice(
-          i,
-          i + perRow
-        );
-
-      group.forEach(
-        cocktail => {
-
-          row.appendChild(
-            createBottleCard(
-              cocktail
-            )
-          );
-
-        }
-      );
-
-      els.shelfRows.appendChild(
-        row
-      );
-
-    }
+    els.shelfRows.appendChild(row);
 
   }
+
+}
+
+
 
   /* =========================================================
      DRAG / DROP
