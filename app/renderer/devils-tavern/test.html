@@ -3067,6 +3067,8 @@ button {
 
   let currentCocktailId = null;
 
+  let currentOriginalContent = "";
+
   let currentShape = "martini";
 
   let currentColor = "ruby";
@@ -3207,6 +3209,151 @@ button {
     return p;
 
   }
+
+
+  function isManagedImagePath(path) {
+    if (!path) {
+      return false;
+    }
+
+    const p =
+      String(path).trim()
+        .replace(/\\/g, "/");
+
+    const prefix =
+      `${IMAGE_DIR}/`;
+
+    /*
+    * 只允许删除：
+    * devils-tavern/images/xxx.webp
+    *
+    * 绝对路径、用户资源路径、
+    * 其他目录、data URL 一律禁止。
+    */
+    if (!p.startsWith(prefix)) {
+      return false;
+    }
+
+    const ref =
+      p.slice(prefix.length);
+
+    /*
+    * 只允许 images 目录下面的直接文件。
+    * 不允许 ../、子目录、绝对路径。
+    */
+    if (
+      !ref ||
+      ref.includes("/") ||
+      ref.includes("\\") ||
+      ref === "." ||
+      ref === ".."
+    ) {
+      return false;
+    }
+
+    return true;
+  }
+
+  function collectManagedImagePaths(
+    root
+  ) {
+    const paths =
+      new Set();
+
+    if (!root) {
+      return paths;
+    }
+
+    let container =
+      root;
+
+    if (
+      typeof root ===
+      "string"
+    ) {
+      const doc =
+        new DOMParser()
+          .parseFromString(
+            root,
+            "text/html"
+          );
+
+      container =
+        doc.body;
+    }
+
+    container
+      .querySelectorAll("img")
+      .forEach(img => {
+
+        const path =
+          normalizeImagePath(
+            img.dataset.localSrc ||
+            img.getAttribute("src") ||
+            ""
+          );
+
+        if (
+          isManagedImagePath(path)
+        ) {
+          paths.add(path);
+        }
+
+      });
+
+    return paths;
+  }
+
+  async function deleteUnusedManagedImages(
+    oldContent,
+    newContent
+  ) {
+    const oldPaths =
+      collectManagedImagePaths(
+        oldContent
+      );
+
+    const newPaths =
+      collectManagedImagePaths(
+        newContent
+      );
+
+    for (
+      const oldPath of oldPaths
+    ) {
+
+      if (
+        newPaths.has(oldPath)
+      ) {
+        continue;
+      }
+
+      if (
+        !isManagedImagePath(oldPath)
+      ) {
+        continue;
+      }
+
+      try {
+
+        await window.electronAPI
+          .deleteDataFile(
+            oldPath
+          );
+
+      } catch (error) {
+
+        console.warn(
+          "删除已废弃的本地图片失败：",
+          oldPath,
+          error
+        );
+
+      }
+    }
+  }
+
+
 
   function escapeHtml(value) {
 
@@ -4549,6 +4696,8 @@ button {
     currentCocktailId =
       id;
 
+    currentOriginalContent = "";
+
     els.viewPanel.hidden =
       true;
 
@@ -4574,6 +4723,9 @@ button {
         cocktail.source || "";
 
       els.editorContent.innerHTML =
+        cocktail.content || "";
+
+      currentOriginalContent =
         cocktail.content || "";
 
       setShape(
@@ -4929,6 +5081,9 @@ button {
         currentCocktailId ||
         makeId();
 
+      const oldContent =
+        currentOriginalContent;
+
       await finalizePendingUploads(
         els.editorContent,
         cocktailId
@@ -4938,6 +5093,15 @@ button {
         normalizeEditorImages(
           els.editorContent
         );
+
+      if (
+        currentCocktailId
+      ) {
+        await deleteUnusedManagedImages(
+          oldContent,
+          content
+        );
+      }
 
       if (
         currentCocktailId
@@ -5015,40 +5179,50 @@ button {
      DELETE
      ========================================================= */
 
-  async function deleteCocktail(
-    id
-  ) {
+async function deleteCocktail(
+  id
+) {
+  const cocktail =
+    cocktails.find(
+      p =>
+        p.id === id
+    );
 
-    const cocktail =
-      cocktails.find(
-        p =>
-          p.id === id
-      );
-
-    if (!cocktail) {
-      return;
-    }
-
-    const confirmed =
-      window.confirm(
-        "确定要让这杯记忆消失吗？"
-      );
-
-    if (!confirmed) {
-      return;
-    }
-
-    cocktails =
-      cocktails.filter(
-        p =>
-          p.id !== id
-      );
-
-    await saveCocktails();
-
-    renderShelf();
-
+  if (!cocktail) {
+    return;
   }
+
+  const confirmed =
+    window.confirm(
+      "确定要让这杯记忆消失吗？"
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+  /*
+   * 先删除这条记忆不再被任何内容引用的
+   * 程序自己管理的图片。
+   *
+   * 这里只处理 devils-tavern/images/
+   * 绝不会删除用户通过本地路径引用的图片。
+   */
+  await deleteUnusedManagedImages(
+    cocktail.content || "",
+    ""
+  );
+
+  cocktails =
+    cocktails.filter(
+      p =>
+        p.id !== id
+    );
+
+  await saveCocktails();
+
+  renderShelf();
+}
 
   /* =========================================================
      NEW COCKTAIL
