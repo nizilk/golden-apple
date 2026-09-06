@@ -1908,10 +1908,16 @@ button {
 
 .parchment {
   position: relative;
+
   width: clamp(560px, var(--parchment-width, 720px), 1000px);
   max-width: calc(100vw - 40px);
+
+  height: min(760px, calc(100vh - 40px));
   max-height: calc(100vh - 40px);
   min-height: 520px;
+  
+  display: flex;
+  flex-direction: column;
 
   padding: 54px 64px 58px;
 
@@ -2266,9 +2272,10 @@ button {
 }
 
 .editor-content {
-  min-height: 220px;
+  flex: 1 1 auto;
+  min-height: 0;
 
-  padding: 3px 0;
+  padding: 3px 8px 3px 0;
 
   outline: none;
 
@@ -2284,6 +2291,15 @@ button {
   line-height: 1.9;
 
   word-break: break-word;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  scrollbar-width: none;
+}
+
+.editor-content::-webkit-scrollbar {
+  display: none;
 }
 
 
@@ -2299,25 +2315,22 @@ button {
   margin: 16px auto;
 
   border-radius: 2px;
-
   border: none;
   box-shadow: none;
 
   object-fit: contain;
-
-  resize: both;
-  overflow: auto;
 }
 
 
 .editor-source-row {
   position: relative;
 
+  flex: 0 0 auto;
+
   display: flex;
   justify-content: flex-end;
 
-  margin-top: 20px;
-
+  margin-top: 8px;
   padding-bottom: 7px;
 }
 
@@ -2389,18 +2402,89 @@ button {
   font-size: 14px;
 }
 
+.editor-panel {
+  display: flex;
+  flex-direction: column;
+
+  height: 100%;
+  min-height: 0;
+
+  overflow: hidden;
+}
+
+
+.editor-image-wrap {
+  position: relative;
+
+  display: block;
+
+  width: fit-content;
+  max-width: 100%;
+
+  margin: 16px auto;
+}
+
+.editor-image-wrap img {
+  display: block;
+
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+
+  margin: 0;
+
+  border: none;
+  box-shadow: none;
+  border-radius: 2px;
+}
+
+.editor-image-wrap.selected {
+  outline: 1px dashed rgba(103, 72, 39, .42);
+  outline-offset: 4px;
+}
+
+.editor-image-resize-handle {
+  position: absolute;
+
+  right: -6px;
+  bottom: -6px;
+
+  width: 14px;
+  height: 14px;
+
+  border-radius: 50%;
+
+  background: #795638;
+
+  box-shadow:
+    0 1px 3px rgba(50, 31, 19, .25);
+
+  cursor: nwse-resize;
+
+  opacity: 0;
+  transition: opacity .15s ease;
+}
+
+.editor-image-wrap.selected
+.editor-image-resize-handle {
+  opacity: 1;
+}
+
 /* =========================================================
    ACTIONS
    ========================================================= */
 
 .editor-actions {
+  flex: 0 0 auto;
+
   display: flex;
   justify-content: flex-end;
   align-items: center;
 
   gap: 8px;
 
-  margin-top: 20px;
+  margin-top: 8px;
+  padding-top: 6px;
 }
 
 .icon-button {
@@ -2451,13 +2535,25 @@ button {
    ========================================================= */
 
 .style-choices {
+  flex: 0 0 auto;
+
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-start;
 
   gap: 8px;
 
-  margin-top: 17px;
+  margin-top: 10px;
+  padding-top: 8px;
+
+  max-height: 68px;
+  overflow-y: auto;
+
+  scrollbar-width: none;
+}
+
+.style-choices::-webkit-scrollbar {
+  display: none;
 }
 
 .style-choice {
@@ -3781,6 +3877,43 @@ button {
 
     clone
       .querySelectorAll(
+        ".editor-image-resize-handle"
+      )
+      .forEach(
+        handle => {
+          handle.remove();
+        }
+      );
+
+    clone
+      .querySelectorAll(
+        ".editor-image-wrap"
+      )
+      .forEach(
+        wrap => {
+
+          const img =
+            wrap.querySelector(
+              "img"
+            );
+
+          if (!img) {
+            wrap.remove();
+            return;
+          }
+
+          wrap.parentNode.insertBefore(
+            img,
+            wrap
+          );
+
+          wrap.remove();
+
+        }
+      );
+
+    clone
+      .querySelectorAll(
         "img"
       )
       .forEach(
@@ -4853,6 +4986,278 @@ button {
 
     }
   );
+
+
+els.editorContent.addEventListener(
+  "mousedown",
+  event => {
+
+    if (
+      event.target.closest(
+        ".editor-image-resize-handle"
+      )
+    ) {
+      return;
+    }
+
+    if (
+      !event.target.closest(
+        "img"
+      )
+    ) {
+      deselectEditorImage();
+    }
+  }
+);
+
+
+let selectedEditorImage = null;
+let imageResizeState = null;
+
+function selectEditorImage(img) {
+  if (!img) {
+    return;
+  }
+
+  if (
+    selectedEditorImage &&
+    selectedEditorImage !== img
+  ) {
+    const oldWrap =
+      selectedEditorImage.closest(
+        ".editor-image-wrap"
+      );
+
+    if (oldWrap) {
+      oldWrap.classList.remove(
+        "selected"
+      );
+    }
+  }
+
+  let wrap =
+    img.closest(
+      ".editor-image-wrap"
+    );
+
+  if (!wrap) {
+    wrap =
+      document.createElement(
+        "span"
+      );
+
+    wrap.className =
+      "editor-image-wrap";
+
+    img.parentNode.insertBefore(
+      wrap,
+      img
+    );
+
+    wrap.appendChild(
+      img
+    );
+
+    const handle =
+      document.createElement(
+        "span"
+      );
+
+    handle.className =
+      "editor-image-resize-handle";
+
+    handle.setAttribute(
+      "contenteditable",
+      "false"
+    );
+
+    wrap.appendChild(
+      handle
+    );
+  }
+
+  wrap.classList.add(
+    "selected"
+  );
+
+  selectedEditorImage =
+    img;
+}
+
+function deselectEditorImage() {
+  if (
+    !selectedEditorImage
+  ) {
+    return;
+  }
+
+  const wrap =
+    selectedEditorImage.closest(
+      ".editor-image-wrap"
+    );
+
+  if (wrap) {
+    wrap.classList.remove(
+      "selected"
+    );
+  }
+
+  selectedEditorImage =
+    null;
+}
+
+els.editorContent.addEventListener(
+  "click",
+  event => {
+
+    const img =
+      event.target.closest(
+        "img"
+      );
+
+    if (!img) {
+      deselectEditorImage();
+      return;
+    }
+
+    event.preventDefault();
+
+    selectEditorImage(
+      img
+    );
+  }
+);
+
+els.editorContent.addEventListener(
+  "pointerdown",
+  event => {
+
+    const handle =
+      event.target.closest(
+        ".editor-image-resize-handle"
+      );
+
+    if (!handle) {
+      return;
+    }
+
+    const wrap =
+      handle.closest(
+        ".editor-image-wrap"
+      );
+
+    const img =
+      wrap?.querySelector(
+        "img"
+      );
+
+    if (!img) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    selectEditorImage(
+      img
+    );
+
+    const rect =
+      img.getBoundingClientRect();
+
+    imageResizeState = {
+      img,
+      startX:
+        event.clientX,
+      startWidth:
+        rect.width
+    };
+
+    handle.setPointerCapture(
+      event.pointerId
+    );
+  }
+);
+
+els.editorContent.addEventListener(
+  "pointermove",
+  event => {
+
+    if (
+      !imageResizeState
+    ) {
+      return;
+    }
+
+    const {
+      img,
+      startX,
+      startWidth
+    } =
+      imageResizeState;
+
+    const delta =
+      event.clientX -
+      startX;
+
+    const editorWidth =
+      els.editorContent
+        .clientWidth;
+
+    const maxWidth =
+      Math.max(
+        120,
+        editorWidth
+      );
+
+    const newWidth =
+      Math.max(
+        120,
+        Math.min(
+          maxWidth,
+          startWidth +
+            delta
+        )
+      );
+
+    img.style.width =
+      `${Math.round(
+        newWidth
+      )}px`;
+
+    img.style.height =
+      "auto";
+  }
+);
+
+els.editorContent.addEventListener(
+  "pointerup",
+  event => {
+
+    if (
+      !imageResizeState
+    ) {
+      return;
+    }
+
+    const handle =
+      event.target.closest(
+        ".editor-image-resize-handle"
+      );
+
+    if (handle) {
+      try {
+        handle.releasePointerCapture(
+          event.pointerId
+        );
+      } catch {}
+    }
+
+    imageResizeState =
+      null;
+  }
+);
+
 
   async function insertImageFile(
     file
