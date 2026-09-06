@@ -97,7 +97,7 @@ button {
 .wall-scene {
   position: relative;
 
-  width: min(1320px, 100vw);
+  width: 100%;
   height: 100%;
 
   overflow: hidden;
@@ -1909,17 +1909,17 @@ button {
 .parchment {
   position: relative;
 
-  width: clamp(560px, var(--parchment-width, 720px), 1000px);
-  max-width: calc(100vw - 40px);
+  width: min(900px, calc(100vw - 32px));
+  height: min(760px, calc(100vh - 32px));
 
-  height: min(760px, calc(100vh - 40px));
-  max-height: calc(100vh - 40px);
-  min-height: 520px;
-  
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 32px);
+  min-height: 0;
+
   display: flex;
   flex-direction: column;
 
-  padding: 54px 64px 58px;
+  padding: 46px 58px 42px;
 
   /* 羊皮纸底色 + 纸张自然晕染 */
   background:
@@ -2122,7 +2122,11 @@ button {
   opacity: .72;
 }
 
+
 .view-content {
+  flex: 1 1 auto;
+  min-height: 0;
+
   color: #49392b;
 
   font-family:
@@ -2131,33 +2135,33 @@ button {
     "FangSong",
     serif;
 
-  font-size: 18px;
+  font-size: clamp(16px, 1.35vw, 18px);
   line-height: 1.9;
-
   word-break: break-word;
 
   max-width: 100%;
   overflow-wrap: anywhere;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  padding-right: 8px;
+
+  scrollbar-width: none;
 }
 
-/* .view-content img {
-  display: block;
+.view-content::-webkit-scrollbar {
+  display: none;
+}
 
-  max-width: 100%;
-  max-height: 60vh;
-  height: auto;
-
-  margin:
-    18px auto;
-
-  border-radius: 2px;
-
-} */
 
 .view-source {
+  flex: 0 0 auto;
+
   min-height: 25px;
 
-  margin-top: 34px;
+  margin-top: 16px;
+  padding-top: 10px;
 
   display: flex;
   justify-content: flex-end;
@@ -2213,6 +2217,8 @@ button {
 
 .editor-title-wrap {
   position: relative;
+
+  flex: 0 0 auto;
 
   margin-bottom: 24px;
   padding-bottom: 11px;
@@ -2287,7 +2293,7 @@ button {
     "FangSong",
     serif;
 
-  font-size: 18px;
+  font-size: clamp(16px, 1.35vw, 18px);
   line-height: 1.9;
 
   word-break: break-word;
@@ -2330,7 +2336,8 @@ button {
   display: flex;
   justify-content: flex-end;
 
-  margin-top: 8px;
+  margin-top: 10px;
+
   padding-bottom: 7px;
 }
 
@@ -2470,6 +2477,39 @@ button {
   opacity: 1;
 }
 
+
+/* =========================================================
+   EDITOR
+   ========================================================= */
+
+.editor-footer {
+  flex: 0 0 auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 14px;
+
+  margin-top: 8px;
+}
+
+.editor-footer .style-choices {
+  flex: 1 1 auto;
+
+  min-width: 0;
+
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.editor-footer .editor-actions {
+  flex: 0 0 auto;
+
+  margin-top: 0;
+}
+
+
 /* =========================================================
    ACTIONS
    ========================================================= */
@@ -2484,7 +2524,6 @@ button {
   gap: 8px;
 
   margin-top: 8px;
-  padding-top: 6px;
 }
 
 .icon-button {
@@ -2538,16 +2577,18 @@ button {
   flex: 0 0 auto;
 
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-start;
 
-  gap: 8px;
+  gap: 7px;
 
-  margin-top: 10px;
+  margin-top: 8px;
   padding-top: 8px;
 
-  max-height: 68px;
-  overflow-y: auto;
+  min-height: 40px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
 
   scrollbar-width: none;
 }
@@ -2557,32 +2598,314 @@ button {
 }
 
 .style-choice {
-  min-width: 32px;
-  height: 30px;
+  flex: 0 0 34px;
 
-  padding:
-    0 10px;
+  width: 34px;
+  height: 34px;
 
-  color: #6b5135;
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #765536;
 
   background:
-    rgba(105,76,44,.07);
+    rgba(105,76,44,.055);
 
-  border-radius: 15px;
+  border:
+    1px solid rgba(105,76,44,.13);
+
+  border-radius: 50%;
 
   cursor: pointer;
 
-  font-size: 12px;
+  transition:
+    transform .15s ease,
+    background .15s ease,
+    border-color .15s ease,
+    box-shadow .15s ease;
+}
+
+.style-choice:hover {
+  transform: translateY(-1px);
+
+  background:
+    rgba(105,76,44,.11);
+
+  border-color:
+    rgba(105,76,44,.26);
 }
 
 .style-choice.active {
-  color: #efe0bc;
-
   background:
-    #745136;
+    rgba(105,76,44,.13);
+
+  border-color:
+    rgba(105,76,44,.42);
 
   box-shadow:
-    0 2px 4px rgba(50,31,19,.18);
+    0 2px 7px rgba(50,31,19,.14);
+}
+
+
+/* -------------------------
+   杯型 CSS 图标
+   ------------------------- */
+
+.style-glyph {
+  position: relative;
+
+  display: block;
+
+  width: 20px;
+  height: 22px;
+}
+
+
+/* 马天尼 */
+
+.martini-glyph::before {
+  content: "";
+
+  position: absolute;
+
+  left: 2px;
+  top: 1px;
+
+  width: 16px;
+  height: 10px;
+
+  border-bottom:
+    1.5px solid currentColor;
+
+  clip-path:
+    polygon(
+      0 0,
+      100% 0,
+      61% 100%,
+      39% 100%
+    );
+}
+
+.martini-glyph::after {
+  content: "";
+
+  position: absolute;
+
+  left: 9px;
+  top: 10px;
+
+  width: 1.5px;
+  height: 9px;
+
+  background: currentColor;
+
+  box-shadow:
+    -4px 9px 0 -0.5px currentColor,
+     4px 9px 0 -0.5px currentColor;
+}
+
+
+/* Coupe */
+
+.coupe-glyph::before {
+  content: "";
+
+  position: absolute;
+
+  left: 1px;
+  top: 3px;
+
+  width: 18px;
+  height: 9px;
+
+  border:
+    1.5px solid currentColor;
+
+  border-top: 0;
+
+  border-radius:
+    0 0 50% 50%;
+}
+
+.coupe-glyph::after {
+  content: "";
+
+  position: absolute;
+
+  left: 9px;
+  top: 11px;
+
+  width: 1.5px;
+  height: 8px;
+
+  background: currentColor;
+
+  box-shadow:
+    -4px 8px 0 -0.5px currentColor,
+     4px 8px 0 -0.5px currentColor;
+}
+
+
+/* Highball */
+
+.highball-glyph::before {
+  content: "";
+
+  position: absolute;
+
+  left: 4px;
+  top: 1px;
+
+  width: 12px;
+  height: 17px;
+
+  border:
+    1.5px solid currentColor;
+
+  border-radius:
+    2px 2px 4px 4px;
+}
+
+.highball-glyph::after {
+  content: "";
+
+  position: absolute;
+
+  left: 6px;
+  top: 13px;
+
+  width: 8px;
+  height: 3px;
+
+  background: currentColor;
+
+  opacity: .32;
+}
+
+
+/* Rocks */
+
+.rocks-glyph::before {
+  content: "";
+
+  position: absolute;
+
+  left: 2px;
+  top: 5px;
+
+  width: 16px;
+  height: 13px;
+
+  border:
+    1.5px solid currentColor;
+
+  border-radius:
+    3px 3px 5px 5px;
+}
+
+.rocks-glyph::after {
+  content: "";
+
+  position: absolute;
+
+  left: 5px;
+  top: 11px;
+
+  width: 10px;
+  height: 5px;
+
+  border-radius: 2px;
+
+  background: currentColor;
+
+  opacity: .3;
+}
+
+
+/* -------------------------
+   颜色示意
+   ------------------------- */
+
+.color-glyph {
+  display: block;
+
+  width: 15px;
+  height: 15px;
+
+  border-radius: 50%;
+
+  box-shadow:
+    inset 0 1px 2px rgba(255,255,255,.35),
+    0 1px 3px rgba(40,25,15,.18);
+}
+
+.color-ruby {
+  background:
+    radial-gradient(
+      circle at 35% 28%,
+      #f08b91,
+      #b73546 52%,
+      #721f2d
+    );
+}
+
+.color-amber {
+  background:
+    radial-gradient(
+      circle at 35% 28%,
+      #f3c66e,
+      #c27a25 52%,
+      #744216
+    );
+}
+
+.color-emerald {
+  background:
+    radial-gradient(
+      circle at 35% 28%,
+      #8acb92,
+      #398252 52%,
+      #20523a
+    );
+}
+
+.color-ocean {
+  background:
+    radial-gradient(
+      circle at 35% 28%,
+      #86c8d8,
+      #347e9d 52%,
+      #214f68
+    );
+}
+
+.color-violet {
+  background:
+    radial-gradient(
+      circle at 35% 28%,
+      #c19bd1,
+      #7b4d8e 52%,
+      #4d315b
+    );
+}
+
+
+/* 杯型与颜色之间的细分隔 */
+
+.style-divider {
+  width: 1px;
+  height: 20px;
+
+  flex: 0 0 1px;
+
+  margin:
+    0 2px;
+
+  background:
+    rgba(105,76,44,.18);
 }
 
 /* =========================================================
@@ -2762,14 +3085,30 @@ button {
   color: #4b301b;
 }
 
-#editorContent,
-#viewContent {
+
+
+#editorContent {
   color: #4a321e;
   max-width: 100%;
+
+  max-height: none;
+
   overflow-x: hidden;
   overflow-y: auto;
 
-  max-height: calc(100vh - 220px);
+  padding-right: 8px;
+
+  scrollbar-width: none;
+}
+
+#viewContent {
+  color: #4a321e;
+  max-width: 100%;
+
+  max-height: none;
+
+  overflow-x: hidden;
+  overflow-y: auto;
 
   padding-right: 8px;
 
@@ -2996,73 +3335,179 @@ button {
 
         </div>
 
-        <div class="editor-actions">
 
-          <!-- image -->
 
-          <button
-            id="imageButton"
-            class="icon-button"
-            type="button"
-            aria-label="添加图片"
-            title="添加图片"
-          >
+        <div class="editor-footer">
 
-            <svg
-              viewBox="0 0 24 24"
-              aria-hidden="true"
+          <div class="style-choices">
+
+            <button
+              class="style-choice active"
+              type="button"
+              data-shape="martini"
+              aria-label="马天尼杯"
+              title="马天尼杯"
             >
-              <rect
-                x="3"
-                y="4"
-                width="18"
-                height="16"
-                rx="2"
-              ></rect>
+              <span class="style-glyph glass-glyph martini-glyph"></span>
+            </button>
 
-              <circle
-                cx="8.5"
-                cy="9"
-                r="1.5"
-              ></circle>
-
-              <path
-                d="M4.5 18l5.2-5.3 3.4 3.1 2.2-2.3 4.2 4.5"
-              ></path>
-            </svg>
-
-          </button>
-
-          <!-- save -->
-
-          <button
-            id="saveButton"
-            class="icon-button"
-            type="button"
-            aria-label="保存"
-            title="保存"
-          >
-
-            <svg
-              viewBox="0 0 24 24"
-              aria-hidden="true"
+            <button
+              class="style-choice"
+              type="button"
+              data-shape="coupe"
+              aria-label="鸡尾酒杯"
+              title="鸡尾酒杯"
             >
-              <path
-                d="M5 4h12l3 3v13H4V4z"
-              ></path>
+              <span class="style-glyph glass-glyph coupe-glyph"></span>
+            </button>
 
-              <path
-                d="M8 4v6h8V4"
-              ></path>
+            <button
+              class="style-choice"
+              type="button"
+              data-shape="highball"
+              aria-label="长杯"
+              title="长杯"
+            >
+              <span class="style-glyph glass-glyph highball-glyph"></span>
+            </button>
 
-              <path
-                d="M8 20v-6h8v6"
-              ></path>
-            </svg>
+            <button
+              class="style-choice"
+              type="button"
+              data-shape="rocks"
+              aria-label="古典杯"
+              title="古典杯"
+            >
+              <span class="style-glyph glass-glyph rocks-glyph"></span>
+            </button>
 
-          </button>
+
+            <span class="style-divider"></span>
+
+
+            <button
+              class="style-choice active"
+              type="button"
+              data-color="ruby"
+              aria-label="红色"
+              title="红色"
+            >
+              <span class="color-glyph color-ruby"></span>
+            </button>
+
+            <button
+              class="style-choice"
+              type="button"
+              data-color="amber"
+              aria-label="琥珀色"
+              title="琥珀色"
+            >
+              <span class="color-glyph color-amber"></span>
+            </button>
+
+            <button
+              class="style-choice"
+              type="button"
+              data-color="emerald"
+              aria-label="翡翠色"
+              title="翡翠色"
+            >
+              <span class="color-glyph color-emerald"></span>
+            </button>
+
+            <button
+              class="style-choice"
+              type="button"
+              data-color="ocean"
+              aria-label="海蓝色"
+              title="海蓝色"
+            >
+              <span class="color-glyph color-ocean"></span>
+            </button>
+
+            <button
+              class="style-choice"
+              type="button"
+              data-color="violet"
+              aria-label="紫色"
+              title="紫色"
+            >
+              <span class="color-glyph color-violet"></span>
+            </button>
+
+          </div>
+
+            <div class="editor-actions">
+
+            <!-- image -->
+
+            <button
+              id="imageButton"
+              class="icon-button"
+              type="button"
+              aria-label="添加图片"
+              title="添加图片"
+            >
+
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <rect
+                  x="3"
+                  y="4"
+                  width="18"
+                  height="16"
+                  rx="2"
+                ></rect>
+
+                <circle
+                  cx="8.5"
+                  cy="9"
+                  r="1.5"
+                ></circle>
+
+                <path
+                  d="M4.5 18l5.2-5.3 3.4 3.1 2.2-2.3 4.2 4.5"
+                ></path>
+              </svg>
+
+            </button>
+
+            <!-- save -->
+
+            <button
+              id="saveButton"
+              class="icon-button"
+              type="button"
+              aria-label="保存"
+              title="保存"
+            >
+
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  d="M5 4h12l3 3v13H4V4z"
+                ></path>
+
+                <path
+                  d="M8 4v6h8V4"
+                ></path>
+
+                <path
+                  d="M8 20v-6h8v6"
+                ></path>
+              </svg>
+
+            </button>
+
+          </div>
 
         </div>
+
+        
 
         <input
           id="imageInput"
@@ -3076,63 +3521,7 @@ button {
           shape / color 现在对应不同鸡尾酒杯视觉。
         -->
 
-        <div class="style-choices">
-
-          <button
-            class="style-choice active"
-            type="button"
-            data-shape="martini"
-          >马天尼</button>
-
-          <button
-            class="style-choice"
-            type="button"
-            data-shape="coupe"
-          >鸡尾酒杯</button>
-
-          <button
-            class="style-choice"
-            type="button"
-            data-shape="highball"
-          >长杯</button>
-
-          <button
-            class="style-choice"
-            type="button"
-            data-shape="rocks"
-          >古典杯</button>
-
-          <button
-            class="style-choice active"
-            type="button"
-            data-color="ruby"
-          >红</button>
-
-          <button
-            class="style-choice"
-            type="button"
-            data-color="amber"
-          >琥珀</button>
-
-          <button
-            class="style-choice"
-            type="button"
-            data-color="emerald"
-          >翡翠</button>
-
-          <button
-            class="style-choice"
-            type="button"
-            data-color="ocean"
-          >海蓝</button>
-
-          <button
-            class="style-choice"
-            type="button"
-            data-color="violet"
-          >紫</button>
-
-        </div>
+        
 
       </section>
 
