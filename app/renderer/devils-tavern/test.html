@@ -1881,7 +1881,7 @@ button {
    MODAL
    ========================================================= */
 
-.potion-modal {
+.cocktail-modal {
   position: fixed;
 
   inset: 0;
@@ -2774,7 +2774,7 @@ button {
       <div class="cauldron-stage">
 
         <button
-          id="newPotionButton"
+          id="newCocktailButton"
           class="cauldron-button"
           type="button"
           aria-label="调制新的记忆"
@@ -2816,8 +2816,8 @@ button {
        ======================================================= -->
 
   <div
-    id="potionModal"
-    class="potion-modal"
+    id="cocktailModal"
+    class="cocktail-modal"
     hidden
   >
 
@@ -3061,15 +3061,17 @@ button {
   const IMAGE_DIR =
     "devils-tavern/images";
 
-  let potions = [];
+  let cocktails = [];
 
-  let currentPotionId = null;
+  const pendingUploads = new Map();
+
+  let currentCocktailId = null;
 
   let currentShape = "martini";
 
   let currentColor = "ruby";
 
-  let draggedPotionId = null;
+  let draggedCocktailId = null;
 
   const els = {
 
@@ -3083,14 +3085,14 @@ button {
         "shelfScroll"
       ),
 
-    newPotionButton:
+    newCocktailButton:
       document.getElementById(
-        "newPotionButton"
+        "newCocktailButton"
       ),
 
-    potionModal:
+    cocktailModal:
       document.getElementById(
-        "potionModal"
+        "cocktailModal"
       ),
 
     modalClose:
@@ -3275,11 +3277,11 @@ button {
 
   }
 
-  async function loadPotions() {
+  async function loadCocktails() {
 
     if (!window.electronAPI) {
 
-      potions = [];
+      cocktails = [];
 
       return;
 
@@ -3298,20 +3300,20 @@ button {
           raw || "[]"
         );
 
-      potions =
+      cocktails =
         Array.isArray(parsed)
           ? parsed
           : [];
 
     } catch {
 
-      potions = [];
+      cocktails = [];
 
     }
 
   }
 
-  async function savePotions() {
+  async function saveCocktails() {
 
     if (!window.electronAPI) {
       return;
@@ -3321,7 +3323,7 @@ button {
       .writeDataFile(
         DATA_PATH,
         JSON.stringify(
-          potions,
+          cocktails,
           null,
           2
         )
@@ -3508,50 +3510,6 @@ button {
 
   }
 
-  async function saveImageFile(
-    file,
-    potionId
-  ) {
-
-    if (!window.electronAPI) {
-
-      return {
-
-        path: "",
-
-        dataURL:
-          await fileToDataURL(
-            file
-          )
-
-      };
-
-    }
-
-    const result =
-      await imageToBlob(
-        file
-      );
-
-    const path =
-      `${IMAGE_DIR}/${potionId}-${Date.now()}.webp`;
-
-    await window.electronAPI
-      .writeDataBinary(
-        path,
-        result.blob
-      );
-
-    return {
-
-      path,
-
-      dataURL:
-        result.dataURL
-
-    };
-
-  }
 
   /* =========================================================
      HYDRATE IMAGES
@@ -3617,6 +3575,54 @@ button {
 
     }
 
+  }
+
+  async function finalizePendingUploads(
+    root,
+    potionId
+  ) {
+    const images =
+      [
+        ...root.querySelectorAll(
+          "img[data-pending-upload]"
+        )
+      ];
+
+    for (
+      const img of images
+    ) {
+      const token =
+        img.dataset.pendingUpload;
+
+      const pending =
+        pendingUploads.get(
+          token
+        );
+
+      if (!pending) {
+        continue;
+      }
+
+      const path =
+        `${IMAGE_DIR}/${potionId}-${Date.now()}-${makeId()}.webp`;
+
+      await window.electronAPI
+        .writeDataBinary(
+          path,
+          pending.blob
+        );
+
+      img.dataset.localSrc =
+        path;
+
+      img.removeAttribute(
+        "data-pending-upload"
+      );
+
+      pendingUploads.delete(
+        token
+      );
+    }
   }
 
   function normalizeEditorImages(
@@ -3727,7 +3733,7 @@ button {
      ========================================================= */
 
   function createCocktailGlass(
-    potion
+    cocktail
   ) {
 
     const glass =
@@ -3736,11 +3742,11 @@ button {
       );
 
     const shape =
-      potion.shape ||
+      cocktail.shape ||
       "martini";
 
     const color =
-      potion.color ||
+      cocktail.color ||
       "ruby";
 
     const className =
@@ -3863,7 +3869,7 @@ button {
      ========================================================= */
 
   function createBottleCard(
-    potion
+    cocktail
   ) {
 
     const slot =
@@ -3895,7 +3901,7 @@ button {
     card.draggable = true;
 
     card.dataset.id =
-      potion.id;
+      cocktail.id;
 
     const visual =
       document.createElement(
@@ -3912,12 +3918,12 @@ button {
 
     visual.appendChild(
       createCocktailGlass(
-        potion
+        cocktail
       )
     );
 
     if (
-      potion.title
+      cocktail.title
     ) {
 
       const label =
@@ -3929,7 +3935,7 @@ button {
         "bottle-label";
 
       label.textContent =
-        potion.title;
+        cocktail.title;
 
       visual.appendChild(
         label
@@ -4001,7 +4007,7 @@ button {
         }
 
         openView(
-          potion.id
+          cocktail.id
         );
 
       }
@@ -4018,7 +4024,7 @@ button {
           event.stopPropagation();
 
           openEditor(
-            potion.id
+            cocktail.id
           );
 
         }
@@ -4034,8 +4040,8 @@ button {
 
           event.stopPropagation();
 
-          await deletePotion(
-            potion.id
+          await deleteCocktail(
+            cocktail.id
           );
 
         }
@@ -4049,8 +4055,8 @@ button {
       "dragstart",
       event => {
 
-        draggedPotionId =
-          potion.id;
+        draggedCocktailId =
+          cocktail.id;
 
         card.classList.add(
           "dragging"
@@ -4063,7 +4069,7 @@ button {
         event.dataTransfer
           .setData(
             "text/plain",
-            potion.id
+            cocktail.id
           );
 
       }
@@ -4073,7 +4079,7 @@ button {
       "dragend",
       () => {
 
-        draggedPotionId =
+        draggedCocktailId =
           null;
 
         card.classList.remove(
@@ -4100,14 +4106,14 @@ button {
       getBottleSlotCount();
 
     if (
-      !potions.length
+      !cocktails.length
     ) {
       return;
     }
 
     for (
       let i = 0;
-      i < potions.length;
+      i < cocktails.length;
       i += perRow
     ) {
 
@@ -4144,17 +4150,17 @@ button {
       );
 
       const group =
-        potions.slice(
+        cocktails.slice(
           i,
           i + perRow
         );
 
       group.forEach(
-        potion => {
+        cocktail => {
 
           row.appendChild(
             createBottleCard(
-              potion
+              cocktail
             )
           );
 
@@ -4196,7 +4202,7 @@ button {
           .getData(
             "text/plain"
           ) ||
-        draggedPotionId;
+        draggedCocktailId;
 
       if (!sourceId) {
         return;
@@ -4271,7 +4277,7 @@ button {
         targetCard.dataset.id;
 
       const sourceIndex =
-        potions.findIndex(
+        cocktails.findIndex(
           p =>
             p.id ===
             sourceId
@@ -4286,13 +4292,13 @@ button {
       const [
         moved
       ] =
-        potions.splice(
+        cocktails.splice(
           sourceIndex,
           1
         );
 
       let targetIndex =
-        potions.findIndex(
+        cocktails.findIndex(
           p =>
             p.id ===
             targetId
@@ -4302,7 +4308,7 @@ button {
         targetIndex < 0
       ) {
 
-        potions.push(
+        cocktails.push(
           moved
         );
 
@@ -4323,7 +4329,7 @@ button {
           targetIndex += 1;
         }
 
-        potions.splice(
+        cocktails.splice(
           targetIndex,
           0,
           moved
@@ -4331,7 +4337,7 @@ button {
 
       }
 
-      await savePotions();
+      await saveCocktails();
 
       renderShelf();
 
@@ -4344,7 +4350,7 @@ button {
 
   function openModal() {
 
-    els.potionModal.hidden =
+    els.cocktailModal.hidden =
       false;
 
     document.body.style.overflow =
@@ -4353,14 +4359,16 @@ button {
   }
 
   function closeModal() {
+    
+    pendingUploads.clear();
 
-    els.potionModal.hidden =
+    els.cocktailModal.hidden =
       true;
 
     document.body.style.overflow =
       "";
 
-    currentPotionId =
+    currentCocktailId =
       null;
 
   }
@@ -4370,13 +4378,13 @@ button {
     closeModal
   );
 
-  els.potionModal.addEventListener(
+  els.cocktailModal.addEventListener(
     "click",
     event => {
 
       if (
         event.target ===
-        els.potionModal
+        els.cocktailModal
       ) {
 
         closeModal();
@@ -4394,17 +4402,17 @@ button {
     id
   ) {
 
-    const potion =
-      potions.find(
+    const cocktail =
+      cocktails.find(
         p =>
           p.id === id
       );
 
-    if (!potion) {
+    if (!cocktail) {
       return;
     }
 
-    currentPotionId =
+    currentCocktailId =
       id;
 
     els.editorPanel.hidden =
@@ -4414,15 +4422,15 @@ button {
       false;
 
     els.viewTitle.textContent =
-      potion.title || "";
+      cocktail.title || "";
 
     els.viewContent.innerHTML =
-      potion.content || "";
+      cocktail.content || "";
 
     els.viewSource.innerHTML =
-      potion.source
+      cocktail.source
         ? `<span>${escapeHtml(
-            potion.source
+            cocktail.source
           )}</span>`
         : "";
 
@@ -4536,7 +4544,9 @@ button {
     id = null
   ) {
 
-    currentPotionId =
+    pendingUploads.clear();
+
+    currentCocktailId =
       id;
 
     els.viewPanel.hidden =
@@ -4547,32 +4557,32 @@ button {
 
     if (id) {
 
-      const potion =
-        potions.find(
+      const cocktail =
+        cocktails.find(
           p =>
             p.id === id
         );
 
-      if (!potion) {
+      if (!cocktail) {
         return;
       }
 
       els.titleInput.value =
-        potion.title || "";
+        cocktail.title || "";
 
       els.sourceInput.value =
-        potion.source || "";
+        cocktail.source || "";
 
       els.editorContent.innerHTML =
-        potion.content || "";
+        cocktail.content || "";
 
       setShape(
-        potion.shape ||
+        cocktail.shape ||
         "martini"
       );
 
       setColor(
-        potion.color ||
+        cocktail.color ||
         "ruby"
       );
 
@@ -4696,15 +4706,21 @@ button {
     file
   ) {
 
-    const potionId =
-      currentPotionId ||
+    const result =
+      await imageToBlob(
+        file
+      );
+
+    const token =
       makeId();
 
-    const result =
-      await saveImageFile(
-        file,
-        potionId
-      );
+    pendingUploads.set(
+      token,
+      {
+        blob: result.blob,
+        dataURL: result.dataURL
+      }
+    );
 
     const img =
       document.createElement(
@@ -4714,14 +4730,7 @@ button {
     img.src =
       result.dataURL;
 
-    if (
-      result.path
-    ) {
-
-      img.dataset.localSrc =
-        result.path;
-
-    }
+    img.dataset.pendingUpload = token;
 
     img.alt =
       "";
@@ -4916,29 +4925,38 @@ button {
       const source =
         els.sourceInput.value.trim();
 
+      const cocktailId =
+        currentCocktailId ||
+        makeId();
+
+      await finalizePendingUploads(
+        els.editorContent,
+        cocktailId
+      );
+
       const content =
         normalizeEditorImages(
           els.editorContent
         );
 
       if (
-        currentPotionId
+        currentCocktailId
       ) {
 
         const index =
-          potions.findIndex(
+          cocktails.findIndex(
             p =>
               p.id ===
-              currentPotionId
+              currentCocktailId
           );
 
         if (
           index >= 0
         ) {
 
-          potions[index] = {
+          cocktails[index] = {
 
-            ...potions[index],
+            ...cocktails[index],
 
             title,
 
@@ -4958,10 +4976,9 @@ button {
 
       } else {
 
-        const potion = {
+        const cocktail = {
 
-          id:
-            makeId(),
+          id: cocktailId,
 
           title,
 
@@ -4977,13 +4994,15 @@ button {
 
         };
 
-        potions.unshift(
-          potion
+        cocktails.unshift(
+          cocktail
         );
 
       }
 
-      await savePotions();
+      await saveCocktails();
+
+      pendingUploads.clear();
 
       closeModal();
 
@@ -4996,17 +5015,17 @@ button {
      DELETE
      ========================================================= */
 
-  async function deletePotion(
+  async function deleteCocktail(
     id
   ) {
 
-    const potion =
-      potions.find(
+    const cocktail =
+      cocktails.find(
         p =>
           p.id === id
       );
 
-    if (!potion) {
+    if (!cocktail) {
       return;
     }
 
@@ -5019,13 +5038,13 @@ button {
       return;
     }
 
-    potions =
-      potions.filter(
+    cocktails =
+      cocktails.filter(
         p =>
           p.id !== id
       );
 
-    await savePotions();
+    await saveCocktails();
 
     renderShelf();
 
@@ -5035,7 +5054,7 @@ button {
      NEW COCKTAIL
      ========================================================= */
 
-  els.newPotionButton.addEventListener(
+  els.newCocktailButton.addEventListener(
     "click",
     () => {
 
@@ -5051,7 +5070,7 @@ button {
      ========================================================= */
 
   async function updateParchmentWidth(root) {
-    els.potionModal
+    els.cocktailModal
       .querySelector(".parchment")
       .style.setProperty(
         "--parchment-width",
@@ -5095,7 +5114,7 @@ button {
 
     await ensureDataDirs();
 
-    await loadPotions();
+    await loadCocktails();
 
     renderShelf();
 
