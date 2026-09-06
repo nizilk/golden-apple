@@ -2070,6 +2070,19 @@ button {
    VIEW
    ========================================================= */
 
+.view-panel {
+  flex: 1 1 auto;
+
+  display: flex;
+  flex-direction: column;
+
+  min-height: 0;
+  height: auto;
+
+  overflow: hidden;
+}
+
+
 #viewTitle {
   margin:
     0
@@ -2137,10 +2150,11 @@ button {
 
   font-size: clamp(16px, 1.35vw, 18px);
   line-height: 1.9;
+
   word-break: break-word;
+  overflow-wrap: anywhere;
 
   max-width: 100%;
-  overflow-wrap: anywhere;
 
   overflow-x: hidden;
   overflow-y: auto;
@@ -2409,12 +2423,15 @@ button {
   font-size: 14px;
 }
 
+
 .editor-panel {
+  flex: 1 1 auto;
+
   display: flex;
   flex-direction: column;
 
-  height: 100%;
   min-height: 0;
+  height: auto;
 
   overflow: hidden;
 }
