@@ -103,6 +103,111 @@ let editingCommentId = null;
 
 const pendingUploads = new Map();
 
+
+function isManagedXhsMediaRef(
+  ref
+) {
+  if (!ref) {
+    return false;
+  }
+
+  const p =
+    String(ref)
+      .trim()
+      .replace(/\\/g, "/");
+
+  /*
+   * XHS 的 file ref 只能是 media/
+   * 目录中的程序生成文件名。
+   *
+   * 绝对路径、用户资源路径、其他路径
+   * 一律不允许删除。
+   */
+  if (
+    !p ||
+    p.includes("/") ||
+    p.includes("\\") ||
+    p === "." ||
+    p === ".."
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+
+async function deleteRemovedPostMedia(
+  oldPost,
+  newPost
+) {
+  if (
+    !oldPost ||
+    !Array.isArray(
+      oldPost.media
+    )
+  ) {
+    return;
+  }
+
+  const newFileRefs =
+    new Set(
+      (newPost.media || [])
+        .filter(
+          m =>
+            m &&
+            m.type === "file" &&
+            isManagedXhsMediaRef(
+              m.ref
+            )
+        )
+        .map(
+          m =>
+            m.ref
+        )
+    );
+
+  for (
+    const media of oldPost.media
+  ) {
+
+    if (
+      !media ||
+      media.type !== "file" ||
+      !isManagedXhsMediaRef(
+        media.ref
+      )
+    ) {
+      continue;
+    }
+
+    if (
+      newFileRefs.has(
+        media.ref
+      )
+    ) {
+      continue;
+    }
+
+    try {
+
+      await electronStorage.delete(
+        `media/${media.ref}`
+      );
+
+    } catch (error) {
+
+      console.warn(
+        "删除更新后废弃的 XHS 媒体失败：",
+        media.ref,
+        error
+      );
+
+    }
+  }
+}
+
+
 function genId(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 function escapeHtml(s){ return (s||"").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 function colorFor(name){
@@ -2317,6 +2422,16 @@ document.getElementById("saveBtn").onclick = async ()=>{
     createdAt
   };
   await writePostToDisk(post);
+
+  if (
+    existing
+  ) {
+    await deleteRemovedPostMedia(
+      existing,
+      post
+    );
+  }
+
   closeEditor();
   await reload();
   
