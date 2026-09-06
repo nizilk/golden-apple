@@ -1909,12 +1909,11 @@ button {
 .parchment {
   position: relative;
 
-  width: clamp(500px, 62vw, 760px);
-  height: min(760px, calc(100vh - 32px));
+  width: min(500px, calc(100vh - 48px));
+  height: min(500px, calc(100vh - 48px));
 
-  max-width: calc(100vw - 32px);
-  max-height: calc(100vh - 32px);
-  min-height: 0;
+  max-width: calc(100vw - 80px);
+  max-height: calc(100vh - 48px);
 
   display: flex;
   flex-direction: column;
@@ -2597,17 +2596,14 @@ button {
   align-items: center;
   justify-content: flex-start;
 
-  gap: 7px;
+  gap: 6px;
 
   margin-top: 8px;
   padding-top: 8px;
 
   min-height: 40px;
 
-  overflow-x: auto;
-  overflow-y: hidden;
-
-  scrollbar-width: none;
+  overflow: visible;
 }
 
 .style-choices::-webkit-scrollbar {
@@ -2633,41 +2629,37 @@ button {
 
   background: transparent;
 
-  border: 1px solid transparent;
-  border-radius: 7px;
+  border:
+    1px solid transparent;
+
+  border-radius: 5px;
 
   cursor: pointer;
 
   transition:
-    color .16s ease,
-    background .16s ease,
-    border-color .16s ease,
-    transform .16s ease;
+    color .14s ease,
+    background .14s ease,
+    border-color .14s ease;
 }
 
 .style-choice:hover {
-  color: #4f3825;
+  color: #4d3522;
 
   background:
-    rgba(105,76,44,.07);
+    rgba(92,66,38,.055);
 
   border-color:
-    rgba(105,76,44,.12);
-
-  transform: translateY(-1px);
+    rgba(92,66,38,.12);
 }
 
 .style-choice.active {
-  color: #4b301c;
+  color: #432d1c;
 
   background:
-    rgba(105,76,44,.10);
+    rgba(92,66,38,.09);
 
   border-color:
-    rgba(105,76,44,.24);
-
-  box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,.22);
+    rgba(92,66,38,.25);
 }
 
 .style-choice.active::after {
@@ -2681,15 +2673,15 @@ button {
 
   height: 2px;
 
-  border-radius: 50%;
+  border-radius: 1px;
 
   background:
-    rgba(112,77,42,.42);
+    rgba(91,62,33,.42);
 }
 
 
 /* =========================================================
-   酒杯线稿图标
+   平面酒杯图标
    ========================================================= */
 
 .style-glyph {
@@ -2697,39 +2689,40 @@ button {
 
   display: block;
 
-  width: 22px;
+  width: 20px;
   height: 22px;
+
+  flex: 0 0 20px;
 
   color: currentColor;
 }
 
 
-/* -------------------------
+/* =========================
    Martini
-   ------------------------- */
+   ========================= */
 
 .martini-glyph::before {
   content: "";
 
   position: absolute;
 
-  left: 2px;
+  left: 1px;
   top: 2px;
 
   width: 18px;
-  height: 10px;
+  height: 9px;
 
-  border-left: 1.5px solid currentColor;
-  border-right: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
+  border-left: 1.4px solid currentColor;
+  border-right: 1.4px solid currentColor;
+  border-bottom: 1.4px solid currentColor;
 
-  clip-path:
-    polygon(
-      0 0,
-      100% 0,
-      58% 100%,
-      42% 100%
-    );
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    58% 100%,
+    42% 100%
+  );
 }
 
 .martini-glyph::after {
@@ -2737,45 +2730,40 @@ button {
 
   position: absolute;
 
-  left: 10px;
-  top: 11px;
+  left: 9px;
+  top: 10px;
 
-  width: 1.5px;
-  height: 7px;
+  width: 1.4px;
+  height: 8px;
 
   background: currentColor;
 
   box-shadow:
-    -5px 7px 0 -0.25px currentColor,
-     5px 7px 0 -0.25px currentColor;
+    -4px 8px 0 -0.35px currentColor,
+     4px 8px 0 -0.35px currentColor;
 }
 
 
-/* -------------------------
+/* =========================
    Coupe
-   ------------------------- */
+   ========================= */
 
 .coupe-glyph::before {
   content: "";
 
   position: absolute;
 
-  left: 1px;
+  left: 0;
   top: 3px;
 
   width: 20px;
-  height: 9px;
+  height: 8px;
 
   border:
-    1.5px solid currentColor;
-
-  border-top: 1.5px solid currentColor;
+    1.4px solid currentColor;
 
   border-radius:
-    50%
-    50%
-    48%
-    48%;
+    50% 50% 45% 45%;
 
   transform:
     scaleY(.72);
@@ -2786,47 +2774,40 @@ button {
 
   position: absolute;
 
-  left: 10px;
-  top: 10px;
+  left: 9px;
+  top: 9px;
 
-  width: 1.5px;
-  height: 8px;
+  width: 1.4px;
+  height: 9px;
 
   background: currentColor;
 
   box-shadow:
-    -5px 8px 0 -0.25px currentColor,
-     5px 8px 0 -0.25px currentColor;
+    -4px 9px 0 -0.35px currentColor,
+     4px 9px 0 -0.35px currentColor;
 }
 
 
-/* -------------------------
+/* =========================
    Highball
-   ------------------------- */
+   ========================= */
 
 .highball-glyph::before {
   content: "";
 
   position: absolute;
 
-  left: 5px;
-  top: 2px;
+  left: 4px;
+  top: 1px;
 
   width: 12px;
-  height: 17px;
+  height: 18px;
 
   border:
-    1.5px solid currentColor;
+    1.4px solid currentColor;
 
   border-radius:
-    2px
-    2px
-    4px
-    4px;
-
-  transform:
-    perspective(30px)
-    rotateX(-2deg);
+    2px 2px 4px 4px;
 }
 
 .highball-glyph::after {
@@ -2834,45 +2815,39 @@ button {
 
   position: absolute;
 
-  left: 7px;
-  bottom: 5px;
+  left: 6px;
+  bottom: 4px;
 
   width: 8px;
-  height: 5px;
+  height: 4px;
 
-  border-radius:
-    1px 1px 3px 3px;
+  border-top:
+    1.4px solid currentColor;
 
-  background:
-    currentColor;
-
-  opacity: .20;
+  opacity: .55;
 }
 
 
-/* -------------------------
+/* =========================
    Rocks
-   ------------------------- */
+   ========================= */
 
 .rocks-glyph::before {
   content: "";
 
   position: absolute;
 
-  left: 3px;
+  left: 2px;
   top: 5px;
 
   width: 16px;
   height: 13px;
 
   border:
-    1.5px solid currentColor;
+    1.4px solid currentColor;
 
   border-radius:
-    3px
-    3px
-    5px
-    5px;
+    3px 3px 5px 5px;
 }
 
 .rocks-glyph::after {
@@ -2880,133 +2855,74 @@ button {
 
   position: absolute;
 
-  left: 6px;
-  bottom: 6px;
+  left: 5px;
+  top: 11px;
 
   width: 10px;
   height: 4px;
 
-  border-radius:
-    2px;
+  border-top:
+    1.4px solid currentColor;
 
-  background:
-    currentColor;
-
-  opacity: .20;
+  opacity: .55;
 }
+
 
 
 /* =========================================================
-   酒液颜色图标
+   平面酒液颜色
    ========================================================= */
 
 .color-glyph {
-  position: relative;
-
   display: block;
 
-  width: 14px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
 
-  border-radius:
-    50%
-    50%
-    50%
-    50% / 
-    58%
-    58%
-    42%
-    42%;
+  flex: 0 0 15px;
 
-  transform:
-    rotate(45deg)
-    scale(.88);
+  border-radius: 3px;
 
-  box-shadow:
-    inset 1px 1px 2px rgba(255,255,255,.32),
-    0 1px 2px rgba(50,30,15,.20);
-}
+  border: none;
 
-.color-glyph::after {
-  content: "";
+  box-shadow: none;
 
-  position: absolute;
-
-  left: 3px;
-  top: 3px;
-
-  width: 3px;
-  height: 3px;
-
-  border-radius: 50%;
-
-  background:
-    rgba(255,255,255,.42);
+  transform: none;
 }
 
 
-/* 红宝石 */
+/* 红 */
 
 .color-ruby {
-  background:
-    linear-gradient(
-      135deg,
-      #e78389 0%,
-      #b63849 48%,
-      #711f2e 100%
-    );
+  background: #b83b4b;
 }
 
 
 /* 琥珀 */
 
 .color-amber {
-  background:
-    linear-gradient(
-      135deg,
-      #f1c56b 0%,
-      #c17a25 48%,
-      #754217 100%
-    );
+  background: #c78328;
 }
 
 
 /* 翡翠 */
 
 .color-emerald {
-  background:
-    linear-gradient(
-      135deg,
-      #91ca96 0%,
-      #3c8354 48%,
-      #205139 100%
-    );
+  background: #3f8757;
 }
 
 
 /* 海蓝 */
 
 .color-ocean {
-  background:
-    linear-gradient(
-      135deg,
-      #8bcbd7 0%,
-      #397f9b 48%,
-      #204d66 100%
-    );
+  background: #397f9d;
 }
 
 
-/* 紫罗兰 */
+/* 紫 */
 
 .color-violet {
-  background:
-    linear-gradient(
-      135deg,
-      #c6a0d4 0%,
-      #7c508f 48%,
-      #4d305b 100%
-    );
+  background: #79508d;
 }
 
 
@@ -5224,10 +5140,6 @@ button {
       els.viewContent
     );
 
-    await updateParchmentWidth(
-      els.viewContent
-    );
-
     openModal();
 
   }
@@ -6150,18 +6062,8 @@ async function deleteCocktail(
     }
   );
 
-  /* =========================================================
-     PARCHMENT WIDTH
-     ========================================================= */
 
-  async function updateParchmentWidth(root) {
-    els.cocktailModal
-      .querySelector(".parchment")
-      .style.setProperty(
-        "--parchment-width",
-        "720px"
-      );
-  }
+  
 
   /* =========================================================
      RESIZE
