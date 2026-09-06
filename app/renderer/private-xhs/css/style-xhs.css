@@ -415,7 +415,7 @@
   font-weight:500;
   line-height:1.45;
   color:var(--ink);
-  margin:0 8px;
+  margin:0 6px;
 
   /* 标题可以点击 */
   cursor:pointer;

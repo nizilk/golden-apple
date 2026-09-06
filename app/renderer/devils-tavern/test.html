@@ -1909,7 +1909,7 @@ button {
 .parchment {
   position: relative;
 
-  width: min(900px, calc(100vw - 32px));
+  width: clamp(500px, 62vw, 760px);
   height: min(760px, calc(100vh - 32px));
 
   max-width: calc(100vw - 32px);
@@ -2614,11 +2614,14 @@ button {
   display: none;
 }
 
-.style-choice {
-  flex: 0 0 34px;
 
-  width: 34px;
-  height: 34px;
+.style-choice {
+  position: relative;
+
+  flex: 0 0 32px;
+
+  width: 32px;
+  height: 32px;
 
   padding: 0;
 
@@ -2626,62 +2629,84 @@ button {
   align-items: center;
   justify-content: center;
 
-  color: #765536;
+  color: #76563b;
 
-  background:
-    rgba(105,76,44,.055);
+  background: transparent;
 
-  border:
-    1px solid rgba(105,76,44,.13);
-
-  border-radius: 50%;
+  border: 1px solid transparent;
+  border-radius: 7px;
 
   cursor: pointer;
 
   transition:
-    transform .15s ease,
-    background .15s ease,
-    border-color .15s ease,
-    box-shadow .15s ease;
+    color .16s ease,
+    background .16s ease,
+    border-color .16s ease,
+    transform .16s ease;
 }
 
 .style-choice:hover {
-  transform: translateY(-1px);
+  color: #4f3825;
 
   background:
-    rgba(105,76,44,.11);
+    rgba(105,76,44,.07);
 
   border-color:
-    rgba(105,76,44,.26);
+    rgba(105,76,44,.12);
+
+  transform: translateY(-1px);
 }
 
 .style-choice.active {
+  color: #4b301c;
+
   background:
-    rgba(105,76,44,.13);
+    rgba(105,76,44,.10);
 
   border-color:
-    rgba(105,76,44,.42);
+    rgba(105,76,44,.24);
 
   box-shadow:
-    0 2px 7px rgba(50,31,19,.14);
+    inset 0 0 0 1px rgba(255,255,255,.22);
+}
+
+.style-choice.active::after {
+  content: "";
+
+  position: absolute;
+
+  left: 7px;
+  right: 7px;
+  bottom: 2px;
+
+  height: 2px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(112,77,42,.42);
 }
 
 
-/* -------------------------
-   杯型 CSS 图标
-   ------------------------- */
+/* =========================================================
+   酒杯线稿图标
+   ========================================================= */
 
 .style-glyph {
   position: relative;
 
   display: block;
 
-  width: 20px;
+  width: 22px;
   height: 22px;
+
+  color: currentColor;
 }
 
 
-/* 马天尼 */
+/* -------------------------
+   Martini
+   ------------------------- */
 
 .martini-glyph::before {
   content: "";
@@ -2689,20 +2714,21 @@ button {
   position: absolute;
 
   left: 2px;
-  top: 1px;
+  top: 2px;
 
-  width: 16px;
+  width: 18px;
   height: 10px;
 
-  border-bottom:
-    1.5px solid currentColor;
+  border-left: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
 
   clip-path:
     polygon(
       0 0,
       100% 0,
-      61% 100%,
-      39% 100%
+      58% 100%,
+      42% 100%
     );
 }
 
@@ -2711,21 +2737,23 @@ button {
 
   position: absolute;
 
-  left: 9px;
-  top: 10px;
+  left: 10px;
+  top: 11px;
 
   width: 1.5px;
-  height: 9px;
+  height: 7px;
 
   background: currentColor;
 
   box-shadow:
-    -4px 9px 0 -0.5px currentColor,
-     4px 9px 0 -0.5px currentColor;
+    -5px 7px 0 -0.25px currentColor,
+     5px 7px 0 -0.25px currentColor;
 }
 
 
-/* Coupe */
+/* -------------------------
+   Coupe
+   ------------------------- */
 
 .coupe-glyph::before {
   content: "";
@@ -2735,16 +2763,22 @@ button {
   left: 1px;
   top: 3px;
 
-  width: 18px;
+  width: 20px;
   height: 9px;
 
   border:
     1.5px solid currentColor;
 
-  border-top: 0;
+  border-top: 1.5px solid currentColor;
 
   border-radius:
-    0 0 50% 50%;
+    50%
+    50%
+    48%
+    48%;
+
+  transform:
+    scaleY(.72);
 }
 
 .coupe-glyph::after {
@@ -2752,8 +2786,8 @@ button {
 
   position: absolute;
 
-  left: 9px;
-  top: 11px;
+  left: 10px;
+  top: 10px;
 
   width: 1.5px;
   height: 8px;
@@ -2761,20 +2795,22 @@ button {
   background: currentColor;
 
   box-shadow:
-    -4px 8px 0 -0.5px currentColor,
-     4px 8px 0 -0.5px currentColor;
+    -5px 8px 0 -0.25px currentColor,
+     5px 8px 0 -0.25px currentColor;
 }
 
 
-/* Highball */
+/* -------------------------
+   Highball
+   ------------------------- */
 
 .highball-glyph::before {
   content: "";
 
   position: absolute;
 
-  left: 4px;
-  top: 1px;
+  left: 5px;
+  top: 2px;
 
   width: 12px;
   height: 17px;
@@ -2783,7 +2819,14 @@ button {
     1.5px solid currentColor;
 
   border-radius:
-    2px 2px 4px 4px;
+    2px
+    2px
+    4px
+    4px;
+
+  transform:
+    perspective(30px)
+    rotateX(-2deg);
 }
 
 .highball-glyph::after {
@@ -2791,26 +2834,32 @@ button {
 
   position: absolute;
 
-  left: 6px;
-  top: 13px;
+  left: 7px;
+  bottom: 5px;
 
   width: 8px;
-  height: 3px;
+  height: 5px;
 
-  background: currentColor;
+  border-radius:
+    1px 1px 3px 3px;
 
-  opacity: .32;
+  background:
+    currentColor;
+
+  opacity: .20;
 }
 
 
-/* Rocks */
+/* -------------------------
+   Rocks
+   ------------------------- */
 
 .rocks-glyph::before {
   content: "";
 
   position: absolute;
 
-  left: 2px;
+  left: 3px;
   top: 5px;
 
   width: 16px;
@@ -2820,7 +2869,10 @@ button {
     1.5px solid currentColor;
 
   border-radius:
-    3px 3px 5px 5px;
+    3px
+    3px
+    5px
+    5px;
 }
 
 .rocks-glyph::after {
@@ -2828,84 +2880,132 @@ button {
 
   position: absolute;
 
-  left: 5px;
-  top: 11px;
+  left: 6px;
+  bottom: 6px;
 
   width: 10px;
-  height: 5px;
+  height: 4px;
 
-  border-radius: 2px;
+  border-radius:
+    2px;
 
-  background: currentColor;
+  background:
+    currentColor;
 
-  opacity: .3;
+  opacity: .20;
 }
 
 
-/* -------------------------
-   颜色示意
-   ------------------------- */
+/* =========================================================
+   酒液颜色图标
+   ========================================================= */
 
 .color-glyph {
+  position: relative;
+
   display: block;
 
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 16px;
+
+  border-radius:
+    50%
+    50%
+    50%
+    50% / 
+    58%
+    58%
+    42%
+    42%;
+
+  transform:
+    rotate(45deg)
+    scale(.88);
+
+  box-shadow:
+    inset 1px 1px 2px rgba(255,255,255,.32),
+    0 1px 2px rgba(50,30,15,.20);
+}
+
+.color-glyph::after {
+  content: "";
+
+  position: absolute;
+
+  left: 3px;
+  top: 3px;
+
+  width: 3px;
+  height: 3px;
 
   border-radius: 50%;
 
-  box-shadow:
-    inset 0 1px 2px rgba(255,255,255,.35),
-    0 1px 3px rgba(40,25,15,.18);
+  background:
+    rgba(255,255,255,.42);
 }
+
+
+/* 红宝石 */
 
 .color-ruby {
   background:
-    radial-gradient(
-      circle at 35% 28%,
-      #f08b91,
-      #b73546 52%,
-      #721f2d
+    linear-gradient(
+      135deg,
+      #e78389 0%,
+      #b63849 48%,
+      #711f2e 100%
     );
 }
+
+
+/* 琥珀 */
 
 .color-amber {
   background:
-    radial-gradient(
-      circle at 35% 28%,
-      #f3c66e,
-      #c27a25 52%,
-      #744216
+    linear-gradient(
+      135deg,
+      #f1c56b 0%,
+      #c17a25 48%,
+      #754217 100%
     );
 }
+
+
+/* 翡翠 */
 
 .color-emerald {
   background:
-    radial-gradient(
-      circle at 35% 28%,
-      #8acb92,
-      #398252 52%,
-      #20523a
+    linear-gradient(
+      135deg,
+      #91ca96 0%,
+      #3c8354 48%,
+      #205139 100%
     );
 }
+
+
+/* 海蓝 */
 
 .color-ocean {
   background:
-    radial-gradient(
-      circle at 35% 28%,
-      #86c8d8,
-      #347e9d 52%,
-      #214f68
+    linear-gradient(
+      135deg,
+      #8bcbd7 0%,
+      #397f9b 48%,
+      #204d66 100%
     );
 }
 
+
+/* 紫罗兰 */
+
 .color-violet {
   background:
-    radial-gradient(
-      circle at 35% 28%,
-      #c19bd1,
-      #7b4d8e 52%,
-      #4d315b
+    linear-gradient(
+      135deg,
+      #c6a0d4 0%,
+      #7c508f 48%,
+      #4d305b 100%
     );
 }
 
@@ -2914,15 +3014,15 @@ button {
 
 .style-divider {
   width: 1px;
-  height: 20px;
+  height: 17px;
 
   flex: 0 0 1px;
 
   margin:
-    0 2px;
+    0 4px;
 
   background:
-    rgba(105,76,44,.18);
+    rgba(105,76,44,.14);
 }
 
 /* =========================================================
