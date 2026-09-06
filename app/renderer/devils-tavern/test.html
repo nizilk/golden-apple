@@ -206,25 +206,15 @@ button {
 
   padding: 20px 38px 23px;
 
-  background:
-    linear-gradient(
-      180deg,
-      #704936,
-      #543326 48%,
-      #3b251c 100%
-    );
+  /* 复古平面木牌 */
+  background: #51382a;
 
-  border-radius:
-    5px
-    5px
-    8px
-    8px;
+  border: 2px solid #261b15;
+  border-radius: 3px;
 
+  /* 不再做 3D 投影，只留非常轻的落影 */
   box-shadow:
-    0 15px 22px rgba(0,0,0,.38),
-    0 3px 5px rgba(0,0,0,.32),
-    inset 0 1px rgba(255,255,255,.13),
-    inset 0 -8px 12px rgba(0,0,0,.20);
+    0 5px 0 rgba(32,22,16,.42);
 }
 
 .title-sign::before {
@@ -233,8 +223,7 @@ button {
   position: absolute;
   inset: 7px;
 
-  border:
-    1px solid rgba(210,165,102,.42);
+  border: 1px solid #a98251;
 
   border-radius: 3px;
 
@@ -279,9 +268,7 @@ button {
   font-weight: 500;
   line-height: 1;
 
-  text-shadow:
-    0 2px 1px rgba(0,0,0,.72),
-    0 0 10px rgba(215,160,88,.13);
+  text-shadow: none;
 }
 
 .sign-rope {
@@ -375,7 +362,6 @@ button {
 
 .shelf-row::before {
   content: "";
-
   position: absolute;
 
   left: 0;
@@ -384,25 +370,15 @@ button {
 
   height: 16px;
 
-  border-radius:
-    3px
-    3px
-    5px
-    5px;
+  background: #69452f;
 
-  background:
-    linear-gradient(
-      180deg,
-      #986845,
-      #69422d 45%,
-      #40281e 100%
-    );
+  border:
+    2px solid #2c1d16;
+
+  border-radius: 2px;
 
   box-shadow:
-    0 8px 12px rgba(0,0,0,.38),
-    0 2px 2px rgba(0,0,0,.38),
-    inset 0 1px rgba(255,255,255,.16),
-    inset 0 -4px 6px rgba(0,0,0,.18);
+    0 3px 0 rgba(36,24,17,.45);
 
   z-index: 0;
 }
@@ -416,13 +392,11 @@ button {
   right: 2%;
   bottom: 0;
 
-  height: 8px;
+  height: 3px;
 
-  border-radius: 50%;
+  background: #2b1c15;
 
-  background: rgba(0,0,0,.32);
-
-  filter: blur(7px);
+  opacity: .65;
 
   z-index: -1;
 }
@@ -435,18 +409,13 @@ button {
   width: 17px;
   height: 34px;
 
-  border-radius: 2px;
+  border-radius: 1px;
 
-  background:
-    linear-gradient(
-      90deg,
-      #39251b,
-      #765037,
-      #352219
-    );
+  background: #493021;
 
-  box-shadow:
-    0 2px 4px rgba(0,0,0,.42);
+  border: 1px solid #261a14;
+
+  box-shadow: none;
 
   z-index: 1;
 }
@@ -466,10 +435,9 @@ button {
 
   border-radius: 50%;
 
-  background: #201610;
+  background: #241812;
 
-  box-shadow:
-    inset 0 1px 1px rgba(255,255,255,.15);
+  box-shadow: none;
 }
 
 .rack-bracket.left {
@@ -1323,18 +1291,13 @@ button {
   height:
     clamp(180px, 23vh, 235px);
 
-  background:
-    linear-gradient(
-      180deg,
-      #86593b 0%,
-      #68432e 28%,
-      #3f291f 100%
-    );
+  background: #593a27;
+
+  border-top:
+    3px solid #2c1d16;
 
   box-shadow:
-    0 -9px 18px rgba(0,0,0,.38),
-    inset 0 9px 11px rgba(255,214,155,.09),
-    inset 0 -12px 18px rgba(0,0,0,.28);
+    0 -4px 0 rgba(35,23,16,.55);
 }
 
 .work-table::before {
@@ -1346,18 +1309,14 @@ button {
   right: 0;
   top: 0;
 
-  height: 13px;
+  height: 11px;
 
-  background:
-    linear-gradient(
-      180deg,
-      #ad794d,
-      #6e452d
-    );
+  background: #795034;
 
-  box-shadow:
-    0 4px 7px rgba(0,0,0,.32),
-    inset 0 1px rgba(255,255,255,.14);
+  border-bottom:
+    2px solid #39251b;
+
+  box-shadow: none;
 }
 
 .work-table::after {
@@ -1367,13 +1326,13 @@ button {
 
   inset: 20px 0 0;
 
-  opacity: .14;
+  opacity: .16;
 
   background:
     repeating-linear-gradient(
       4deg,
       transparent 0 28px,
-      rgba(36,20,13,.35) 29px,
+      rgba(36,20,13,.45) 29px,
       transparent 31px 58px
     );
 
@@ -1407,7 +1366,7 @@ button {
   z-index: 50;
 
   left: 50%;
-  bottom: clamp(67px, 9vh, 100px);
+  bottom: clamp(18px, 3vh, 38px);
 
   transform: translateX(-50%);
 
@@ -1480,54 +1439,18 @@ button {
   height: 151px;
 
   border-radius:
-    23px
-    23px
-    31px
-    31px;
+    20px
+    20px
+    28px
+    28px;
 
-  background:
-    linear-gradient(
-      90deg,
-      #6c7070 0%,
-      #aeb1ac 17%,
-      #e0dfd3 32%,
-      #858985 50%,
-      #4b504f 76%,
-      #252a29 100%
-    );
+  background: #74736b;
 
   border:
-    1px solid rgba(15,15,14,.65);
+    2px solid #292824;
 
   box-shadow:
-    inset 10px 0 rgba(255,255,255,.17),
-    inset -13px 0 rgba(0,0,0,.20),
-    0 14px 17px rgba(0,0,0,.38);
-}
-
-.cauldron-body::after {
-  content: "";
-
-  position: absolute;
-
-  left: 20px;
-  top: 30px;
-
-  width: 8px;
-  height: 88px;
-
-  border-radius: 50%;
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255,255,255,.48),
-      rgba(255,255,255,.02)
-    );
-
-  filter: blur(.4px);
-
-  opacity: .55;
+    0 5px 0 rgba(38,31,26,.48);
 }
 
 .cauldron-rim {
@@ -1577,17 +1500,9 @@ button {
 
   border-radius: 50%;
 
-  background:
-    linear-gradient(
-      90deg,
-      #7c2632,
-      #cf4650 42%,
-      #8e2637
-    );
+  background: #9c3040;
 
-  box-shadow:
-    inset 0 3px 4px rgba(255,255,255,.16),
-    0 0 16px rgba(173,45,58,.16);
+  box-shadow: none;
 }
 
 /* shaker cap */
@@ -1608,22 +1523,17 @@ button {
     rotate(-1deg);
 
   border-radius:
-    9px
-    9px
-    6px
-    6px;
+    7px
+    7px
+    4px
+    4px;
 
-  background:
-    linear-gradient(
-      90deg,
-      #555a59,
-      #d1d0c6 34%,
-      #707573 62%,
-      #303433
-    );
+  background: #5c5b55;
 
-  box-shadow:
-    0 3px 5px rgba(0,0,0,.30);
+  border:
+    2px solid #292824;
+
+  box-shadow: none;
 }
 
 .shaker-cap::after {
@@ -1640,18 +1550,15 @@ button {
   transform: translateX(-50%);
 
   border-radius:
-    7px
-    7px
-    4px
-    4px;
+    5px
+    5px
+    3px
+    3px;
 
-  background:
-    linear-gradient(
-      90deg,
-      #4d5251,
-      #c4c3ba,
-      #555958
-    );
+  background: #68675f;
+
+  border:
+    2px solid #292824;
 }
 
 /* shaker arms */
@@ -1667,11 +1574,11 @@ button {
   height: 76px;
 
   border:
-    8px solid #4b4f4e;
+    7px solid #45443f;
 
   border-radius: 50%;
 
-  opacity: .92;
+  opacity: 1;
 }
 
 .cauldron-handle.left {
