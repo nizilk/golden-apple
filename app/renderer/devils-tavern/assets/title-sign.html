@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../css/global.css">
+<title>恶魔酒馆木牌</title>
+
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: transparent;
+  }
+
+  .sign-wrap {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  #signSvg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  /*
+   * 这里暂时只负责木牌里的标题。
+   * 等你在全局 CSS 注册字体后，
+   * 把这里的 DevilsTavern 换成你的字体名即可。
+   */
+  .title {
+    font-family:
+      "GeTeShiZiTi",
+      "STKaiti",
+      "KaiTi",
+      serif;
+
+    font-size: 42px;
+    font-weight: 500;
+    letter-spacing: 10px;
+
+    fill: #b99a63;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="sign-wrap">
+
+<svg
+  id="signSvg"
+  viewBox="0 0 900 160"
+  xmlns="http://www.w3.org/2000/svg"
+  aria-label="恶魔酒馆木牌"
+>
+
+  <defs>
+
+    <!-- 木牌本体 -->
+    <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4a2b1d"/>
+      <stop offset=".5" stop-color="#352016"/>
+      <stop offset="1" stop-color="#2b1810"/>
+    </linearGradient>
+
+    <!-- 金属旧金 -->
+<linearGradient
+  id="oldGold"
+  x1="0"
+  y1="0"
+  x2="0"
+  y2="1"
+>
+  <stop offset="0" stop-color="#8c7047"/>
+  <stop offset=".45" stop-color="#b79a64"/>
+  <stop offset="1" stop-color="#765a38"/>
+</linearGradient>
+
+
+
+    <clipPath id="woodClip">
+  <path
+    d="
+      M 128 18
+
+      C 225 17 335 19 450 17
+      C 565 19 675 17 772 18
+
+      C 776 29 778 41 778 53
+      L 778 78
+      C 778 90 776 100 772 107
+
+      C 675 108 565 106 450 108
+      C 335 106 225 108 128 107
+
+      C 124 100 122 90 122 78
+      L 122 53
+      C 122 41 124 29 128 18
+
+      Z
+    "
+  />
+</clipPath>
+
+
+  </defs>
+
+
+
+<!-- =========================
+     木牌厚度 / 后缘
+     ========================= -->
+
+<path
+  d="
+    M 132 21
+
+    C 225 20 335 21 450 20
+    C 565 21 675 20 768 21
+
+    C 773 32 775 44 775 56
+    L 775 81
+    C 775 93 773 103 768 110
+
+    C 675 111 565 110 450 111
+    C 335 110 225 111 132 110
+
+    C 127 103 125 93 125 81
+    L 125 56
+    C 125 44 127 32 132 21
+
+    Z
+  "
+  fill="#180c08"
+/>
+
+  
+
+  <!-- =========================
+       木牌主体
+       ========================= -->
+
+<path
+  d="
+    M 128 18
+
+    C 225 16 335 18 450 17
+    C 565 18 675 16 772 18
+
+    C 776 29 778 41 778 53
+    L 778 78
+    C 778 90 776 100 772 107
+
+    C 675 109 565 107 450 108
+    C 335 107 225 109 128 107
+
+    C 124 100 122 90 122 78
+    L 122 53
+    C 122 41 124 29 128 18
+
+    Z
+  "
+  fill="url(#wood)"
+/>
+
+
+  <!-- =========================
+       连续木纹
+       ========================= -->
+
+<!-- =====================================================
+     木牌木纹
+     与古典完整木酒架保持同一套木材纹理逻辑
+     ===================================================== -->
+
+<g
+  clip-path="url(#woodClip)"
+  fill="none"
+  stroke-linecap="round"
+  opacity=".82"
+>
+
+  <!-- 深色主木纹 -->
+  <g>
+
+    <path
+      d="
+        M 70 27
+
+        C 150 24 230 29 315 26
+        S 455 22 540 27
+        S 690 31 830 25
+      "
+      stroke="#160b07"
+      stroke-width="0.75"
+      opacity=".24"
+    />
+
+    <path
+      d="
+        M 70 34
+
+        C 155 31 235 37 325 33
+        S 465 29 555 35
+        S 700 39 830 32
+      "
+      stroke="#24130d"
+      stroke-width="0.75"
+      opacity=".21"
+    />
+
+    <path
+      d="
+        M 70 42
+
+        C 145 39 225 45 315 41
+        S 460 37 550 43
+        S 700 47 830 40
+      "
+      stroke="#160b07"
+      stroke-width="1"
+      opacity=".30"
+    />
+
+    <path
+      d="
+        M 70 51
+
+        C 155 48 235 54 320 50
+        S 465 46 555 52
+        S 705 56 830 49
+      "
+      stroke="#24130d"
+      stroke-width="0.75"
+      opacity=".20"
+    />
+
+    <path
+      d="
+        M 70 60
+
+        C 145 57 230 63 315 59
+        S 455 55 545 61
+        S 700 65 830 58
+      "
+      stroke="#160b07"
+      stroke-width="0.75"
+      opacity=".24"
+    />
+
+    <path
+      d="
+        M 70 70
+
+        C 155 67 235 73 325 69
+        S 465 65 555 71
+        S 705 75 830 68
+      "
+      stroke="#24130d"
+      stroke-width="0.8"
+      opacity=".22"
+    />
+
+    <path
+      d="
+        M 70 80
+
+        C 145 77 225 83 315 79
+        S 460 75 550 81
+        S 700 85 830 78
+      "
+      stroke="#160b07"
+      stroke-width="0.75"
+      opacity=".25"
+    />
+
+    <path
+      d="
+        M 70 90
+
+        C 155 87 235 93 320 89
+        S 465 85 555 91
+        S 705 95 830 88
+      "
+      stroke="#24130d"
+      stroke-width="0.75"
+      opacity=".19"
+    />
+
+    <path
+      d="
+        M 70 99
+
+        C 145 96 230 102 315 98
+        S 455 94 545 100
+        S 700 104 830 97
+      "
+      stroke="#160b07"
+      stroke-width="0.8"
+      opacity=".22"
+    />
+
+  </g>
+
+
+  <!-- 温暖的细木纹 -->
+  <g>
+
+    <path
+      d="
+        M 75 30
+
+        C 155 28 235 34 320 30
+        S 465 26 550 32
+        S 700 36 825 29
+      "
+      stroke="#8a6245"
+      stroke-width="0.55"
+      opacity=".11"
+    />
+
+    <path
+      d="
+        M 75 46
+
+        C 150 43 230 49 315 45
+        S 460 41 545 47
+        S 700 51 825 44
+      "
+      stroke="#8a6245"
+      stroke-width="0.55"
+      opacity=".14"
+    />
+
+    <path
+      d="
+        M 75 64
+
+        C 155 61 235 67 320 63
+        S 465 59 550 65
+        S 705 69 825 62
+      "
+      stroke="#8a6245"
+      stroke-width="0.55"
+      opacity=".12"
+    />
+
+    <path
+      d="
+        M 75 84
+
+        C 150 81 230 87 315 83
+        S 460 79 545 85
+        S 700 89 825 82
+      "
+      stroke="#8a6245"
+      stroke-width="0.55"
+      opacity=".13"
+    />
+
+    <path
+      d="
+        M 75 103
+
+        C 155 100 235 106 320 102
+        S 465 98 550 104
+        S 705 108 825 101
+      "
+      stroke="#8a6245"
+      stroke-width="0.55"
+      opacity=".10"
+    />
+
+  </g>
+
+
+  <!-- 木材天然纵向变化 -->
+  <g
+    stroke="#130906"
+    stroke-width="0.65"
+    opacity=".14"
+  >
+
+    <path
+      d="
+        M 0 18
+        C 165 22 185 38 195 108
+      "
+    />
+
+    <path
+      d="
+        M 0 18
+        C 300 22 315 34 305 108
+      "
+    />
+
+    <path
+      d="
+        M 0 18
+        C 405 21 425 35 415 108
+      "
+    />
+
+    <path
+      d="
+        M 0 18
+        C 610 20 625 37 615 108
+      "
+    />
+
+    <path
+      d="
+        M 0 18
+        C 750 22 770 39 790 108
+      "
+    />
+
+  </g>
+
+</g>
+
+
+
+
+<!-- =========================
+     木牌内嵌式雕刻框
+     ========================= -->
+
+<g
+  fill="none"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+
+  <!-- 深色内凹线 -->
+  <path
+    d="
+      M 145 29
+      C 230 28 340 30 450 29
+      C 560 30 670 28 755 29
+
+      C 758 39 760 48 760 57
+      L 760 76
+      C 760 86 758 95 755 101
+
+      C 670 102 560 100 450 101
+      C 340 100 230 102 145 101
+
+      C 142 95 140 86 140 76
+      L 140 57
+      C 140 48 142 39 145 29
+    "
+    stroke="#170b07"
+    stroke-width="1.5"
+    opacity=".65"
+  />
+
+  <!-- 很细的旧金镶线 -->
+  <path
+    d="
+      M 147 31
+      C 235 30 340 32 450 31
+      C 560 32 665 30 753 31
+
+      C 756 40 758 49 758 58
+      L 758 75
+      C 758 85 756 93 753 99
+
+      C 665 100 560 98 450 99
+      C 340 98 235 100 147 99
+
+      C 144 93 142 85 142 75
+      L 142 58
+      C 142 49 144 40 147 31
+    "
+    stroke="url(#oldGold)"
+    stroke-width=".65"
+    opacity=".72"
+  />
+
+</g>
+
+
+
+
+
+<!-- =========================
+     左右哥特式铁艺装饰
+     ========================= -->
+
+<g
+  id="gothicLeft"
+  fill="none"
+  stroke="url(#oldGold)"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  transform="translate(35 0)"
+>
+
+  <!-- 左侧主 S 形骨架 -->
+  <path
+    d="
+      M 108 82
+      C 116 70 119 56 128 49
+      C 137 42 148 43 154 50
+      C 160 57 158 66 152 70
+      C 146 74 139 71 138 65
+      C 137 60 141 56 146 57
+    "
+    stroke-width=".95"
+  />
+
+  <!-- 左侧下部回旋 -->
+  <path
+    d="
+      M 108 82
+      C 117 91 128 95 139 93
+      C 149 91 157 84 159 75
+    "
+    stroke-width=".65"
+  />
+
+  <!-- 左上尖叶 -->
+  <path
+    d="
+      M 126 50
+      C 125 42 129 35 136 30
+      C 137 39 134 46 126 50
+      Z
+    "
+    stroke-width=".7"
+  />
+
+  <!-- 左上尖叶中线 -->
+  <path
+    d="
+      M 128 47
+      C 131 41 134 35 136 31
+    "
+    stroke-width=".4"
+  />
+
+  <!-- 左下尖叶 -->
+  <path
+    d="
+      M 137 92
+      C 141 99 148 101 155 99
+      C 152 93 146 90 137 92
+      Z
+    "
+    stroke-width=".7"
+  />
+
+  <!-- 左下叶脉 -->
+  <path
+    d="
+      M 140 93
+      C 145 96 150 98 154 99
+    "
+    stroke-width=".4"
+  />
+
+  <!-- 左侧外回旋 -->
+  <path
+    d="
+      M 115 69
+      C 108 62 108 54 113 49
+      C 118 44 125 46 127 51
+      C 129 56 125 61 121 60
+      C 117 59 117 55 120 53
+    "
+    stroke-width=".6"
+  />
+
+  <!-- 左侧小菱形 -->
+  <path
+    d="
+      M 165 57
+      L 169 61
+      L 165 65
+      L 161 61
+      Z
+    "
+    stroke-width=".55"
+  />
+
+    <!-- =========================
+       左上小型尖拱花饰
+       ========================= -->
+
+  <path 
+    d="
+      M 145 43
+      C 151 36 157 31 165 31
+      C 174 31 181 35 186 42
+
+      C 179 39 173 39 168 43
+      C 163 47 158 47 153 44
+
+      C 157 40 162 38 168 39
+    " 
+    fill="none" 
+    stroke="url(#oldGold)" 
+    stroke-width=".75" 
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+</g>
+
+<!-- 右侧完全镜像 -->
+<g transform="translate(900 0) scale(-1 1)">
+  <use href="#gothicLeft"/>
+</g>
+
+
+
+
+
+
+<!-- =========================
+     标题
+     ========================= -->
+
+<text
+  class="title"
+  x="450"
+  y="76"
+  text-anchor="middle"
+  fill="#b99a63"
+  stroke="#4a351f"
+  stroke-width=".65"
+  paint-order="stroke fill"
+>
+  恶魔酒馆
+</text>
+
+
+  <!-- =========================
+       标题下方完整收尾花饰
+       ========================= -->
+
+<g
+  transform="translate(450 92)"
+  fill="none"
+  stroke="url(#oldGold)"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+
+  <path
+    d="
+      M -36 0
+      C -27 -4 -18 -4 -9 0
+      C -6 2 -3 3 0 3
+      C 3 3 6 2 10 0
+      C 18 -4 27 -4 36 0
+    "
+    stroke-width=".7"
+  />
+
+  <path
+    d="
+      M -24 1
+      C -19 5 -14 6 -9 5
+    "
+    stroke-width=".45"
+  />
+
+  <path
+    d="
+      M 24 1
+      C 19 5 14 6 9 5
+    "
+    stroke-width=".45"
+  />
+
+  <path
+    d="
+      M -4 3
+      L 0 7
+      L 4 3
+    "
+    stroke-width=".55"
+  />
+
+</g>
+
+
+
+</svg>
+
+</div>
+
+</body>
+</html>

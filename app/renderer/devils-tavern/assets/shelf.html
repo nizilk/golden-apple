@@ -321,15 +321,8 @@ svg.appendChild(silhouette);
     id: "shelfTopGrainClip"
   });
 
-  const topClipShape = createSvgElement("path", {
-    d: `
-      M ${leftSupportX + 8} 18
-      L ${width - leftSupportX - 8} 18
-      L ${width - leftSupportX + 15} 50
-      L ${leftSupportX - 15} 50
-      Z
-    `
-  });
+  const topClipShape = topFace.cloneNode(true);
+  topClipShape.removeAttribute("fill");
 
   topClip.appendChild(topClipShape);
   grainDefs.appendChild(topClip);
@@ -349,15 +342,8 @@ svg.appendChild(silhouette);
   const frontClipHeight = 21;
   const frontClipBottom = frontClipTop + frontClipHeight;
 
-  const frontClipShape = createSvgElement("path", {
-    d: `
-      M ${leftSupportX - 15} ${frontClipTop}
-      L ${width - leftSupportX + 15} ${frontClipTop}
-      L ${width - leftSupportX + 15} ${frontClipBottom}
-      L ${leftSupportX - 15} ${frontClipBottom}
-      Z
-    `
-  });
+  const frontClipShape = frontFace.cloneNode(true);
+  frontClipShape.removeAttribute("fill");
 
   frontClip.appendChild(frontClipShape);
   grainDefs.appendChild(frontClip);
@@ -396,7 +382,7 @@ svg.appendChild(grainDefs);
    */
 
   const topDarkGrains = [
-    23, 27, 31, 35, 39
+    23, 27, 31, 35, 39, 45
   ];
 
   topDarkGrains.forEach((y, index) => {
@@ -440,7 +426,8 @@ svg.appendChild(grainDefs);
     25,
     30,
     34,
-    38
+    38,
+    45
   ];
 
   topWarmGrains.forEach((y, index) => {
@@ -481,17 +468,17 @@ svg.appendChild(grainDefs);
       M ${width * .17} 18
       C ${width * .20} 22,
         ${width * .22} 31,
-        ${width * .26} 38
+        ${width * .26} 50
 
       M ${width * .43} 18
       C ${width * .46} 23,
         ${width * .47} 31,
-        ${width * .45} 42
+        ${width * .45} 50
 
       M ${width * .72} 18
       C ${width * .75} 24,
         ${width * .77} 33,
-        ${width * .80} 43
+        ${width * .80} 50
     `,
     fill: "none",
     stroke: "#130906",
@@ -520,10 +507,10 @@ svg.appendChild(grainDefs);
 
 
   [
-    48,
-    52,
-    56,
-    60
+    51,
+    55,
+    59,
+    63
   ].forEach((y, index) => {
 
     const path = createSvgElement("path", {

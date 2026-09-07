@@ -182,120 +182,31 @@ button {
   left: 83%;
 }
 
+
+
 /* =========================================================
-   HANGING SIGN
+   TITLE SIGN
    ========================================================= */
 
-.title-sign {
+.title-sign-frame {
   position: absolute;
   z-index: 40;
 
-  top: clamp(28px, 5vh, 58px);
+  top: 10px;
   left: 50%;
 
-  transform:
-    translateX(-50%)
-    rotate(-.7deg);
+  transform: translateX(-50%);
 
-  width: clamp(245px, 27vw, 360px);
-  min-height: 105px;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  padding: 20px 38px 23px;
-
-  /* 复古平面木牌 */
-  background: #51382a;
-
-  border: 2px solid #261b15;
-  border-radius: 3px;
-
-  /* 不再做 3D 投影，只留非常轻的落影 */
-  box-shadow:
-    0 5px 0 rgba(32,22,16,.42);
-}
-
-.title-sign::before {
-  content: "";
-
-  position: absolute;
-  inset: 7px;
-
-  border: 1px solid #a98251;
-
-  border-radius: 3px;
-
-  pointer-events: none;
-}
-
-.title-sign::after {
-  content: "";
-
-  position: absolute;
-
-  left: 50%;
-  bottom: -15px;
-
-  width: 1px;
-  height: 18px;
-
-  background: rgba(20,13,10,.75);
-}
-
-.title-sign h1 {
-  position: relative;
-  z-index: 2;
+  width: 800px;
+  /* height: 155px; */
 
   margin: 0;
+  padding: 0;
 
-  color: #e5c58e;
+  border: 0;
+  background: transparent;
 
-  text-align: center;
-  white-space: nowrap;
-
-  font-family:
-    "Cinzel Decorative",
-    "UnifrakturCook",
-    "UnifrakturMaguntia",
-    "Old English Text MT",
-    fantasy;
-
-  font-size:
-    clamp(28px, 3.2vw, 43px);
-
-  font-weight: 500;
-  line-height: 1;
-
-  text-shadow: none;
-}
-
-.sign-rope {
-  position: absolute;
-
-  top: -25px;
-
-  width: 2px;
-  height: 28px;
-
-  background:
-    linear-gradient(
-      90deg,
-      #38271d,
-      #9d754c,
-      #38271d
-    );
-}
-
-.sign-rope.left {
-  left: 27px;
-  transform: rotate(-2deg);
-}
-
-.sign-rope.right {
-  right: 27px;
-  transform: rotate(2deg);
+  pointer-events: none;
 }
 
 
@@ -314,8 +225,6 @@ button {
 
   overflow-y: auto;
   overflow-x: hidden;
-
-  scroll-snap-type: y mandatory;
 
   scrollbar-width: none;
 
@@ -361,9 +270,6 @@ button {
   justify-content: center;
   gap: 6px;
   padding: 10px 10px 18px;
-
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
 }
 
 
@@ -2354,14 +2260,12 @@ button {
            HANGING SIGN
            ===================================================== -->
 
-      <header class="title-sign">
-
-        <span class="sign-rope left"></span>
-        <span class="sign-rope right"></span>
-
-        <h1>恶魔酒馆</h1>
-
-      </header>
+      <iframe
+        class="title-sign-frame"
+        src="assets/title-sign.html"
+        title="恶魔酒馆木牌"
+        scrolling="no"
+      ></iframe>
 
       <!-- =====================================================
            COCKTAIL SHELVES
@@ -4028,6 +3932,7 @@ function renderShelf() {
 
 
   let shelfWheelLocked = false;
+  let shelfCurrentRow = 0;
 
   els.shelfScroll.addEventListener(
     "wheel",
@@ -4053,53 +3958,44 @@ function renderShelf() {
         return;
       }
 
-      const currentTop =
-        els.shelfScroll.scrollTop;
-
-      let currentIndex = 0;
-      let bestDistance = Infinity;
-
-      rows.forEach(
-        (row, index) => {
-
-          const distance =
-            Math.abs(
-              row.offsetTop -
-              currentTop
-            );
-
-          if (distance < bestDistance) {
-            bestDistance = distance;
-            currentIndex = index;
-          }
-
-        }
-      );
+      /*
+      * 一次显示三行。
+      *
+      * 最后允许到达的位置：
+      * 倒数第三行在顶部。
+      */
+      const maxRow =
+        Math.max(
+          0,
+          rows.length - 3
+        );
 
       const direction =
         event.deltaY > 0 ? 1 : -1;
 
-      const nextIndex =
-        currentIndex + direction;
+      const nextRow =
+        Math.max(
+          0,
+          Math.min(
+            maxRow,
+            shelfCurrentRow + direction
+          )
+        );
 
-      // 已经是第一行，禁止继续向上滚
-      if (nextIndex < 0) {
-        els.shelfScroll.scrollTop =
-          rows[0].offsetTop;
+      /*
+      * 已经到最顶部或最底部：
+      * 完全不移动。
+      */
+      if (nextRow === shelfCurrentRow) {
         return;
       }
 
-      // 已经是最后一行，禁止继续向下滚
-      if (nextIndex >= rows.length) {
-        els.shelfScroll.scrollTop =
-          rows[rows.length - 1].offsetTop;
-        return;
-      }
+      shelfCurrentRow = nextRow;
 
       shelfWheelLocked = true;
 
       els.shelfScroll.scrollTo({
-        top: rows[nextIndex].offsetTop,
+        top: rows[shelfCurrentRow].offsetTop,
         behavior: "smooth"
       });
 
