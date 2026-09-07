@@ -287,7 +287,7 @@ button {
 
   display: block;
 
-  width: 1050px;
+  width: 1300px;
 
   height: 170px;
 
@@ -312,15 +312,14 @@ button {
   position: relative;
   z-index: 4;
 
-  width: 132px;
-  /* min-width: 132px; */
+  width: 112px;
   height: 166px;
 
   display: flex;
   justify-content: center;
   align-items: flex-end;
 
-  flex: 0 0 132px;
+  flex: 0 0 112px;
 
   transform:
     rotate(var(--tilt, 0deg))
@@ -330,7 +329,7 @@ button {
 .bottle-card {
   position: relative;
 
-  width: 132px;
+  width: 112px;
   height: 166px;
 
   display: flex;
@@ -356,12 +355,14 @@ button {
 .bottle-visual {
   position: relative;
 
-  width: 108px;
-  height: 158px;
+  width: 96px;
+  height: 150px;
 
   display: flex;
   justify-content: center;
   align-items: flex-end;
+
+  transform: scale(.88);
 
   transition:
     transform .22s cubic-bezier(.2,.8,.25,1),
@@ -372,7 +373,7 @@ button {
   transform:
     translateY(-12px)
     rotate(var(--hover-rotate, 0deg))
-    scale(1.045);
+    scale(.92);
 
   filter:
     drop-shadow(
@@ -3455,31 +3456,57 @@ button {
 
   }
 
-  function getBottleSlotCount() {
 
-    const width =
-      els.shelfScroll
-        .clientWidth;
+const SHELF_WIDTH = 1300;
+/*
+ * 木架两端不给酒杯使用的安全区域。
+ * 酒杯最外侧必须留出这部分距离。
+ */
+const SHELF_SIDE_PADDING = 55;
 
-    if (width < 500) {
-      return 3;
-    }
+/*
+ * 每个酒杯占用的水平空间。
+ * 包括酒杯本身 + 杯与杯之间的间距。
+ */
+const GLASS_SLOT_WIDTH = 118;
 
-    if (width < 720) {
-      return 4;
-    }
+/*
+ * 每排最少酒杯。
+ */
+const MIN_GLASS_COUNT = 6;
 
-    if (width < 930) {
-      return 5;
-    }
+/*
+ * 每排最多酒杯。
+ */
+const MAX_GLASS_COUNT = 12;
 
-    if (width < 1120) {
-      return 6;
-    }
+function getBottleSlotCount() {
 
-    return 7;
+  /*
+   * 木架真正可以摆放酒杯的区域。
+   *
+   * 左右各扣掉 SHELF_SIDE_PADDING。
+   */
+  const usableWidth =
+    SHELF_WIDTH -
+    SHELF_SIDE_PADDING * 2;
 
-  }
+  /*
+   * 根据可用宽度自动计算数量。
+   */
+  const count =
+    Math.floor(
+      usableWidth / GLASS_SLOT_WIDTH
+    );
+
+  return Math.max(
+    MIN_GLASS_COUNT,
+    Math.min(
+      MAX_GLASS_COUNT,
+      count
+    )
+  );
+}
 
   /* =========================================================
      COCKTAIL GLASS CREATION
