@@ -62,20 +62,6 @@
    酒架参数
    ========================================================= */
 
-/*
- * 这里就是你以后真正控制酒架横向长度的位置。
- *
- * 例如：
- *
- * setShelfWidth(760);
- * setShelfWidth(900);
- * setShelfWidth(1100);
- * setShelfWidth(1400);
- *
- * 托架不会被放大。
- * 架子厚度不会被放大。
- * 只有中间木层横向增加。
- */
 const DEFAULT_SHELF_WIDTH = 1050;
 
 
@@ -251,8 +237,8 @@ svg.appendChild(silhouette);
     d: `
       M ${leftSupportX + 8} 18
       L ${width - leftSupportX - 8} 18
-      L ${width - leftSupportX + 8} 43
-      L ${leftSupportX - 8} 43
+      L ${width - leftSupportX + 15} 50
+      L ${leftSupportX - 15} 50
       Z
     `,
     fill: WOOD_TOP
@@ -275,12 +261,16 @@ svg.appendChild(silhouette);
    * =======================================================
    */
 
+  const frontTop = 50;
+  const frontHeight = 21;
+  const frontBottom = frontTop + frontHeight;
+
   const frontFace = createSvgElement("path", {
     d: `
-      M ${leftSupportX - 8} 43
-      L ${width - leftSupportX + 8} 43
-      L ${width - leftSupportX - 2} 64
-      L ${leftSupportX + 2} 64
+      M ${leftSupportX - 15} ${frontTop}
+      L ${width - leftSupportX + 15} ${frontTop}
+      L ${width - leftSupportX + 15} ${frontBottom}
+      L ${leftSupportX - 15} ${frontBottom}
       Z
     `,
     fill: WOOD_FRONT
@@ -335,8 +325,8 @@ svg.appendChild(silhouette);
     d: `
       M ${leftSupportX + 8} 18
       L ${width - leftSupportX - 8} 18
-      L ${width - leftSupportX + 8} 43
-      L ${leftSupportX - 8} 43
+      L ${width - leftSupportX + 15} 50
+      L ${leftSupportX - 15} 50
       Z
     `
   });
@@ -355,12 +345,16 @@ svg.appendChild(silhouette);
     id: "shelfFrontGrainClip"
   });
 
+  const frontClipTop = 50;
+  const frontClipHeight = 21;
+  const frontClipBottom = frontClipTop + frontClipHeight;
+
   const frontClipShape = createSvgElement("path", {
     d: `
-      M ${leftSupportX - 8} 43
-      L ${width - leftSupportX + 8} 43
-      L ${width - leftSupportX - 2} 64
-      L ${leftSupportX + 2} 64
+      M ${leftSupportX - 15} ${frontClipTop}
+      L ${width - leftSupportX + 15} ${frontClipTop}
+      L ${width - leftSupportX + 15} ${frontClipBottom}
+      L ${leftSupportX - 15} ${frontClipBottom}
       Z
     `
   });
@@ -606,18 +600,6 @@ function setShelfWidth(width) {
 setShelfWidth(DEFAULT_SHELF_WIDTH);
 
 
-/*
- * =======================================================
- * 测试：
- *
- * 取消下面任意一行的注释即可观察真正的“横向伸缩”。
- * =======================================================
- */
-
-// setShelfWidth(700);
-// setShelfWidth(850);
-// setShelfWidth(1200);
-// setShelfWidth(1400);
 
 </script>
 

@@ -307,20 +307,22 @@ button {
   position: absolute;
   z-index: 20;
 
-  top: 160px;
+  top: 120px;
   left: 0px;
   right: 0px;
-  bottom: 160px;
+  bottom: 120px;
 
   overflow-y: auto;
   overflow-x: hidden;
+
+  scroll-snap-type: y mandatory;
 
   scrollbar-width: none;
 
   padding:
     8px
-    clamp(8px, 2vw, 26px)
-    40px;
+    10px
+    0;
 }
 
 .shelf-scroll-area::-webkit-scrollbar {
@@ -339,9 +341,9 @@ button {
   display: flex;
   flex-direction: column;
 
-  gap: 30px;
+  gap: 20px;
 
-  padding-bottom: 36px;
+  /* padding-bottom: 36px; */
 }
 
 
@@ -353,12 +355,15 @@ button {
 .shelf-row {
   position: relative;
   width: 100%;
-  height: 210px;
+  height: 180px;
   display: flex;
   align-items: flex-end;
   justify-content: center;
   gap: 6px;
   padding: 10px 10px 18px;
+
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
 
@@ -370,7 +375,7 @@ button {
 
   left: 50%;
 
-  bottom: -108px;
+  bottom: -103px;
 
   transform: translateX(-50%);
 
@@ -402,7 +407,7 @@ button {
   z-index: 4;
 
   width: 132px;
-  min-width: 132px;
+  /* min-width: 132px; */
   height: 166px;
 
   display: flex;
@@ -1242,7 +1247,7 @@ button {
   align-items: flex-end;
   justify-content: center;
 
-  gap: 150px;
+  gap: 250px;
 
   pointer-events: none;
 }
@@ -4021,6 +4026,97 @@ function renderShelf() {
     }
   );
 
+
+  let shelfWheelLocked = false;
+
+  els.shelfScroll.addEventListener(
+    "wheel",
+    event => {
+
+      if (event.deltaY === 0) {
+        return;
+      }
+
+      event.preventDefault();
+
+      if (shelfWheelLocked) {
+        return;
+      }
+
+      const rows = [
+        ...els.shelfRows.querySelectorAll(
+          ".shelf-row"
+        )
+      ];
+
+      if (!rows.length) {
+        return;
+      }
+
+      const currentTop =
+        els.shelfScroll.scrollTop;
+
+      let currentIndex = 0;
+      let bestDistance = Infinity;
+
+      rows.forEach(
+        (row, index) => {
+
+          const distance =
+            Math.abs(
+              row.offsetTop -
+              currentTop
+            );
+
+          if (distance < bestDistance) {
+            bestDistance = distance;
+            currentIndex = index;
+          }
+
+        }
+      );
+
+      const direction =
+        event.deltaY > 0 ? 1 : -1;
+
+      const nextIndex =
+        currentIndex + direction;
+
+      // 已经是第一行，禁止继续向上滚
+      if (nextIndex < 0) {
+        els.shelfScroll.scrollTop =
+          rows[0].offsetTop;
+        return;
+      }
+
+      // 已经是最后一行，禁止继续向下滚
+      if (nextIndex >= rows.length) {
+        els.shelfScroll.scrollTop =
+          rows[rows.length - 1].offsetTop;
+        return;
+      }
+
+      shelfWheelLocked = true;
+
+      els.shelfScroll.scrollTo({
+        top: rows[nextIndex].offsetTop,
+        behavior: "smooth"
+      });
+
+      setTimeout(
+        () => {
+          shelfWheelLocked = false;
+        },
+        450
+      );
+
+    },
+    {
+      passive: false
+    }
+  );
+
+  
   els.shelfScroll.addEventListener(
     "drop",
     async event => {
