@@ -351,50 +351,81 @@ button {
    ========================================================= */
 
 .shelf-row {
-  position:relative;
 
-  width:100%;
-  min-height:182px;
+  position: relative;
 
-  display:flex;
-  align-items:flex-end;
-  justify-content:center;
+  width: 100%;
 
-  gap:6px;
+  min-height: 250px;
+
+  display: flex;
+
+  align-items: flex-end;
+
+  justify-content: center;
+
+  gap: 6px;
 
   padding:
     10px
     clamp(10px, 2vw, 26px)
     18px;
+
+}
+
+.shelf-frame {
+
+  position: absolute;
+
+  z-index: 1;
+
+  left: 50%;
+
+  bottom: 18px;
+
+  transform: translateX(-50%);
+
+  display: block;
+
+  width: 1050px;
+
+  height: 170px;
+
+  margin: 0;
+
+  border: 0;
+
+  background: transparent;
+
+  pointer-events: none;
+
+}
+
+.shelf-row > *:not(.shelf-frame) {
+
+  position: relative;
+
+  z-index: 2;
+
 }
 
 
-/* =========================================================
-   PNG SHELF ROW
-   ========================================================= */
 
-.shelf-row-image {
-  position:absolute;
+.bottle-row {
 
-  left:0;
-  right:0;
-  bottom:0;
+  width: 1050px;
 
-  width:100%;
-  height:auto;
+  display: flex;
 
-  display:block;
+  align-items: flex-end;
 
-  object-fit:contain;
-  object-position:center bottom;
+  justify-content: center;
 
-  user-select:none;
-  -webkit-user-drag:none;
-  pointer-events:none;
+  gap: 6px;
 
-  z-index:0;
+  margin-top: -58px;
+
 }
-
 
 
 /* =========================================================
@@ -3967,18 +3998,25 @@ function renderShelf() {
 
     row.className = "shelf-row";
 
-    const shelfImage = document.createElement("img");
 
-    shelfImage.className = "shelf-row-image";
+    /*
+     * 酒架
+     * 放在后面，只负责提供置物面。
+     */
+    const shelfFrame = document.createElement("iframe");
 
-    shelfImage.src = "assets/shelf-row.png";
+    shelfFrame.className = "shelf-frame";
+    shelfFrame.src = "assets/shelf.html";
+    shelfFrame.title = "恶魔酒馆酒架";
+    shelfFrame.setAttribute("scrolling", "no");
 
-    shelfImage.alt = "";
+    row.appendChild(shelfFrame);
 
-    shelfImage.draggable = false;
 
-    row.appendChild(shelfImage);
-
+    /*
+     * 酒瓶
+     * 放在酒架前面。
+     */
     const group = cocktails.slice(
       i,
       i + perRow
@@ -3987,11 +4025,11 @@ function renderShelf() {
     group.forEach(
       cocktail => {
 
-        row.appendChild(
-          createBottleCard(
-            cocktail
-          )
+        const bottle = createBottleCard(
+          cocktail
         );
+
+        row.appendChild(bottle);
 
       }
     );
@@ -4001,8 +4039,6 @@ function renderShelf() {
   }
 
 }
-
-
 
   /* =========================================================
      DRAG / DROP

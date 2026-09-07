@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>恶魔酒馆 · 古典完整木酒架</title>
+
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+  }
+
+  body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: transparent;
+    }
+
+  /*
+   * =====================================================
+   * 酒架显示宽度
+   *
+   * 这个只是页面上的显示宽度。
+   * 真正的“木架长度”由 JS 的 setShelfWidth() 决定。
+   * =====================================================
+   */
+  .shelf-wrap {
+    width: 100%;
+  }
+
+  #shelfSvg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="shelf-wrap">
+  <svg
+    id="shelfSvg"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-label="古典深色木制酒架"
+  ></svg>
+</div>
+
+
+<script>
+
+/* =========================================================
+   酒架参数
+   ========================================================= */
+
+/*
+ * 这里就是你以后真正控制酒架横向长度的位置。
+ *
+ * 例如：
+ *
+ * setShelfWidth(760);
+ * setShelfWidth(900);
+ * setShelfWidth(1100);
+ * setShelfWidth(1400);
+ *
+ * 托架不会被放大。
+ * 架子厚度不会被放大。
+ * 只有中间木层横向增加。
+ */
+const DEFAULT_SHELF_WIDTH = 1050;
+
+
+/*
+ * 架子的固定高度。
+ */
+const SHELF_HEIGHT = 170;
+
+
+/*
+ * 左右托架的固定尺寸。
+ *
+ * 无论架子变成多长，
+ * 这里都不会改变。
+ */
+const SUPPORT_WIDTH = 82;
+
+
+/*
+ * 两端向内留出的空间。
+ */
+const END_SPACE = 36;
+
+
+
+/* =========================================================
+   创建 SVG
+   ========================================================= */
+
+const svg = document.getElementById("shelfSvg");
+
+
+
+/* =========================================================
+   SVG 工具
+   ========================================================= */
+
+function createSvgElement(tag, attrs = {}) {
+
+  const el = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    tag
+  );
+
+  Object.entries(attrs).forEach(([key, value]) => {
+    el.setAttribute(key, value);
+  });
+
+  return el;
+}
+
+
+
+
+
+
+/* =========================================================
+   生成完整酒架
+   ========================================================= */
+
+function renderShelf(width) {
+
+  /*
+   * 清空旧 SVG。
+   */
+  svg.innerHTML = "";
+
+
+  /*
+   * SVG 本身的真实几何宽度就是 width。
+   *
+   * 这非常重要。
+   *
+   * 不是把 1050px 的图缩放成 1400px，
+   * 而是重新计算 1400px 的架子。
+   */
+  svg.setAttribute(
+    "viewBox",
+    `0 0 ${width} ${SHELF_HEIGHT}`
+  );
+
+  svg.setAttribute(
+    "width",
+    width
+  );
+
+  svg.setAttribute(
+    "height",
+    SHELF_HEIGHT
+  );
+
+
+  /*
+   * =======================================================
+   * 颜色
+   * =======================================================
+   */
+
+  const WOOD_MAIN = "#352016";
+  const WOOD_TOP = "#4a2b1d";
+  const WOOD_FRONT = "#2b1810";
+  const WOOD_SUPPORT = "#301b12";
+  const WOOD_DARK = "#190b07";
+
+
+  /*
+   * =======================================================
+   * 几何尺寸
+   * =======================================================
+   */
+
+  const leftSupportX = END_SPACE;
+
+  const rightSupportX =
+    width - END_SPACE - SUPPORT_WIDTH;
+    
+
+
+  /*
+   * =======================================================
+   * 整个架子的“连续外轮廓”
+   *
+   * 这是这一次最重要的部分。
+   *
+   * 不再：
+   *
+   *    木板
+   *    + 左托架
+   *    + 右托架
+   *
+   * 而是先定义“一件完整的木架”。
+   *
+   * 左托架、木层、右托架
+   * 在这里属于同一个连续轮廓。
+   * =======================================================
+   */
+
+  const completeSilhouette = `
+  M ${leftSupportX + 8} 18
+
+  L ${width - leftSupportX - 8} 18
+
+  L ${width - leftSupportX + 8} 43
+
+  L ${width - leftSupportX - 2} 64
+
+  L ${leftSupportX + 2} 64
+
+  L ${leftSupportX - 8} 43
+
+  Z
+`;
+
+const silhouette = createSvgElement("path", {
+  d: completeSilhouette,
+  fill: WOOD_MAIN
+});
+
+svg.appendChild(silhouette);
+
+
+
+  /*
+   * =======================================================
+   * 顶部置物面
+   *
+   * 它是完整主体的一部分。
+   * 只是用颜色区分不同木材表面。
+   * =======================================================
+   */
+
+  const topFace = createSvgElement("path", {
+    d: `
+      M ${leftSupportX + 8} 18
+      L ${width - leftSupportX - 8} 18
+      L ${width - leftSupportX + 8} 43
+      L ${leftSupportX - 8} 43
+      Z
+    `,
+    fill: WOOD_TOP
+  });
+
+  svg.appendChild(topFace);
+
+
+
+
+
+
+  /*
+   * =======================================================
+   * 前挡边
+   *
+   * 仍然属于完整主体。
+   *
+   * 它不是“悬浮的一根木条”。
+   * =======================================================
+   */
+
+  const frontFace = createSvgElement("path", {
+    d: `
+      M ${leftSupportX - 8} 43
+      L ${width - leftSupportX + 8} 43
+      L ${width - leftSupportX - 2} 64
+      L ${leftSupportX + 2} 64
+      Z
+    `,
+    fill: WOOD_FRONT
+  });
+
+  svg.appendChild(frontFace);
+
+
+
+
+
+
+  
+
+  
+
+
+
+  
+
+
+
+    /*
+   * =======================================================
+   * 真正的木材纹理
+   *
+   * 这一部分只负责“材质”。
+   *
+   * 不改变架子的任何几何结构。
+   *
+   * 木纹全部通过 clipPath 限制在木材表面内部，
+   * 所以不会再出现“木纹飘在架子外面”的问题。
+   * =======================================================
+   */
+
+  const grainDefs = createSvgElement("defs");
+
+
+  /*
+   * =======================================================
+   * 顶面裁剪区域
+   *
+   * 木纹只能存在于真正的置物面。
+   * =======================================================
+   */
+
+  const topClip = createSvgElement("clipPath", {
+    id: "shelfTopGrainClip"
+  });
+
+  const topClipShape = createSvgElement("path", {
+    d: `
+      M ${leftSupportX + 8} 18
+      L ${width - leftSupportX - 8} 18
+      L ${width - leftSupportX + 8} 43
+      L ${leftSupportX - 8} 43
+      Z
+    `
+  });
+
+  topClip.appendChild(topClipShape);
+  grainDefs.appendChild(topClip);
+
+
+  /*
+   * =======================================================
+   * 前挡边裁剪区域
+   * =======================================================
+   */
+
+  const frontClip = createSvgElement("clipPath", {
+    id: "shelfFrontGrainClip"
+  });
+
+  const frontClipShape = createSvgElement("path", {
+    d: `
+      M ${leftSupportX - 8} 43
+      L ${width - leftSupportX + 8} 43
+      L ${width - leftSupportX - 2} 64
+      L ${leftSupportX + 2} 64
+      Z
+    `
+  });
+
+  frontClip.appendChild(frontClipShape);
+  grainDefs.appendChild(frontClip);
+
+
+
+
+
+
+
+  
+
+svg.appendChild(grainDefs);
+
+
+
+
+
+  /*
+   * =======================================================
+   * 顶面木纹
+   *
+   * 不再是几条孤立的波浪线。
+   *
+   * 改成非常细、非常密、方向基本一致的胡桃木纹理。
+   * =======================================================
+   */
+
+  const topGrainGroup = createSvgElement("g", {
+    "clip-path": "url(#shelfTopGrainClip)"
+  });
+
+
+  /*
+   * 深色主纹理
+   */
+
+  const topDarkGrains = [
+    23, 27, 31, 35, 39
+  ];
+
+  topDarkGrains.forEach((y, index) => {
+
+    const offset = index * 19;
+
+    const path = createSvgElement("path", {
+      d: `
+        M ${leftSupportX - 40} ${y}
+
+        C ${width * 0.12} ${y - 3 + (index % 2)},
+          ${width * 0.22} ${y + 2},
+          ${width * 0.32} ${y - 1}
+
+        S ${width * 0.48} ${y - 4},
+          ${width * 0.59} ${y + 1}
+
+        S ${width * 0.76} ${y + 4},
+          ${width - leftSupportX + 40} ${y - 2}
+      `,
+      fill: "none",
+      stroke: index % 2 === 0
+        ? "#160b07"
+        : "#24130d",
+      "stroke-width": index === 2 ? "1.15" : "0.75",
+      "stroke-linecap": "round",
+      opacity: index === 2 ? ".34" : ".24"
+    });
+
+    topGrainGroup.appendChild(path);
+  });
+
+
+  /*
+   * 温暖的细纹。
+   *
+   * 只占很少比例，避免变成卡通线条。
+   */
+
+  const topWarmGrains = [
+    25,
+    30,
+    34,
+    38
+  ];
+
+  topWarmGrains.forEach((y, index) => {
+
+    const path = createSvgElement("path", {
+      d: `
+        M ${leftSupportX - 25} ${y + 1}
+
+        C ${width * 0.16} ${y - 1},
+          ${width * 0.26} ${y + 3},
+          ${width * 0.36} ${y}
+
+        S ${width * 0.51} ${y - 2},
+          ${width * 0.63} ${y + 2}
+
+        S ${width * 0.80} ${y + 3},
+          ${width - leftSupportX + 25} ${y}
+      `,
+      fill: "none",
+      stroke: "#8a6245",
+      "stroke-width": "0.65",
+      "stroke-linecap": "round",
+      opacity: index === 1 ? ".22" : ".14"
+    });
+
+    topGrainGroup.appendChild(path);
+  });
+
+
+  /*
+   * 少量不规则细节。
+   *
+   * 这些不是装饰线，而是木材天然纹理变化。
+   */
+
+  const topFigure = createSvgElement("path", {
+    d: `
+      M ${width * .17} 18
+      C ${width * .20} 22,
+        ${width * .22} 31,
+        ${width * .26} 38
+
+      M ${width * .43} 18
+      C ${width * .46} 23,
+        ${width * .47} 31,
+        ${width * .45} 42
+
+      M ${width * .72} 18
+      C ${width * .75} 24,
+        ${width * .77} 33,
+        ${width * .80} 43
+    `,
+    fill: "none",
+    stroke: "#130906",
+    "stroke-width": "0.7",
+    opacity: ".18"
+  });
+
+  topGrainGroup.appendChild(topFigure);
+
+  svg.appendChild(topGrainGroup);
+
+
+
+  /*
+   * =======================================================
+   * 前挡边木纹
+   *
+   * 与顶面方向保持一致，
+   * 但是纹理更加密集、更加细。
+   * =======================================================
+   */
+
+  const frontGrainGroup = createSvgElement("g", {
+    "clip-path": "url(#shelfFrontGrainClip)"
+  });
+
+
+  [
+    48,
+    52,
+    56,
+    60
+  ].forEach((y, index) => {
+
+    const path = createSvgElement("path", {
+      d: `
+        M ${leftSupportX - 20} ${y}
+
+        C ${width * .15} ${y - 1.5},
+          ${width * .27} ${y + 2},
+          ${width * .38} ${y}
+
+        S ${width * .55} ${y - 2},
+          ${width * .67} ${y + 1}
+
+        S ${width * .83} ${y + 2},
+          ${width - leftSupportX + 20} ${y - 1}
+      `,
+      fill: "none",
+      stroke: index % 2 === 0
+        ? "#160a06"
+        : "#744d34",
+      "stroke-width": index === 1 ? "0.9" : "0.65",
+      "stroke-linecap": "round",
+      opacity: index % 2 === 0 ? ".28" : ".16"
+    });
+
+    frontGrainGroup.appendChild(path);
+  });
+
+  svg.appendChild(frontGrainGroup);
+
+
+    
+  
+
+
+
+}
+
+
+
+/* =========================================================
+   对外的长度设置函数
+   ========================================================= */
+
+function setShelfWidth(width) {
+
+  /*
+   * 最小宽度。
+   *
+   * 防止左右托架互相撞到。
+   */
+  const minWidth = 360;
+
+
+  /*
+   * 最大宽度只是测试限制。
+   * 以后接入你的酒架时可以删除。
+   */
+  const finalWidth = Math.max(
+    minWidth,
+    Number(width)
+  );
+
+
+  renderShelf(finalWidth);
+}
+
+
+
+/* =========================================================
+   初始显示
+   ========================================================= */
+
+setShelfWidth(DEFAULT_SHELF_WIDTH);
+
+
+/*
+ * =======================================================
+ * 测试：
+ *
+ * 取消下面任意一行的注释即可观察真正的“横向伸缩”。
+ * =======================================================
+ */
+
+// setShelfWidth(700);
+// setShelfWidth(850);
+// setShelfWidth(1200);
+// setShelfWidth(1400);
+
+</script>
+
+</body>
+</html>
