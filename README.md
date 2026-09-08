@@ -4,6 +4,8 @@
 
 所有数据均存储在本地文件夹。
 
+(截图未更新)
+
 <img width="2880" height="1704" alt="image" src="https://github.com/user-attachments/assets/7370275b-1c63-42f5-96d1-7208e0a55631" />
 
 <img width="2880" height="1704" alt="image" src="https://github.com/user-attachments/assets/4cd2f3dc-184f-4732-bceb-1855670c279f" />
@@ -12,10 +14,8 @@
 
 ---
 
-v1.0.0: old_ver/ 是旧的单文件版本（可以删了）。app/ 是试图改造成 electron 软件。目前：粗略实现，待精修。
-
-
-增加新页签：devils-tavern，功能是碎片化图文堆叠。目前是儿童画级别的体验版。但是，先不放到安装包里。  
+v1.1.0: 
+增加新页签：devils-tavern，功能是碎片化图文堆叠。目前是儿童画级别的体验版。  
 
 
 ---
@@ -49,7 +49,6 @@ v1.0.0: old_ver/ 是旧的单文件版本（可以删了）。app/ 是试图改�
   - [ ] 首页简介只显示三行，导致有可能标签没有达到小方块的最下面。
 
 - #### more...
-  - [ ] 想要魔药店
   - [ ] 备份方案
   - [ ] 重构数据存储方案，使用数据库
 
