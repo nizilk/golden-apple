@@ -1,0 +1,1961 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 108 158"
+  width="108"
+  height="158"
+>
+  <defs>
+
+    <!-- =====================================================
+         玻璃
+         对应原 CSS 的半透明玻璃效果
+         ===================================================== -->
+
+    <linearGradient
+      id="glass-surface"
+      x1="0"
+      y1="0"
+      x2="1"
+      y2="0"
+    >
+      <stop
+        offset="0"
+        stop-color="#ffffff"
+        stop-opacity=".38"
+      />
+
+      <stop
+        offset=".28"
+        stop-color="#ffffff"
+        stop-opacity=".10"
+      />
+
+      <stop
+        offset=".48"
+        stop-color="#ffffff"
+        stop-opacity=".04"
+      />
+
+      <stop
+        offset="1"
+        stop-color="#000000"
+        stop-opacity=".12"
+      />
+    </linearGradient>
+
+
+    <!-- =====================================================
+         玻璃高光
+         ===================================================== -->
+
+    <linearGradient
+      id="glass-highlight"
+      x1="0"
+      y1="0"
+      x2="0"
+      y2="1"
+    >
+      <stop
+        offset="0"
+        stop-color="#ffffff"
+        stop-opacity=".48"
+      />
+
+      <stop
+        offset="1"
+        stop-color="#ffffff"
+        stop-opacity=".04"
+      />
+    </linearGradient>
+
+
+    <!-- =====================================================
+         冰块
+         原版：
+         background:
+         linear-gradient(
+           135deg,
+           rgba(255,255,255,.72),
+           rgba(207,228,226,.18)
+         );
+         ===================================================== -->
+
+    <linearGradient
+      id="ice-fill"
+      x1="0"
+      y1="0"
+      x2="1"
+      y2="1"
+    >
+      <stop
+        offset="0"
+        stop-color="#ffffff"
+        stop-opacity=".72"
+      />
+
+      <stop
+        offset="1"
+        stop-color="#cfe4e2"
+        stop-opacity=".18"
+      />
+    </linearGradient>
+
+
+
+    <!-- =====================================================
+         杯体几何
+         ===================================================== -->
+
+<path
+  id="martini-geometry"
+  d="
+    M10 14
+    C28 12 80 12 98 14
+    L63 68
+    C60.5 71 57.5 73 54 73
+    C50.5 73 47.5 71 45 68
+    Z
+  "
+/>
+
+<path
+  id="coupe-geometry"
+  d="
+    M7 26
+
+    C12 21.5
+    37 18.5
+    54 18.5
+    C71 18.5
+    96 21.5
+    101 26
+
+    C100 38
+    94 49
+    85 57
+
+    C77 64
+    66 68
+    54 68
+
+    C42 68
+    31 64
+    23 57
+
+    C14 49
+    8 38
+    7 26
+
+    Z
+  "
+/>
+
+    <path
+      id="highball-geometry"
+      d="
+        M27 30
+        C40 27.5 68 27.5 81 30
+        L78.5 139
+        C66 142 42 142 29.5 139
+        Z
+      "
+    />
+
+    <path
+      id="rocks-geometry"
+      d="
+        M17 53
+        C17 45 33 41 54 41
+        C75 41 91 45 91 53
+        L88 135
+        C86 142 71 145 54 145
+        C37 145 22 142 20 135
+        Z
+      "
+    />
+
+
+    <!-- =====================================================
+         Clip
+         ===================================================== -->
+
+    <clipPath id="martini-clip">
+      <use href="#martini-geometry" />
+    </clipPath>
+
+    <clipPath id="coupe-clip">
+      <use href="#coupe-geometry" />
+    </clipPath>
+
+    <clipPath id="highball-clip">
+      <use href="#highball-geometry" />
+    </clipPath>
+
+    <clipPath id="rocks-clip">
+      <use href="#rocks-geometry" />
+    </clipPath>
+
+
+
+
+<!-- =====================================================
+     HIGHBALL GARNISH 
+     杯子内部挖空，杯子外部正常显示
+     ===================================================== -->
+
+<clipPath
+  id="highball-garnish-outside-clip"
+  clipPathUnits="userSpaceOnUse"
+>
+  <path
+    fill-rule="evenodd"
+    clip-rule="evenodd"
+    d="
+      M0 0
+      H108
+      V158
+      H0
+      Z
+
+      M27 30
+      C40 27.5 68 27.5 81 30
+      L78.5 139
+      C66 142 42 142 29.5 139
+      Z
+    "
+  />
+</clipPath>
+
+
+
+  </defs>
+
+
+  <!-- =========================================================
+       MARTINI
+       ========================================================= -->
+
+  <symbol
+    id="glass-martini"
+    viewBox="0 0 108 158"
+  >
+
+
+<!-- =====================================================
+     MARTINI 杯梗
+     细长、略带玻璃厚度，不再是粗矩形
+     ===================================================== -->
+
+<!-- 杯梗主体 -->
+<path
+  d="
+    M52 77
+    C52.9 84 52.8 103 52.5 124
+    C52.4 132 51.8 138 51.3 141
+    L56.7 141
+    C56.2 138 55.6 132 55.5 124
+    C55.2 103 55.1 84 56 77
+    C55 78 53 78 52 77
+    Z
+  "
+  fill="url(#glass-surface)"
+  stroke="rgba(255,255,255,.20)"
+  stroke-width=".65"
+  stroke-linejoin="round"
+/>
+
+<!-- 小杯托 -->
+  <path
+    d="
+      M46 70
+      C50.4 75
+      52 78
+      54 78
+      C56 78
+      57.6 75
+      62 70
+
+      C58.1 73.8
+      56.7 73.6
+      54 73.6
+      C51.3 73.6
+      49.9 73.8
+      46 70
+      Z
+    "
+    fill="url(#glass-surface)"
+    stroke="rgba(255,255,255,.18)"
+    stroke-width=".55"
+    stroke-linejoin="round"
+  />
+  
+
+<!-- 杯梗左侧细高光 -->
+<path
+  d="
+    M53.2 78
+    C53.5 91 53.4 116 53.1 134
+    C53.0 137 52.8 139 52.5 140
+  "
+  fill="none"
+  stroke="rgba(255,255,255,.38)"
+  stroke-width=".75"
+  stroke-linecap="round"
+/>
+
+<!-- 杯梗右侧很淡的玻璃边缘 -->
+<path
+  d="
+    M55.0 71
+    C54.8 92 54.8 116 55.0 134
+    C55.0 137 55.2 139 55.5 140
+  "
+  fill="none"
+  stroke="rgba(255,255,255,.14)"
+  stroke-width=".55"
+  stroke-linecap="round"
+/>
+
+
+<!-- =====================================================
+     MARTINI 杯底座
+     真正的 Martini / cocktail glass foot：
+     杯梗落在一个扁平、宽展开的玻璃底座上
+     ===================================================== -->
+
+<!-- 底座主体 -->
+<path
+  d="
+    M28 143.5
+    C34 141.6 44 140.6 54 140.6
+    C64 140.6 74 141.6 80 143.5
+
+    L80 146.2
+
+    C73 148.5 64 149.6 54 149.6
+    C44 149.6 35 148.5 28 146.2
+    Z
+  "
+  fill="url(#glass-surface)"
+  stroke="rgba(255,255,255,.24)"
+  stroke-width=".8"
+  stroke-linejoin="round"
+/>
+
+<!-- 底座顶部与杯梗连接处 -->
+<ellipse
+  cx="54"
+  cy="142.2"
+  rx="5.2"
+  ry="1.25"
+  fill="rgba(255,255,255,.18)"
+/>
+
+<!-- 底座前缘 -->
+<path
+  d="
+    M28.5 146
+    C35.5 148.5 44.5 149.3 54 149.3
+    C63.5 149.3 72.5 148.5 79.5 146
+  "
+  fill="none"
+  stroke="rgba(255,255,255,.34)"
+  stroke-width=".9"
+  stroke-linecap="round"
+/>
+
+<!-- 底座中央柔和高光 -->
+<path
+  d="
+    M35 144.3
+    C41 143.1 47 142.7 54 142.7
+    C61 142.7 67 143.1 73 144.3
+    C67 145.1 61 145.5 54 145.5
+    C47 145.5 41 145.1 35 144.3
+    Z
+  "
+  fill="url(#glass-highlight)"
+  opacity=".42"
+/>
+
+
+    <!-- =====================================================
+         杯体
+         ===================================================== -->
+
+<use
+  href="#martini-geometry"
+  fill="url(#glass-surface)"
+  stroke="rgba(255,255,255,.24)"
+  stroke-width="1"
+  stroke-linejoin="round"
+/>
+
+
+    <!-- =====================================================
+         酒液
+         ===================================================== -->
+
+<path
+  d="
+    M15 24
+    C35 21 73 21 93 24
+
+    L67 73
+
+    C63 74
+    59 75
+    54 75
+    C49 75
+    45 74
+    41 73
+
+    Z
+  "
+  fill="var(--drink-color)"
+  clip-path="url(#martini-clip)"
+/>
+
+
+    <!-- 酒液表面 -->
+    <path
+      fill="none"
+      stroke="rgba(255,255,255,.16)"
+      stroke-width="1"
+      stroke-linecap="round"
+      d="
+        M15 24
+        C35 21 73 21 93 24
+      "
+      clip-path="url(#martini-clip)"
+    />
+
+
+    <!-- =====================================================
+         冰块
+         
+         原 CSS：
+         i1 left 22 bottom 39
+         i2 left 40 bottom 50
+         i3 left 31 bottom 29
+         
+         迁移后保持相同的相对视觉位置。
+         ===================================================== -->
+
+    <!-- i1 -->
+    <g
+      transform="rotate(5 39 48)"
+      clip-path="url(#martini-clip)"
+    >
+      <rect
+        x="35"
+        y="40"
+        width="12"
+        height="12"
+        rx="3"
+        fill="url(#ice-fill)"
+        stroke="rgba(255,255,255,.30)"
+        stroke-width="1"
+        stroke-linejoin="round"
+      />
+
+
+    </g>
+
+
+    <!-- i2 -->
+    <g
+      transform="rotate(-15 57 37)"
+      clip-path="url(#martini-clip)"
+    >
+      <rect
+        x="50"
+        y="25"
+        width="12"
+        height="12"
+        rx="3"
+        fill="url(#ice-fill)"
+        stroke="rgba(255,255,255,.30)"
+        stroke-width="1"
+        stroke-linejoin="round"
+      />
+
+
+    </g>
+
+
+    <!-- i3 -->
+    <g
+      transform="rotate(40 48 58)"
+      clip-path="url(#martini-clip)"
+    >
+      <rect
+        x="42"
+        y="52"
+        width="13"
+        height="13"
+        rx="3"
+        fill="url(#ice-fill)"
+        stroke="rgba(255,255,255,.30)"
+        stroke-width="1"
+        stroke-linejoin="round"
+      />
+
+
+    </g>
+
+
+
+
+
+<!-- =====================================================
+     Martini 杯碗高光
+     明确向右下方倾斜，贴合 Martini 杯的斜壁
+       d="
+    M10 14
+    C28 12 80 12 98 14
+    L63 68
+    C60.5 71 57.5 73 54 73
+    C50.5 73 47.5 71 45 68
+    Z
+     ===================================================== -->
+
+<g
+  clip-path="url(#martini-clip)"
+>
+  <path
+    fill="url(#glass-highlight)"
+    opacity=".50"
+    d="
+      M10 14
+
+      L45 73
+
+      L50 73
+
+      C30 45 20 18 18 13
+
+      Z
+    "
+  />
+</g>
+
+
+
+
+
+<!-- =====================================================
+     杯碗下缘
+     不再是一条明显的白线，而是玻璃厚度的柔和折射
+     ===================================================== -->
+
+<!-- 内侧柔光 -->
+<path
+  d="
+    M45.2 68.1
+    C47.8 70.8
+    50.8 72.5
+    54 72.5
+    C57.2 72.5
+    60.2 70.8
+    62.8 68.1
+  "
+  fill="none"
+  stroke="rgba(255,255,255,.20)"
+  stroke-width=".65"
+  stroke-linecap="round"
+/>
+
+<!-- 最外侧极细玻璃边缘 -->
+<path
+  d="
+    M45 68
+    C47.6 71.2
+    50.7 73
+    54 73
+    C57.3 73
+    60.4 71.2
+    63 68
+  "
+  fill="none"
+  stroke="rgba(255,255,255,.30)"
+  stroke-width=".55"
+  stroke-linecap="round"
+/>
+
+<!-- 中央非常淡的折射 -->
+<path
+  d="
+    M49.2 71
+    C50.8 72
+    52.3 72.5
+    54 72.5
+    C55.7 72.5
+    57.2 72
+    58.8 71
+  "
+  fill="none"
+  stroke="rgba(255,255,255,.10)"
+  stroke-width=".7"
+  stroke-linecap="round"
+/>
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- =====================================================
+     MARTINI FLOWER GARNISH
+     紧凑五瓣小花
+
+     整朵花共用一个中心径向渐变：
+     花心粉色
+       ↓
+     内部柔粉
+       ↓
+     外轮廓乳白
+
+     花瓣彼此重叠，不做明显分离
+     ===================================================== -->
+
+<defs>
+
+  <!--
+    唯一渐变
+    中心是明亮柔粉
+    粉色范围较小
+    向外迅速过渡到乳白
+  -->
+  <radialGradient
+    id="flower-center-gradient"
+    gradientUnits="userSpaceOnUse"
+    cx="91"
+    cy="12"
+    r="8"
+  >
+    <stop offset="0"    stop-color="#e8a0aa"/>
+    <stop offset=".10"  stop-color="#edafb8"/>
+    <stop offset=".23"  stop-color="#f3c6cb"/>
+    <stop offset=".40"  stop-color="#f8dcda"/>
+    <stop offset=".60"  stop-color="#fceae7"/>
+    <stop offset=".82"  stop-color="#fff7f3"/>
+    <stop offset="1"    stop-color="#fffefa"/>
+  </radialGradient>
+
+</defs>
+
+
+<!-- =====================================================
+     微微向上仰的五瓣小花
+     ===================================================== -->
+
+<g
+  class="flower-garnish"
+  transform="translate(91 12) scale(1.5) translate(-92 -10)"
+>
+
+  <!--
+    五瓣一体轮廓
+
+    特征：
+    1. 上方花瓣略高、略展开
+    2. 左右两侧有前后错位
+    3. 下方花瓣较短、较窄
+    4. 整体不是正圆，而是略带“向上仰”的透视
+  -->
+
+  <path
+    d="
+      M91.0 2.0
+
+      C94.0 2.1 96.1 4.1 96.6 6.5
+      C98.9 6.3 101.0 7.6 101.6 9.7
+      C102.2 12.0 100.6 13.8 98.3 14.5
+
+      C98.6 16.8 97.3 18.8 95.1 19.3
+      C92.9 19.8 91.1 18.5 90.3 16.6
+
+      C88.8 18.1 86.3 18.1 84.7 16.4
+      C83.1 14.7 83.5 12.4 85.1 10.8
+
+      C82.9 9.9 81.8 7.8 82.8 5.7
+      C83.8 3.5 86.2 2.6 88.3 3.4
+
+      C89.0 2.5 90.0 2.0 91.0 2.0
+
+      Z
+    "
+    fill="url(#flower-center-gradient)"
+  />
+
+
+  <!-- =================================================
+       花瓣轻微结构线
+
+       不形成明显分瓣，只暗示花瓣朝向
+       ================================================= -->
+
+  <g
+    fill="none"
+    stroke="#ffffff"
+    stroke-opacity=".30"
+    stroke-width=".48"
+    stroke-linecap="round"
+  >
+
+    <!-- 左上 → 中心 -->
+    <path
+      d="M84.0 6.2 C86.1 7.1 87.7 8.6 88.8 10.2"
+    />
+
+    <!-- 上方 → 中心 -->
+    <path
+      d="M91.0 3.3 C90.7 5.4 90.7 7.5 91.0 9.5"
+    />
+
+    <!-- 右上 → 中心 -->
+    <path
+      d="M99.7 8.0 C97.6 8.8 96.0 10.0 94.8 11.2"
+    />
+
+    <!-- 右下 → 中心 -->
+    <path
+      d="M96.5 17.5 C95.0 15.7 93.7 14.3 92.5 13.5"
+    />
+
+    <!-- 左下 → 中心 -->
+    <path
+      d="M85.4 15.8 C87.0 14.4 88.2 13.1 89.1 11.8"
+    />
+
+  </g>
+
+
+  <!-- =================================================
+       花蕊
+
+       不是从同一点出发。
+
+       5 根花蕊从中心附近一个很小的区域错开，
+       整体朝“上方”生长。
+
+       前侧两根稍长，
+       后侧三根稍短，
+       制造微弱透视。
+       ================================================= -->
+
+  <g
+    fill="none"
+    stroke="#e45d68"
+    stroke-width=".68"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+
+    <!-- 后侧左：短、向上 -->
+    <path
+      d="M89.9 12.0
+         C89.5 11.1 88.9 10.1 88.4 9.3"
+    />
+
+    <!-- 后侧右：短、偏右上 -->
+    <path
+      d="M91.2 11.7
+         C92.0 10.8 92.8 9.8 93.3 9.0"
+    />
+
+    <!-- 中间：稍高，形成花心主轴 -->
+    <path
+      d="M90.8 11.8
+         C90.9 10.7 91.0 9.6 91.1 8.8"
+    />
+
+    <!-- 前侧左：稍长，向左上 -->
+    <path
+      d="M90.5 12.4
+         C89.5 11.7 88.5 11.1 87.5 10.7"
+    />
+
+    <!-- 前侧右：稍长，向右上 -->
+    <path
+      d="M91.5 12.3
+         C92.5 11.7 93.5 11.3 94.4 11.1"
+    />
+
+  </g>
+
+</g>
+
+
+
+
+  </symbol>
+
+
+
+
+
+<!-- =========================================================
+     COUPE
+     ========================================================= -->
+
+<symbol
+  id="glass-coupe"
+  viewBox="0 0 108 158"
+>
+
+
+
+
+  <!-- =====================================================
+       COUPE 杯梗
+       与杯碗底部自然连接
+       ===================================================== -->
+
+  <!-- 杯梗主体 -->
+  <path
+    d="
+      M52.2 73
+
+      C52.6 78
+      52.8 96
+      52.6 116
+
+      C52.5 128
+      52.0 136
+      51.3 141
+
+      C52.8 141.8
+      55.2 141.8
+      56.7 141
+
+      C56.0 136
+      55.5 128
+      55.4 116
+
+      C55.2 96
+      55.4 78
+      55.8 73
+
+      C54.8 73
+      53.2 73
+      52.2 73
+
+      Z
+    "
+    fill="url(#glass-surface)"
+    stroke="rgba(255,255,255,.20)"
+    stroke-width=".65"
+    stroke-linejoin="round"
+  />
+
+
+  <!-- =====================================================
+       杯碗与杯梗的连接过渡
+       ===================================================== -->
+
+  <path
+    d="
+      M48.8 68
+      C50.4 71.5
+      52.1 73
+      54 73
+      C55.9 73
+      57.6 71.5
+      59.2 68
+
+      C58.1 68.8
+      56.7 68.6
+      54 68.6
+      C51.3 68.6
+      49.9 68.8
+      48.8 68
+      Z
+    "
+    fill="url(#glass-surface)"
+    stroke="rgba(255,255,255,.18)"
+    stroke-width=".55"
+    stroke-linejoin="round"
+  />
+
+
+  <!-- 杯梗左侧弯曲高光 -->
+  <path
+    d="
+      M53.0 73
+
+      C53.5 83
+      53.5 99
+      53.3 115
+
+      C53.2 126
+      52.9 135
+      52.4 139.5
+    "
+    fill="none"
+    stroke="rgba(255,255,255,.42)"
+    stroke-width=".72"
+    stroke-linecap="round"
+  />
+
+
+  <!-- 杯梗右侧淡淡折射 -->
+  <path
+    d="
+      M55.0 69
+
+      C54.7 84
+      54.8 100
+      55.0 116
+
+      C55.1 127
+      55.3 135
+      55.7 139.5
+    "
+    fill="none"
+    stroke="rgba(255,255,255,.13)"
+    stroke-width=".55"
+    stroke-linecap="round"
+  />
+
+
+  <!-- =====================================================
+       COUPE 杯底座
+       ===================================================== -->
+
+  <path
+    d="
+      M28 143.5
+
+      C34 141.6
+      44 140.6
+      54 140.6
+
+      C64 140.6
+      74 141.6
+      80 143.5
+
+      L80 146.2
+
+      C73 148.5
+      64 149.6
+      54 149.6
+
+      C44 149.6
+      35 148.5
+      28 146.2
+
+      Z
+    "
+    fill="url(#glass-surface)"
+    stroke="rgba(255,255,255,.24)"
+    stroke-width=".8"
+    stroke-linejoin="round"
+  />
+
+
+  <!-- 杯梗与底座连接 -->
+  <ellipse
+    cx="54"
+    cy="142.2"
+    rx="5.2"
+    ry="1.25"
+    fill="rgba(255,255,255,.18)"
+  />
+
+
+  <!-- 底座前缘 -->
+  <path
+    d="
+      M28.5 146
+
+      C35.5 148.5
+      44.5 149.3
+      54 149.3
+
+      C63.5 149.3
+      72.5 148.5
+      79.5 146
+    "
+    fill="none"
+    stroke="rgba(255,255,255,.34)"
+    stroke-width=".9"
+    stroke-linecap="round"
+  />
+
+
+  <!-- 底座中央柔和高光 -->
+  <path
+    d="
+      M35 144.3
+
+      C41 143.1
+      47 142.7
+      54 142.7
+
+      C61 142.7
+      67 143.1
+      73 144.3
+
+      C67 145.1
+      61 145.5
+      54 145.5
+
+      C47 145.5
+      41 145.1
+      35 144.3
+
+      Z
+    "
+    fill="url(#glass-highlight)"
+    opacity=".42"
+  />
+
+
+  <!-- =====================================================
+       coupe 杯体主体
+       ===================================================== -->
+
+  <use
+    href="#coupe-geometry"
+    fill="url(#glass-surface)"
+    stroke="rgba(255,255,255,.24)"
+    stroke-width="1"
+    stroke-linejoin="round"
+  />
+
+
+  <!-- =====================================================
+       coupe  酒液
+       ===================================================== -->
+
+  <path
+    d="
+      M11 28
+
+      C20 25.5
+      37 24
+      54 24
+
+      C71 24
+      88 25.5
+      97 28
+
+      C97 39
+      91 49
+      83 56
+
+      C75 62
+      65 65
+      54 65
+
+      C43 65
+      33 62
+      25 56
+
+      C17 49
+      11 39
+      10 26
+
+      Z
+    "
+    fill="var(--drink-color)"
+    clip-path="url(#coupe-clip)"
+  />
+
+
+  <!-- =====================================================
+       coupe 液面
+       ===================================================== -->
+
+  <path
+    fill="none"
+    stroke="rgba(255,255,255,.17)"
+    stroke-width=".9"
+    stroke-linecap="round"
+    d="
+      M11 28
+
+      C20 25.5
+      37 24
+      54 24
+
+      C71 24
+      88 25.5
+      97 28
+    "
+    clip-path="url(#coupe-clip)"
+  />
+
+
+  <!-- =====================================================
+       coupe 冰块
+       ===================================================== -->
+
+  <g
+    transform="rotate(13 34 38)"
+    clip-path="url(#coupe-clip)"
+  >
+    <rect
+      x="27.5"
+      y="31.5"
+      width="13"
+      height="13"
+      rx="3"
+      fill="url(#ice-fill)"
+      stroke="rgba(255,255,255,.30)"
+      stroke-width="1"
+      stroke-linejoin="round"
+    />
+  </g>
+
+
+  <g
+    transform="rotate(-9 54 34)"
+    clip-path="url(#coupe-clip)"
+  >
+    <rect
+      x="47.5"
+      y="27.5"
+      width="13"
+      height="13"
+      rx="3"
+      fill="url(#ice-fill)"
+      stroke="rgba(255,255,255,.30)"
+      stroke-width="1"
+      stroke-linejoin="round"
+    />
+  </g>
+
+
+  <g
+    transform="rotate(22 67 43)"
+    clip-path="url(#coupe-clip)"
+  >
+    <rect
+      x="60.5"
+      y="36.5"
+      width="13"
+      height="13"
+      rx="3"
+      fill="url(#ice-fill)"
+      stroke="rgba(255,255,255,.30)"
+      stroke-width="1"
+      stroke-linejoin="round"
+    />
+  </g>
+
+
+  <!-- =====================================================
+       coupe 左侧斜向弯曲高光
+       ===================================================== -->
+
+<path
+  d="
+    M7 26
+
+    C7 27
+    7.5 27.5
+    8 30
+
+    C9 34
+    11 38
+    12 42
+
+    C12 47
+    13 51.5
+    14 55.5
+
+    C15 59.5
+    16 62.5
+    17 64.5
+
+    C40 64
+    36.5 62.8
+    33 60.8
+
+    C27.5 57.5
+    23.5 53
+    20.5 47.5
+
+    C17.5 42
+    16 36
+    15 31
+
+    C15 29.5
+    13 28.5
+    12 28.5
+
+    Z
+  "
+  fill="url(#glass-highlight)"
+  opacity=".46"
+  clip-path="url(#coupe-clip)"
+/>
+
+
+  <!-- =====================================================
+       coupe 右侧极淡的弧形折射
+       ===================================================== -->
+
+<path 
+  d="
+    M95 28
+    C94 35 91.5 44 87.5 50
+    C84.5 54.5 80.5 58 75 60
+  " 
+  fill="none" 
+  stroke="rgba(255,255,255,.10)" 
+  stroke-width=".75" 
+  stroke-linecap="round" 
+  clip-path="url(#coupe-clip)" 
+/>
+
+
+
+
+  <!-- =====================================================
+       杯沿
+       两头尖、中间扁
+       ===================================================== -->
+
+  <path
+    d="
+      M7 26
+
+      C12 30.5
+      37 33.5
+      54 33.5
+
+      C71 33.5
+      96 30.5
+      101 26
+    "
+    fill="none"
+    stroke="rgba(255,255,255,.36)"
+    stroke-width=".85"
+    stroke-linecap="round"
+  />
+
+
+
+
+
+  <!-- =====================================================
+       杯碗下缘
+       ===================================================== -->
+
+  <path
+    d="
+      M23 57
+
+      C31 64
+      42 68
+      54 68
+
+      C66 68
+      77 64
+      85 57
+    "
+    fill="none"
+    stroke="rgba(255,255,255,.30)"
+    stroke-width=".85"
+    stroke-linecap="round"
+  />
+
+
+  <!-- 下缘第二层极淡折射 -->
+  <path
+    d="
+      M31 63
+
+      C38 67
+      46 69
+      54 69
+
+      C62 69
+      70 67
+      77 63
+    "
+    fill="none"
+    stroke="rgba(255,255,255,.11)"
+    stroke-width=".65"
+    stroke-linecap="round"
+  />
+
+
+  <!-- =====================================================
+       杯梗前侧反光
+       ===================================================== -->
+
+  <path
+    d="
+      M53.7 71
+
+      C54.0 88
+      54.0 106
+      53.8 122
+
+      C53.8 131
+      53.6 137
+      53.3 140
+    "
+    fill="none"
+    stroke="rgba(255,255,255,.16)"
+    stroke-width=".45"
+    stroke-linecap="round"
+  />
+
+
+
+  <!-- =====================================================
+       LEMON GARNISH
+       放在右侧杯沿
+       ===================================================== -->
+
+  <g
+    transform="translate(75 11) rotate(8) scale(1.3)"
+    class="lemon-garnish"
+  >
+
+    <!-- 柠檬果肉 -->
+    <path
+      d="
+        M0 13
+
+        A13 13 0 0 1 26 13
+
+        Z
+      "
+      fill="#f4d66d"
+      stroke="rgba(126,103,39,.20)"
+      stroke-width=".5"
+    />
+
+
+    <!-- 柠檬皮 -->
+    <path
+      d="
+        M0 13
+
+        A13 13 0 0 1 26 13
+
+        L23.2 13
+
+        A10.2 10.2 0 0 0 2.8 13
+
+        Z
+      "
+      fill="#d8b84f"
+    />
+
+
+    <!-- 果肉内圈 -->
+    <path
+      d="
+        M3.1 12.5
+
+        A9.9 9.9 0 0 1 22.9 12.5
+      "
+      fill="none"
+      stroke="#ffe9a0"
+      stroke-width="1.1"
+      stroke-linecap="round"
+    />
+
+
+    <!-- 果瓣 -->
+    <path
+      d="M13 12.5 L13 3.7"
+      fill="none"
+      stroke="#e5c45d"
+      stroke-width=".72"
+      stroke-linecap="round"
+    />
+
+    <path
+      d="M13 12.5 L6.2 6.4"
+      fill="none"
+      stroke="#e5c45d"
+      stroke-width=".72"
+      stroke-linecap="round"
+    />
+
+    <path
+      d="M13 12.5 L19.8 6.4"
+      fill="none"
+      stroke="#e5c45d"
+      stroke-width=".72"
+      stroke-linecap="round"
+    />
+
+  </g>
+
+
+
+</symbol>
+
+
+
+
+  <!-- =========================================================
+       HIGHBALL
+       ========================================================= -->
+
+  <symbol
+    id="glass-highball"
+    viewBox="0 0 108 158"
+  >
+
+
+
+<!-- 杯体 -->
+<use
+  href="#highball-geometry"
+  fill="url(#glass-surface)"
+  stroke="rgba(255,255,255,.24)"
+  stroke-width="1"
+  stroke-linejoin="round"
+/>
+
+
+
+
+
+    <!-- =====================================================
+         酒液
+         
+         原 CSS：
+         left 0
+         right 0
+         bottom 0
+         height 73
+         
+         所以就是杯身内部下方的完整长方形。
+         由杯体 clip。
+         ===================================================== -->
+
+    <path
+      fill="var(--drink-color)"
+      d="
+        M27 67
+        C40 65.5 68 65.5 81 67
+        L81 142
+        L27 142
+        Z
+      "
+      clip-path="url(#highball-clip)"
+    />
+
+
+    <!-- 液面 -->
+    <path
+      fill="none"
+      stroke="rgba(255,255,255,.16)"
+      stroke-width="1"
+      stroke-linecap="round"
+      d="
+        M27.5 67
+        C40 65.5
+        68 65.5
+        80.5 67
+      "
+      clip-path="url(#highball-clip)"
+    />
+
+
+    <!-- =====================================================
+         冰块
+         全部进入酒液区域
+         ===================================================== -->
+
+    <g
+      transform="rotate(14 39 79)"
+      clip-path="url(#highball-clip)"
+    >
+      <rect
+        x="32.5"
+        y="72.5"
+        width="13"
+        height="13"
+        rx="3"
+        fill="url(#ice-fill)"
+        stroke="rgba(255,255,255,.30)"
+        stroke-width="1"
+        stroke-linejoin="round"
+      />
+
+
+    </g>
+
+
+    <g
+      transform="rotate(-9 61 84)"
+      clip-path="url(#highball-clip)"
+    >
+      <rect
+        x="54.5"
+        y="77.5"
+        width="13"
+        height="13"
+        rx="3"
+        fill="url(#ice-fill)"
+        stroke="rgba(255,255,255,.30)"
+        stroke-width="1"
+        stroke-linejoin="round"
+      />
+
+
+    </g>
+
+
+    <g
+      transform="rotate(24 43 101)"
+      clip-path="url(#highball-clip)"
+    >
+      <rect
+        x="36.5"
+        y="94.5"
+        width="13"
+        height="13"
+        rx="3"
+        fill="url(#ice-fill)"
+        stroke="rgba(255,255,255,.30)"
+        stroke-width="1"
+        stroke-linejoin="round"
+      />
+
+
+    </g>
+
+
+    <g
+      transform="rotate(-7 64 115)"
+      clip-path="url(#highball-clip)"
+    >
+      <rect
+        x="57.5"
+        y="108.5"
+        width="13"
+        height="13"
+        rx="3"
+        fill="url(#ice-fill)"
+        stroke="rgba(255,255,255,.30)"
+        stroke-width="1"
+        stroke-linejoin="round"
+      />
+
+
+
+    </g>
+
+
+<!-- =====================================================
+     HIGHBALL 左侧杯壁
+     ===================================================== -->
+
+<path
+  d="
+    M27 15
+    C29 14.5 31 15 31.5 17
+    L34 135
+    C34.2 138 32.8 139 30.8 138
+    C29.8 137.5 29.5 135.5 29.5 132
+    L27 20
+    C26.9 18 26.7 16 27 15
+    Z
+  "
+  fill="url(#glass-highlight)"
+  opacity=".48"
+  clip-path="url(#highball-clip)"
+/>
+
+
+<path
+  d="
+    M79.5 16
+    L77 135
+  "
+  fill="none"
+  stroke="rgba(255,255,255,.16)"
+  stroke-width="1"
+  stroke-linecap="round"
+  clip-path="url(#highball-clip)"
+/>
+
+
+
+<!-- =====================================================
+     HIGHBALL 玻璃底厚度
+     加宽版 / 厚底版
+     ===================================================== -->
+
+<path
+  d="
+    M29 139
+    C42 142 66 142 79 139
+
+    L79 147
+
+    C66 151 42 151 29 147
+
+    Z
+  "
+  fill="url(#glass-highlight)"
+/>
+
+
+<!-- 底部玻璃折射边 -->
+<path
+  d="
+    M29.5 147
+    C41 151 67 151 78.5 147
+  "
+  fill="none"
+  stroke="rgba(255,255,255,.34)"
+  stroke-width="1.2"
+  stroke-linecap="round"
+/>
+
+
+<!-- 底部内反光 -->
+<path
+  d="
+    M32 141
+    C44 144 64 144 76 141
+  "
+  fill="none"
+  stroke="rgba(255,255,255,.18)"
+  stroke-width=".9"
+  stroke-linecap="round"
+/>
+
+<!-- =====================================================
+     HIGHBALL GARNISH
+     自然的薄荷 / 香草叶
+     贴在杯口边缘
+     ===================================================== -->
+
+<g
+  clip-path="url(#highball-garnish-outside-clip)"
+>
+
+  <g
+    transform="translate(24 -0) rotate(0 8 12) scale(1.5)"
+  >
+
+  <!-- 叶片主体 -->
+<path
+  d="
+    M2 20
+    C3 13 8 6 19 2
+    C19 10 15 17 9 20
+    C6 22 3 22 2 20
+    Z
+  "
+  fill="#748454"
+  stroke="rgba(48,62,35,.28)"
+  stroke-width=".55"
+/>
+
+  <!-- 叶片明暗面 -->
+<path
+  d="
+    M3 19
+    C8 13 13 7 18 3
+    C14 12 9 17 3 19
+    Z
+  "
+  fill="rgba(190,205,132,.28)"
+/>
+
+  <!-- 自然的主叶脉 -->
+<path
+  d="
+    M3 19
+    C8 14 13 8 18 3
+  "
+  fill="none"
+  stroke="#465735"
+  stroke-width=".9"
+  stroke-linecap="round"
+/>
+
+</g>
+
+</g>
+
+
+  </symbol>
+
+
+  <!-- =========================================================
+       ROCKS / OLD FASHIONED
+       ========================================================= -->
+
+  <symbol
+    id="glass-rocks"
+    viewBox="0 0 108 158"
+  >
+
+    <!-- =====================================================
+         杯体
+         ===================================================== -->
+
+<use
+  href="#rocks-geometry"
+  fill="url(#glass-surface)"
+  stroke="rgba(255,255,255,.24)"
+  stroke-width="1"
+  stroke-linejoin="round"
+/>
+
+
+    <!-- =====================================================
+         酒液
+         
+         原 CSS：
+         left 3
+         right 3
+         bottom 3
+         height 52
+         
+         现在是真正的矮杯内部液体，
+         跟随杯身轮廓。
+         ===================================================== -->
+
+    <path
+      d="
+        M23 91
+        C30 89
+        42 88
+        54 88
+        C66 88
+        78 89
+        85 91
+        L84 132
+        C82 137
+        70 141
+        54 141
+        C38 141
+        26 137
+        24 132
+        Z
+      "
+      fill="var(--drink-color)"
+      clip-path="url(#rocks-clip)"
+    />
+
+
+    <!-- 液面 -->
+    <path
+      fill="none"
+      stroke="rgba(255,255,255,.16)"
+      stroke-width="1"
+      stroke-linecap="round"
+      d="
+        M23 91
+        C36 87.8
+        72 87.8
+        85 91
+      "
+      clip-path="url(#rocks-clip)"
+    />
+
+
+    <!-- =====================================================
+         冰块
+         现在全部真实落在酒液中
+         ===================================================== -->
+
+    <g
+      transform="rotate(14 35 99)"
+      clip-path="url(#rocks-clip)"
+    >
+      <rect
+        x="28.5"
+        y="92.5"
+        width="13"
+        height="13"
+        rx="3"
+        fill="url(#ice-fill)"
+        stroke="rgba(255,255,255,.30)"
+        stroke-width="1"
+        stroke-linejoin="round"
+      />
+
+
+    </g>
+
+
+    <g
+      transform="rotate(-9 57 104)"
+      clip-path="url(#rocks-clip)"
+    >
+      <rect
+        x="50.5"
+        y="97.5"
+        width="13"
+        height="13"
+        rx="3"
+        fill="url(#ice-fill)"
+        stroke="rgba(255,255,255,.30)"
+        stroke-width="1"
+        stroke-linejoin="round"
+      />
+
+
+    </g>
+
+
+    <g
+      transform="rotate(22 43 116)"
+      clip-path="url(#rocks-clip)"
+    >
+      <rect
+        x="36.5"
+        y="109.5"
+        width="13"
+        height="13"
+        rx="3"
+        fill="url(#ice-fill)"
+        stroke="rgba(255,255,255,.30)"
+        stroke-width="1"
+        stroke-linejoin="round"
+      />
+
+
+    </g>
+
+
+    <g
+      transform="rotate(-7 65 123)"
+      clip-path="url(#rocks-clip)"
+    >
+      <rect
+        x="58.5"
+        y="116.5"
+        width="13"
+        height="13"
+        rx="3"
+        fill="url(#ice-fill)"
+        stroke="rgba(255,255,255,.30)"
+        stroke-width="1"
+        stroke-linejoin="round"
+      />
+
+
+    </g>
+
+
+    <!-- =====================================================
+         左侧玻璃高光
+         ===================================================== -->
+
+    <path
+      fill="url(#glass-highlight)"
+      opacity=".52"
+      d="
+        M25 51
+        C27 50
+        28 52
+        28 55
+        L31 113
+        C31.5 118
+        30 120
+        28.5 118
+        C27 116
+        26.5 112
+        26.5 108
+        L23 59
+        C22.7 55
+        23 52
+        25 51
+        Z
+      "
+      clip-path="url(#rocks-clip)"
+    />
+
+
+    <!-- =====================================================
+         ★ Rocks 杯口的下半弧 ★
+         
+         不是杯底。
+         不是底座。
+         不是额外装饰。
+         
+         它就是原杯口椭圆的前半圈。
+         ===================================================== -->
+
+    <path
+      fill="none"
+      stroke="rgba(255,255,255,.34)"
+      stroke-width=".9"
+      stroke-linecap="round"
+      d="
+        M17 53
+        C17 59
+        33 63
+        54 63
+        C75 63
+        91 59
+        91 53
+      "
+    />
+
+<!-- =====================================================
+  樱桃
+  ===================================================== -->
+
+<g transform="translate(-15 -3) rotate(0 0 0) scale(1.1)">
+  <!-- 樱桃梗 -->
+  <path
+    d="
+      M78 39
+      C81 31 84 27 89 24
+    "
+    fill="none"
+    stroke="#68764a"
+    stroke-width="1"
+    stroke-linecap="round"
+  />
+
+  <!-- 樱桃 -->
+  <circle
+    cx="79"
+    cy="42"
+    r="8"
+    fill="#9b303b"
+  />
+
+  <circle
+    cx="77"
+    cy="40"
+    r="2.3"
+    fill="#d96a69"
+    opacity=".55"
+  />
+
+  <path
+    d="
+      M84 36
+      C87 34 89 34 91 36
+    "
+    fill="none"
+    stroke="#59683f"
+    stroke-width="1"
+    stroke-linecap="round"
+  />
+</g>
+
+
+  </symbol>
+
+</svg>

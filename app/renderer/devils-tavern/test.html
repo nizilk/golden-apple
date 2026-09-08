@@ -312,8 +312,7 @@ button {
   position: relative;
   z-index: 4;
 
-  width: 112px;
-  height: 166px;
+  width: 100px;
 
   display: flex;
   justify-content: center;
@@ -329,8 +328,7 @@ button {
 .bottle-card {
   position: relative;
 
-  width: 112px;
-  height: 166px;
+  width: 100px;
 
   display: flex;
   justify-content: center;
@@ -491,29 +489,25 @@ button {
 }
 
 
-.cocktail-glass-frame {
-  position: absolute;
 
+.cocktail-glass-svg {
+  position: absolute;
   left: 50%;
   bottom: 0;
 
   width: 108px;
   height: 158px;
 
-  transform:
-    translateX(-50%);
-
   display: block;
 
-  border: 0;
-  margin: 0;
-  padding: 0;
+  transform: translateX(-50%);
 
-  background: transparent;
-
-  overflow: hidden;
+  overflow: visible;
 
   pointer-events: none;
+  user-select: none;
+
+  flex: 0 0 auto;
 }
 
 
@@ -2924,52 +2918,238 @@ function getBottleSlotCount() {
   );
 }
 
-  /* =========================================================
-     COCKTAIL GLASS CREATION
-     ========================================================= */
 
-function createCocktailGlass(
-  cocktail
-) {
+/* =========================================================
+   COCKTAIL GLASS SVG SYSTEM
+   ========================================================= */
 
-  const frame =
-    document.createElement(
-      "iframe"
-    );
+let cocktailGlassSpritePromise = null;
 
-  frame.className =
-    "cocktail-glass-frame";
+function loadCocktailGlassSprite() {
+  if (cocktailGlassSpritePromise) {
+    return cocktailGlassSpritePromise;
+  }
+
+  cocktailGlassSpritePromise = fetch(
+    "assets/cocktail-glasses.svg"
+  )
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(
+          `无法加载酒杯 SVG：${response.status}`
+        );
+      }
+
+      return response.text();
+    })
+
+    .then(text => {
+      const parser = new DOMParser();
+
+      const parsedDocument =
+        parser.parseFromString(
+          text,
+          "image/svg+xml"
+        );
+
+      /*
+       * XML / SVG 解析失败时，
+       * Chromium 会返回 parsererror 文档。
+       */
+      const parserError =
+        parsedDocument.querySelector(
+          "parsererror"
+        );
+
+      if (parserError) {
+        console.error(
+          "[Devils Tavern] SVG XML 解析错误：",
+          parserError.textContent
+        );
+
+        throw new Error(
+          "cocktail-glasses.svg XML 解析失败"
+        );
+      }
+
+      const svg =
+        parsedDocument.documentElement;
+
+      if (
+        !svg ||
+        svg.namespaceURI !==
+          "http://www.w3.org/2000/svg" ||
+        svg.localName !== "svg"
+      ) {
+        throw new Error(
+          "cocktail-glasses.svg 根节点不是 SVG"
+        );
+      }
+
+      /*
+       * 把 SVG 文件中的 defs / symbols
+       * 导入当前 HTML 文档。
+       */
+      const sprite =
+        window.document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "svg"
+        );
+
+      sprite.setAttribute(
+        "aria-hidden",
+        "true"
+      );
+
+      sprite.setAttribute(
+        "width",
+        "0"
+      );
+
+      sprite.setAttribute(
+        "height",
+        "0"
+      );
+
+      sprite.style.position =
+        "absolute";
+
+      sprite.style.width =
+        "0";
+
+      sprite.style.height =
+        "0";
+
+      sprite.style.overflow =
+        "hidden";
+
+      sprite.style.pointerEvents =
+        "none";
+
+      /*
+       * 不使用 display:none。
+       * 保证 SVG paint server / symbol
+       * 在 Chromium 中保持可解析状态。
+       */
+      for (
+        const child of svg.childNodes
+      ) {
+        sprite.appendChild(
+          window.document.importNode(
+            child,
+            true
+          )
+        );
+      }
+
+      window.document.body.appendChild(
+        sprite
+      );
+
+      console.log(
+        "[Devils Tavern] 酒杯 SVG sprite 已加载"
+      );
+
+      return sprite;
+    })
+
+    .catch(error => {
+      cocktailGlassSpritePromise = null;
+
+      console.error(
+        "[Devils Tavern] 酒杯 SVG 加载失败",
+        error
+      );
+
+      throw error;
+    });
+
+  return cocktailGlassSpritePromise;
+}
+
+
+function createCocktailGlass(cocktail) {
+  const allowedShapes = new Set([
+    "martini",
+    "coupe",
+    "highball",
+    "rocks"
+  ]);
 
   const shape =
-    cocktail.shape ||
-    "martini";
+    allowedShapes.has(cocktail.shape)
+      ? cocktail.shape
+      : "martini";
+
+  const svg =
+    document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "svg"
+    );
+
+  svg.classList.add(
+    "cocktail-glass-svg"
+  );
+
+  svg.setAttribute(
+    "viewBox",
+    "0 0 108 158"
+  );
+
+  svg.setAttribute(
+    "aria-hidden",
+    "true"
+  );
+
+  svg.setAttribute(
+    "focusable",
+    "false"
+  );
+
+  const drinkColors = {
+    ruby: "#a9474f",
+    amber: "#c28a3f",
+    emerald: "#557f68",
+    ocean: "#4b8993",
+    violet: "#805f80"
+  };
 
   const color =
-    cocktail.color ||
-    "ruby";
+    drinkColors[cocktail.color]
+      ? cocktail.color
+      : "ruby";
 
-  frame.src =
-    `assets/cocktail-glasses.html` +
-    `?shape=${encodeURIComponent(shape)}` +
-    `&color=${encodeURIComponent(color)}`;
-
-  frame.title =
-    cocktail.title ||
-    "鸡尾酒";
-
-  frame.setAttribute(
-    "scrolling",
-    "no"
+  svg.style.setProperty(
+    "--drink-color",
+    drinkColors[color]
   );
 
-  frame.setAttribute(
-    "frameborder",
-    "0"
+  const use =
+    document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "use"
+    );
+
+  const symbolId =
+    `#glass-${shape}`;
+
+  use.setAttribute(
+    "href",
+    symbolId
   );
 
-  return frame;
+  use.setAttributeNS(
+    "http://www.w3.org/1999/xlink",
+    "xlink:href",
+    symbolId
+  );
 
+  svg.appendChild(use);
+
+  return svg;
 }
+
+
 
   /* =========================================================
      COCKTAIL CARD
@@ -4770,6 +4950,8 @@ async function deleteCocktail(
     await ensureDataDirs();
 
     await loadCocktails();
+
+    await loadCocktailGlassSprite();
 
     renderShelf();
 
